@@ -1,15 +1,19 @@
-import Fastify, { FastifyInstance } from 'fastify';
+import Fastify from 'fastify';
 import websocket from '@fastify/websocket';
 import cors from '@fastify/cors';
 import staticFiles from '@fastify/static';
 import path from 'path';
+import fs from 'fs';
 
-const fastify: FastifyInstance = Fastify({
+const fastify = Fastify({
   logger: true,
-  https: process.env.NODE_ENV === 'production' ? {
-    key: require('fs').readFileSync('/app/ssl/key.pem'),
-    cert: require('fs').readFileSync('/app/ssl/cert.pem')
-  } : undefined
+  // HTTPS設定は開発環境では無効化
+  ...(process.env.NODE_ENV === 'production' && fs.existsSync('/app/ssl/key.pem') ? {
+    https: {
+      key: fs.readFileSync('/app/ssl/key.pem'),
+      cert: fs.readFileSync('/app/ssl/cert.pem')
+    }
+  } : {})
 });
 
 // プラグインの登録
@@ -39,7 +43,7 @@ async function setupRoutes() {
 
   // WebSocket接続（リアルタイム通信用）
   fastify.register(async function (fastify) {
-    fastify.get('/ws', { websocket: true }, (connection, request) => {
+    fastify.get('/ws', { websocket: true }, (connection) => {
       connection.socket.on('message', (message: Buffer) => {
         try {
           const data = JSON.parse(message.toString());
@@ -52,7 +56,7 @@ async function setupRoutes() {
             timestamp: new Date().toISOString()
           }));
         } catch (error) {
-          fastify.log.error('WebSocket message error:', error);
+          fastify.log.error('WebSocket message error: ' + String(error));
         }
       });
 

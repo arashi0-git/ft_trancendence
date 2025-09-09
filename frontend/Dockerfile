@@ -7,7 +7,7 @@ WORKDIR /app
 COPY frontend/package*.json ./
 
 # 依存関係のインストール
-RUN npm ci --only=production
+RUN npm install
 
 # アプリケーションコードをコピー
 COPY frontend/ .

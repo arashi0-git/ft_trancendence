@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   frontend:
@@ -12,6 +11,7 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - ./ssl:/app/ssl  # SSL証明書をマウント
     environment:
       - NODE_ENV=development
     depends_on:

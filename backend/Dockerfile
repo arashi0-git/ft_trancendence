@@ -6,11 +6,8 @@ WORKDIR /app
 # パッケージファイルをコピー
 COPY backend/package*.json ./
 
-# 依存関係のインストール
-RUN npm ci --only=production
-
-# 開発依存関係も必要な場合（TypeScript等）
-RUN npm ci
+# 依存関係のインストール（npm ciの代わりにnpm installを使用）
+RUN npm install
 
 # アプリケーションコードをコピー
 COPY backend/ .
