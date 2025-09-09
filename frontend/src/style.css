@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ft_transcendence カスタムスタイル */
+
+body {
+    @apply bg-gray-100 font-sans;
+}
+
+#pong-canvas {
+    @apply shadow-lg;
+}
+
+button:disabled {
+    @apply opacity-50 cursor-not-allowed;
+}
+
+.container {
+    @apply max-w-4xl;
+}
