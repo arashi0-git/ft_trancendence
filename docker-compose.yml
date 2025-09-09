@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: ft_transcendence_frontend
+    ports:
+      - "443:443"  # HTTPS必須
+      - "80:80"     # HTTPからHTTPSにリダイレクト用
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: ft_transcendence_backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./database:/app/database  # SQLite用
+    environment:
+      - NODE_ENV=development
+      - DATABASE_PATH=/app/database/transcendence.db
+    depends_on:
+      - database
+
+  database:
+    image: alpine:latest
+    container_name: ft_transcendence_database
+    command: tail -f /dev/null  # SQLiteなのでファイルベース、コンテナは永続化のみ
+    volumes:
+      - ./database:/data
+    environment:
+      - DB_PATH=/data/transcendence.db
+
+  # 開発用のHTTPS証明書生成
+  ssl-cert:
+    image: alpine:latest
+    container_name: ft_transcendence_ssl
+    command: |
+      sh -c "
+      apk add --no-cache openssl &&
+      mkdir -p /certs &&
+      openssl req -x509 -newkey rsa:4096 -keyout /certs/key.pem -out /certs/cert.pem -days 365 -nodes -subj '/CN=localhost'
+      "
+    volumes:
+      - ./ssl:/certs
+
+networks:
+  default:
+    name: ft_transcendence_network
