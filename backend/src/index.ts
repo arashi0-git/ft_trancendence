@@ -83,6 +83,7 @@ async function setupRoutes() {
 // サーバー起動
 async function start() {
   try {
+    await initializeDatabase();
     await registerPlugins();
     await setupRoutes();
 
@@ -105,23 +106,5 @@ process.on('SIGINT', async () => {
   await fastify.close();
   process.exit(0);
 });
-
-async function start() {
-  try {
-    await initializeDatabase();
-    await registerPlugins();
-    await setupRoutes();
-
-    const port = Number(process.env.PORT) || 3000;
-    const host = process.env.HOST || '0.0.0.0';
-    await fastify.listen({ port, host });
-
-    fastify.log.info(`ft_transcendence backend server listening on ${host}:${port}`);
-    fastify.log.info(`WebSocket endpoint: ws${process.env.NODE_ENV === 'production' ? 's' : ''}://${host}:${port}/ws`);
-  } catch (error) {
-    fastify.log.error(error);
-    process.exit(1);
-  }
-}
 
 start();

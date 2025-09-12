@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { db } from './connection';
 
+
+
 export async function initializeDatabase(): Promise<void> {
     try {
         const schemaPath = path.join(__dirname, '../../../database/schema.sql');

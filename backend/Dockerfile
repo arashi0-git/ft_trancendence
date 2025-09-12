@@ -6,9 +6,17 @@ WORKDIR /app
 # パッケージファイルをコピー
 COPY backend/package*.json ./
 
-# 依存関係のインストール（npm ciの代わりにnpm installを使用）
-RUN npm install
+# ビルドツールを最初にインストール
+RUN apk add --no-cache python3 make g++ sqlite-dev
 
+# 依存関係のインストール（SQLite3を除いて）
+RUN npm install --ignore-scripts
+
+# SQLite3をソースからビルド
+RUN npm install sqlite3 --build-from-source
+
+# 残りのスクリプトを実行
+RUN npm rebuild
 # アプリケーションコードをコピー
 COPY backend/ .
 
