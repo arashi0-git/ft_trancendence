@@ -4,7 +4,8 @@
   "description": "ft_trancendence project",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx src/index.ts",
+    "dev": "tsx backend/src/index.ts",
+    "backend:dev": "cd backend && npm run dev",
     "build": "tsc",
     "lint": "eslint --config config/.eslintrc.js 'src/**/*.ts'",
     "lint:fix": "eslint --config config/.eslintrc.js 'src/**/*.ts' --fix",

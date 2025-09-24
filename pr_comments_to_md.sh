@@ -65,7 +65,7 @@ fetch_all() {
   if $GH_AVAILABLE; then
     # gh api は --paginate で自動追跡
     local json
-    if ! json=$(gh api --paginate "repos/${OWNER}/${REPO}${endpoint}" 2>/dev/null); then
+    if ! json=$(gh api --paginate "repos/${OWNER}/${REPO}${endpoint}" -q '.[]' 2>/dev/null | jq -s '.'); then
       echo "ERROR: gh api で取得失敗: ${endpoint}" >&2
       exit 1
     fi

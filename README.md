@@ -1,6 +1,5 @@
 # ft_trancendence
 
-
 ## 開発ツール
 
 ### PRコメント取得スクリプト
@@ -31,11 +30,16 @@ npm run pr-comments -- https://github.com/owner/repo/pull/123
 `pr-{PR番号}-review-comments.md` ファイルが生成されます。
 
 APIテスト
-```sh
-cd backend
 
+```sh
+# Backend development
+cd backend
 npm run dev
+
+# Or from project root (if backend entry point is configured)
+npm run backend:dev
 ```
+
 ```sh
 # ユーザー登録テスト
 curl -X POST http://localhost:3000/api/auth/register \
@@ -51,4 +55,3 @@ curl -X POST http://localhost:3000/api/auth/login \
 curl http://localhost:3000/api/health
 
 ```
-

@@ -1,43 +1,49 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { UserProfile } from '../types/user';
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { UserProfile } from "../types/user";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || "";
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET must be set");
+}
 const SALT_ROUNDS = 12;
 
 export class AuthUtils {
-    static async hashPassword(password: string): Promise<string> {
-        return bcrypt.hash(password, SALT_ROUNDS);
-    }
+  static async hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, SALT_ROUNDS);
+  }
 
-    static async verifyPassword(password: string, hash: string): Promise<boolean> {
-        return bcrypt.compare(password, hash);
-    }
+  static async verifyPassword(
+    password: string,
+    hash: string,
+  ): Promise<boolean> {
+    return bcrypt.compare(password, hash);
+  }
 
-    static generateToken(user: UserProfile): string {
-        return jwt.sign(
-            {
-                id: user.id,
-                username: user.username,
-                email: user.email
-            },
-            JWT_SECRET,
-            { expiresIn: '24h' }
-        );
-    }
+  static generateToken(user: UserProfile): string {
+    return jwt.sign(
+      {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+      },
+      JWT_SECRET,
+      { expiresIn: "24h" },
+    );
+  }
 
-    static verifyToken(token: string): any {
-        try {
-            return jwt.verify(token, JWT_SECRET);
-        } catch (error) {
-            throw new Error('Invalid token');
-        }
+  static verifyToken(token: string): any {
+    try {
+      return jwt.verify(token, JWT_SECRET);
+    } catch (error) {
+      throw new Error("Invalid token");
     }
+  }
 
-    static extractTokenFromHeader(authorization?: string): string | null {
-        if (!authorization || !authorization.startsWith('Bearer ')) {
-            return null;
-        }
-        return authorization.substring(7);
+  static extractTokenFromHeader(authorization?: string): string | null {
+    if (!authorization || !authorization.startsWith("Bearer ")) {
+      return null;
     }
+    return authorization.substring(7);
+  }
 }
