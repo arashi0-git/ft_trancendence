@@ -1,30 +1,29 @@
 FROM node:18-alpine
 
-# 作業ディレクトリの設定
 WORKDIR /app
 
-# パッケージファイルをコピー
-COPY backend/package*.json ./
-
-# ビルドツールを最初にインストール
+# 依存のためのツール
 RUN apk add --no-cache python3 make g++ sqlite-dev
 
-# 依存関係のインストール（SQLite3を除いて）
-RUN npm install --ignore-scripts
+# 先に package*.json
+COPY backend/package*.json ./
 
-# SQLite3をソースからビルド
-RUN npm install sqlite3 --build-from-source
+# 依存関係のインストール（better-sqlite3）
+RUN npm install
 
-# 残りのスクリプトを実行
-RUN npm rebuild
-# アプリケーションコードをコピー
+# アプリ本体
 COPY backend/ .
 
-# TypeScriptのビルド
+# DatabaseファイルのディレクトリとSchemaファイルを共有
+COPY database/shcema.sql /app/database/schema.sql
+
+# TypeScriptビルド
 RUN npm run build
 
-# ポート3000を公開
+# DBファイル保存先（例：/app/data/transcendence.db）
+ENV DATABASE_PATH=/app/data/transcendence.db
+RUN mkdir -p /app/data
+
 EXPOSE 3000
 
-# 本番環境ではビルドされたJSを実行、開発環境ではts-nodeを使用
 CMD ["sh", "-c", "if [ \"$NODE_ENV\" = \"production\" ]; then npm start; else npm run dev; fi"]

@@ -1,15 +1,17 @@
 -- DBの初期化（PRAGMA）＋認証に必要なテーブル定義＋便利なインデックスやトリガ-
 
 PRAGMA journal_mode = WAL;
+PRAGMA foreign_keys = ON;
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
-    id PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    
     is_online BOOLEAN DEFAULT FALSE,
     last_login DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -24,7 +26,7 @@ CREATE TABLE IF NOT EXISTS tournaments (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     started_at DATETIME,
     completed_at DATETIME,
-    winner_id INTEGER,
+    winner_id INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS matches (
