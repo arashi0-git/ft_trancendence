@@ -5,6 +5,7 @@ import staticFiles from '@fastify/static';
 import path from 'path';
 import fs from 'fs';
 import { initializeDatabase } from './database/init';
+import { authRoutes } from './routes/auth';
 
 const fastify = Fastify({
   logger: true,
@@ -37,6 +38,7 @@ async function registerPlugins() {
 
 // ルートの設定
 async function setupRoutes() {
+  await fastify.register(authRoutes, { prefix: '/api/auth' });
   // ヘルスチェック
   fastify.get('/api/health', async (request, reply) => {
     return { status: 'ok', timestamp: new Date().toISOString() };
@@ -108,3 +110,14 @@ process.on('SIGINT', async () => {
 });
 
 start();
+
+
+/*
+1. フロントエンド → POST /api/auth/register
+2. routes/auth.ts → 入力検証
+3. routes/auth.ts → UserService.createUser()
+4. UserService → AuthUtils.hashPassword()
+5. UserService → データベースに保存
+6. UserService → AuthUtils.generateToken()
+7. routes/auth.ts → レスポンス返却
+*/
