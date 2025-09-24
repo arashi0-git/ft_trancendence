@@ -4,6 +4,7 @@ import cors from '@fastify/cors';
 import staticFiles from '@fastify/static';
 import path from 'path';
 import fs from 'fs';
+import { initializeDatabase } from './database/init';
 
 const fastify = Fastify({
   logger: true,
@@ -48,7 +49,7 @@ async function setupRoutes() {
         try {
           const data = JSON.parse(message.toString());
           fastify.log.info('WebSocket message received:', data);
-          
+
           // エコーバック（開発用）
           connection.socket.send(JSON.stringify({
             type: 'echo',
@@ -82,6 +83,7 @@ async function setupRoutes() {
 // サーバー起動
 async function start() {
   try {
+    await initializeDatabase();
     await registerPlugins();
     await setupRoutes();
 
@@ -89,7 +91,7 @@ async function start() {
     const host = process.env.HOST || '0.0.0.0';
 
     await fastify.listen({ port, host });
-    
+
     fastify.log.info(`ft_transcendence backend server listening on ${host}:${port}`);
     fastify.log.info(`WebSocket endpoint: ws${process.env.NODE_ENV === 'production' ? 's' : ''}://${host}:${port}/ws`);
   } catch (error) {

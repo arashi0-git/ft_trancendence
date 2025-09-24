@@ -48,3 +48,6 @@ pids
 # Temporary files
 tmp/
 temp/
+
+Claude.md
+.serena/
