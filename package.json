@@ -8,6 +8,8 @@
     "build": "tsc",
     "lint": "eslint --config config/.eslintrc.js 'src/**/*.ts'",
     "lint:fix": "eslint --config config/.eslintrc.js 'src/**/*.ts' --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,json,css,md}\"",
+    "type-check": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test": "jest --config config/jest.config.mjs",
     "test:coverage": "jest --config config/jest.config.mjs --coverage",
@@ -17,6 +19,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@evilmartians/lefthook": "^1.13.3",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.24",
     "@typescript-eslint/eslint-plugin": "^7.1.1",
@@ -24,6 +27,7 @@
     "eslint": "^8.57.0",
     "eslint-plugin-unused-imports": "^3.0.0",
     "jest": "^29.7.0",
+    "prettier": "^3.6.2",
     "ts-jest": "^29.1.2",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3"
