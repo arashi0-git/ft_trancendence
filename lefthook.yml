@@ -1,0 +1,39 @@
+pre-commit:
+  parallel: true
+  commands:
+    typecheck:
+      glob: "src/**/*.{ts,tsx}"
+      run: npm run typecheck
+      skip:
+        - merge
+        - rebase
+
+    lint:
+      glob: "src/**/*.{ts,tsx}"
+      run: npm run lint:fix
+      stage_fixed: true
+      skip:
+        - merge
+        - rebase
+
+    format:
+      glob: "*.{tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
+      run: npx prettier --write --ignore-unknown {staged_files} && git add {staged_files}
+      skip:
+        - merge
+        - rebase
+
+pre-push:
+  parallel: true
+  commands:
+    test:
+      run: npm run test
+      skip:
+        - merge
+        - rebase
+
+    build:
+      run: npm run build
+      skip:
+        - merge
+        - rebase
