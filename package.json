@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "test": "jest --config config/jest.config.mjs",
     "test:coverage": "jest --config config/jest.config.mjs --coverage",
-    "test:watch": "jest --config config/jest.config.mjs --watch"
+    "test:watch": "jest --config config/jest.config.mjs --watch",
+    "pr-comments": "./pr_comments_to_md.sh"
   },
   "keywords": [],
   "author": "",
