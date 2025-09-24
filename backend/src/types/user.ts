@@ -11,6 +11,7 @@ export interface User {
   updated_at: string;
   is_online: boolean;
   last_login: string | null;
+  token_version: number;
 }
 
 // APIリクエスト

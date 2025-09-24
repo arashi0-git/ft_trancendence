@@ -20,12 +20,13 @@ export class AuthUtils {
     return bcrypt.compare(password, hash);
   }
 
-  static generateToken(user: UserProfile): string {
+  static generateToken(user: UserProfile & { token_version?: number }): string {
     return jwt.sign(
       {
         id: user.id,
         username: user.username,
         email: user.email,
+        tokenVersion: user.token_version || 0,
       },
       JWT_SECRET,
       { expiresIn: "24h" },

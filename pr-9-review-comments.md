@@ -448,6 +448,7 @@ or unsafe UPDATE statement.
 
 <!-- This is an auto-generated comment by CodeRabbit -->
 
+✅ Addressed in commit 706fff9
 _(diff_hunk)_
 
 ```
@@ -593,6 +594,7 @@ parsing/formatting and optional checks) to avoid runtime type errors.
 
 <!-- This is an auto-generated comment by CodeRabbit -->
 
+✅ Addressed in commit 706fff9
 _(diff_hunk)_
 
 ```
@@ -667,6 +669,7 @@ chaining) so the API response type aligns with DB reality.
 
 <!-- This is an auto-generated comment by CodeRabbit -->
 
+✅ Addressed in commit 706fff9
 _(diff_hunk)_
 
 ```
@@ -770,6 +773,7 @@ real secret.
 
 <!-- This is an auto-generated comment by CodeRabbit -->
 
+✅ Addressed in commit 706fff9
 _(diff_hunk)_
 
 ```
@@ -846,6 +850,7 @@ existing error message/exit behavior intact.
 
 <!-- This is an auto-generated comment by CodeRabbit -->
 
+✅ Addressed in commit 706fff9
 _(diff_hunk)_
 
 ```
@@ -930,7 +935,7 @@ _(diff_hunk)_
 (レビューで行に紐づいたコメントのみ)
 
 - **coderabbitai[bot]** [2025-09-24T11:56:11Z]
-  `README.md#L38`
+  `README.md#L41`
   _⚠️ Potential issue_
 
 **起動手順のパスが package.json と不一致**
@@ -991,6 +996,7 @@ change to keep script and docs consistent.
 
 <!-- This is an auto-generated comment by CodeRabbit -->
 
+✅ Addressed in commit 706fff9
 _(diff_hunk)_
 
 ````
@@ -1178,4 +1184,161 @@ _(diff_hunk)_
 +            });
 +        });
 +    }
+```
+
+# PR #9 差分レビューコメント
+
+(レビューで行に紐づいたコメントのみ)
+
+- **coderabbitai[bot]** [2025-09-24T12:16:04Z]
+  `pr_comments_to_md.sh#L86`
+  _⚠️ Potential issue_
+
+**curl フォールバックのヘッダ/本文分離が壊れます（sed の CR 区切り判定が無効）。**
+
+GNU sed の `\r` は意図どおり CR として解釈されず、本文抽出に失敗→jq でエラーになります。`-D` と `-o` でファイルに分離してください。ついでに Authorization 形式と Accept ヘッダも推奨値へ。
+
+適用差分:
+
+```diff
+-      local resp headers body
+-      resp=$(curl -sS -D - -H "Authorization: Bearer ${GH_TOKEN}" \
+-        "${API_BASE}${endpoint}?per_page=100&page=${page}")
+-      headers=$(printf "%s" "$resp" | sed -n '1,/^\r$/p')
+-      body=$(printf "%s" "$resp" | sed '1,/^\r$/d')
++      local headers body tmpH tmpB
++      tmpH="$(mktemp)" && tmpB="$(mktemp)"
++      curl -sS -D "$tmpH" \
++        -H "Authorization: token ${GH_TOKEN}" \
++        -H "Accept: application/vnd.github+json" \
++        "${API_BASE}${endpoint}?per_page=100&page=${page}" \
++        -o "$tmpB"
++      headers="$(cat "$tmpH")"
++      body="$(cat "$tmpB")"
++      rm -f "$tmpH" "$tmpB"
+```
+
+<!-- suggestion_start -->
+
+<details>
+<summary>📝 Committable suggestion</summary>
+
+> ‼️ **IMPORTANT**
+> Carefully review the code before committing. Ensure that it accurately replaces the highlighted code, contains no missing lines, and has no issues with indentation. Thoroughly test & benchmark the code to ensure it meets the requirements.
+
+```suggestion
+      local headers body tmpH tmpB
+      tmpH="$(mktemp)" && tmpB="$(mktemp)"
+      curl -sS -D "$tmpH" \
+        -H "Authorization: token ${GH_TOKEN}" \
+        -H "Accept: application/vnd.github+json" \
+        "${API_BASE}${endpoint}?per_page=100&page=${page}" \
+        -o "$tmpB"
+      headers="$(cat "$tmpH")"
+      body="$(cat "$tmpB")"
+      rm -f "$tmpH" "$tmpB"
+      acc=$(jq -s '.[0] + .[1]' <(echo "$acc") <(echo "$body"))
+      echo "$headers" | grep -qi 'rel="next"' || break
+      page=$((page+1))
+    done
+```
+
+</details>
+
+<!-- suggestion_end -->
+
+<!-- fingerprinting:phantom:triton:chinchilla -->
+
+<!-- This is an auto-generated comment by CodeRabbit -->
+
+_(diff_hunk)_
+
+```
+@@ -0,0 +1,115 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++# 使い方:
++#   ./pr_comments_to_md.sh -o OWNER -r REPO -p PR_NUMBER
++#   ./pr_comments_to_md.sh https://github.com/OWNER/REPO/pull/123
++#
++# 環境変数:
++#   GH_TOKEN があれば curl に使用。gh が入っていれば gh api を優先利用。
++#
++# 出力:
++#   pr-<PR_NUMBER>-review-comments.md をカレントディレクトリに生成。
++
++OWNER=""
++REPO=""
++PR=""
++
++need() { command -v "$1" >/dev/null 2>&1 || { echo "ERROR: $1 が見つかりません"; exit 1; }; }
++
++# URL から owner/repo/pr を抽出
++parse_url() {
++  local url="$1"
++  if [[ "$url" =~ github\.com/([^/]+)/([^/]+)/pull/([0-9]+) ]]; then
++    OWNER="${BASH_REMATCH[1]}"
++    REPO="${BASH_REMATCH[2]}"
++    PR="${BASH_REMATCH[3]}"
++  else
++    echo "ERROR: PR URL の形式ではありません: $url"
++    exit 1
++  fi
++}
++
++# 引数パース
++if [[ $# -eq 1 && "$1" == https://github.com/*/pull/* ]]; then
++  parse_url "$1"
++else
++  while getopts "o:r:p:" opt; do
++    case "$opt" in
++      o) OWNER="$OPTARG" ;;
++      r) REPO="$OPTARG" ;;
++      p) PR="$OPTARG" ;;
++      *) echo "使い方: $0 -o OWNER -r REPO -p PR_NUMBER | $0 https://github.com/OWNER/REPO/pull/123"; exit 1 ;;
++    esac
++  done
++fi
++
++[[ -n "${OWNER}" && -n "${REPO}" && -n "${PR}" ]] || { echo "ERROR: OWNER/REPO/PR を指定してください"; exit 1; }
++
++need jq
++
++# gh があれば token 取得に利用
++GH_AVAILABLE=false
++if command -v gh >/dev/null 2>&1; then
++  if gh auth status >/dev/null 2>&1; then
++    GH_AVAILABLE=true
++  fi
++fi
++
++API_BASE="https://api.github.com/repos/${OWNER}/${REPO}"
++
++# ページネーション対応: gh api または curl で全件取得
++fetch_all() {
++  local endpoint="$1"  # 例: /pulls/123/comments
++  local acc="[]"
++  if $GH_AVAILABLE; then
++    # gh api は --paginate で自動追跡
++    local json
++    if ! json=$(gh api --paginate "repos/${OWNER}/${REPO}${endpoint}" -q '.[]' 2>/dev/null | jq -s '.'); then
++      echo "ERROR: gh api で取得失敗: ${endpoint}" >&2
++      exit 1
++    fi
++    acc="$json"
++  else
++    # curl + Linkヘッダで追跡
++    [[ -n "${GH_TOKEN:-}" ]] || { echo "ERROR: GH_TOKEN が設定されていません。gh を使うか GH_TOKEN をエクスポートしてください。"; exit 1; }
++    local page=1
++    while :; do
++      local resp headers body
++      resp=$(curl -sS -D - -H "Authorization: Bearer ${GH_TOKEN}" \
++        "${API_BASE}${endpoint}?per_page=100&page=${page}")
++      headers=$(printf "%s" "$resp" | sed -n '1,/^\r$/p')
++      body=$(printf "%s" "$resp" | sed '1,/^\r$/d')
++      acc=$(jq -s '.[0] + .[1]' <(echo "$acc") <(echo "$body"))
++      echo "$headers" | grep -qi 'rel="next"' || break
++      page=$((page+1))
++    done
 ```

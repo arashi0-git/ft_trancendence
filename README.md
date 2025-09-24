@@ -31,7 +31,25 @@ npm run pr-comments -- https://github.com/owner/repo/pull/123
 
 APIテスト
 
-```sh
+````sh
+# Backend development
+
+## Environment Setup
+1. Copy the environment file:
+```bash
+cd backend
+cp .env.example .env
+````
+
+2. Edit `.env` and set your JWT secret:
+
+```bash
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+```
+
+## Running the server
+
+```bash
 # Backend development
 cd backend
 npm run dev
@@ -39,6 +57,8 @@ npm run dev
 # Or from project root (if backend entry point is configured)
 npm run backend:dev
 ```
+
+````
 
 ```sh
 # ユーザー登録テスト
@@ -54,4 +74,4 @@ curl -X POST http://localhost:3000/api/auth/login \
 # ヘルスチェック
 curl http://localhost:3000/api/health
 
-```
+````

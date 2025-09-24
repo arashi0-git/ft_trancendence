@@ -31,9 +31,9 @@ export class UserService {
     }
 
     const user = (await db.get(
-      "SELECT id, username, email, created_at, is_online, last_login FROM users WHERE email = ?",
+      "SELECT id, username, email, created_at, is_online, last_login, token_version FROM users WHERE email = ?",
       [email],
-    )) as UserProfile;
+    )) as UserProfile & { token_version: number };
 
     return user;
   }
@@ -63,21 +63,19 @@ export class UserService {
       [user.id],
     );
 
-    return {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      created_at: user.created_at,
-      is_online: true,
-      last_login: new Date().toISOString(),
-    };
+    const updatedUser = (await db.get(
+      "SELECT id, username, email, created_at, is_online, last_login, token_version FROM users WHERE id = ?",
+      [user.id],
+    )) as UserProfile & { token_version: number };
+
+    return updatedUser;
   }
 
   static async getUserById(id: number): Promise<UserProfile | null> {
     const user = (await db.get(
-      "SELECT id, username, email, created_at, is_online, last_login FROM users WHERE id = ?",
+      "SELECT id, username, email, created_at, is_online, last_login, token_version FROM users WHERE id = ?",
       [id],
-    )) as UserProfile;
+    )) as UserProfile & { token_version?: number };
 
     return user || null;
   }
@@ -86,10 +84,18 @@ export class UserService {
     id: number,
     isOnline: boolean,
   ): Promise<void> {
-    await db.run(
-      "UPDATE users SET is_online = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-      [isOnline, id],
-    );
+    // If logging out, increment token version to invalidate existing tokens
+    if (!isOnline) {
+      await db.run(
+        "UPDATE users SET is_online = ?, token_version = token_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        [isOnline, id],
+      );
+    } else {
+      await db.run(
+        "UPDATE users SET is_online = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        [isOnline, id],
+      );
+    }
   }
 
   static async updateUserProfile(
