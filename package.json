@@ -4,7 +4,8 @@
   "description": "ft_trancendence project",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx src/index.ts",
+    "dev": "tsx backend/src/index.ts",
+    "backend:dev": "cd backend && npm run dev",
     "build": "tsc",
     "lint": "eslint --config config/.eslintrc.js 'src/**/*.ts'",
     "lint:fix": "eslint --config config/.eslintrc.js 'src/**/*.ts' --fix",
@@ -13,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "test": "jest --config config/jest.config.mjs",
     "test:coverage": "jest --config config/jest.config.mjs --coverage",
-    "test:watch": "jest --config config/jest.config.mjs --watch"
+    "test:watch": "jest --config config/jest.config.mjs --watch",
+    "pr-comments": "./pr_comments_to_md.sh"
   },
   "keywords": [],
   "author": "",
@@ -31,5 +33,13 @@
     "ts-jest": "^29.1.2",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "bcrypt": "^6.0.0",
+    "fastify": "^5.6.1",
+    "jsonwebtoken": "^9.0.2",
+    "sqlite3": "^5.1.7"
   }
 }
