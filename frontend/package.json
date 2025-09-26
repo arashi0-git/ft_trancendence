@@ -1,0 +1,21 @@
+{
+  "name": "ft-transcendence-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for ft_transcendence Pong game",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "tailwindcss": "^3.3.6",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32"
+  },
+  "devDependencies": {
+    "vite": "^5.0.8",
+    "typescript": "^5.3.3",
+    "@types/node": "^20.11.24"
+  }
+}
