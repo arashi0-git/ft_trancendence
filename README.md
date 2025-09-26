@@ -1,1 +1,77 @@
 # ft_trancendence
+
+## 開発ツール
+
+### PRコメント取得スクリプト
+
+PRの差分レビューコメントをMarkdownファイルとして取得できます。
+
+#### 使い方
+
+```bash
+# GitHub CLIを使用（推奨）
+gh auth login  # 初回のみ
+npm run pr-comments -- https://github.com/owner/repo/pull/123
+
+# または直接実行
+./pr_comments_to_md.sh https://github.com/owner/repo/pull/123
+
+# オプション指定
+./pr_comments_to_md.sh -o owner -r repo -p 123
+```
+
+#### 必要な環境
+
+- `jq` コマンド
+- `gh` コマンド（GitHub CLI）または `GH_TOKEN` 環境変数
+
+#### 出力
+
+`pr-{PR番号}-review-comments.md` ファイルが生成されます。
+
+APIテスト
+
+````sh
+# Backend development
+
+## Environment Setup
+1. Copy the environment file:
+```bash
+cd backend
+cp .env.example .env
+````
+
+2. Edit `.env` and set your JWT secret:
+
+```bash
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+```
+
+## Running the server
+
+```bash
+# Backend development
+cd backend
+npm run dev
+
+# Or from project root (if backend entry point is configured)
+npm run backend:dev
+```
+
+````
+
+```sh
+# ユーザー登録テスト
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"testuser","email":"test@example.com","password":"password123"}'
+
+# ログインテスト
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}'
+
+# ヘルスチェック
+curl http://localhost:3000/api/health
+
+````
