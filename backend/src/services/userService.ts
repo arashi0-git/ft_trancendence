@@ -88,12 +88,12 @@ export class UserService {
     if (!isOnline) {
       await db.run(
         "UPDATE users SET is_online = ?, token_version = token_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-        [isOnline, id],
+        [isOnline ? 1 : 0, id],
       );
     } else {
       await db.run(
         "UPDATE users SET is_online = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-        [isOnline, id],
+        [isOnline ? 1 : 0, id],
       );
     }
   }
