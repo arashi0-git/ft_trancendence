@@ -22,7 +22,14 @@ class App {
   private showWelcomeView(): void {
     this.currentView = "welcome";
     const authContainer = document.getElementById("auth-container");
+    const gameContainer = document.getElementById("game-container");
+
     if (authContainer) {
+      // auth-containerを表示し、game-containerを隠す
+      authContainer.classList.remove("hidden");
+      if (gameContainer) {
+        gameContainer.classList.add("hidden");
+      }
       authContainer.innerHTML = `
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h2 class="text-2xl font-bold mb-4 text-center">Welcome to ft_transcendence</h2>
