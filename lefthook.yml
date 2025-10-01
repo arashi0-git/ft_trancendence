@@ -2,14 +2,14 @@ pre-commit:
   parallel: true
   commands:
     typecheck:
-      glob: "src/**/*.{ts,tsx}"
+      glob: "{src,backend/src}/**/*.{ts,tsx}"
       run: npm run typecheck
       skip:
         - merge
         - rebase
 
     lint:
-      glob: "src/**/*.{ts,tsx}"
+      glob: "{src,backend/src}/**/*.{ts,tsx}"
       run: npm run lint:fix
       stage_fixed: true
       skip:
@@ -17,8 +17,9 @@ pre-commit:
         - rebase
 
     format:
-      glob: "*.{tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
-      run: npx prettier --write --ignore-unknown {staged_files} && git add {staged_files}
+      glob: "**/*.{tsx,ts,mts,mcs,mjs,cjs,js,json,md,yml,yaml}"
+      run: npx prettier --write --ignore-unknown {staged_files}
+      stage_fixed: true
       skip:
         - merge
         - rebase

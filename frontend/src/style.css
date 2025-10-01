@@ -2,20 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ft_transcendence カスタムスタイル */
-
+/* カスタムスタイル */
 body {
     @apply bg-gray-100 font-sans;
 }
 
-#pong-canvas {
-    @apply shadow-lg;
+.container {
+    @apply max-w-4xl;
 }
 
 button:disabled {
     @apply opacity-50 cursor-not-allowed;
-}
-
-.container {
-    @apply max-w-4xl;
 }
