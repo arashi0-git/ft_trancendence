@@ -10,7 +10,7 @@ class App {
   }
 
   private init(): void {
-    console.log("ft_trancendence loading...");
+    console.log("ft_transcendence loading...");
 
     if (AuthService.isAuthenticated()) {
       this.showGameView();
@@ -71,7 +71,7 @@ class App {
       authContainer.innerHTML = `
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h2 class="text-2xl font-bold mb-4 text-center">Register</h2>
-                    <p class="text-center text-gray-600 mb-4">Registration from coming soon...</p>
+                    <p class="text-center text-gray-600 mb-4">Registration form coming soon...</p>
                     <button id="back-to-welcome" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded">
                         Back to Welcome
                     </button>

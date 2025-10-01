@@ -3,10 +3,10 @@ import {
   CreateUserRequest,
   LoginRequest,
   AuthResponse,
-  ApiError,
 } from "../types/user";
 
-const API_BASE_URL = "http://localhost:3000/api";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
 export class AuthService {
   private static getAuthHeaders(): HeadersInit {
@@ -33,7 +33,9 @@ export class AuthService {
         throw new Error(data.error || "Registration failed");
       }
 
-      localStorage.setItem("auth_token", data.token);
+      if (data.token) {
+        localStorage.setItem("auth_token", data.token);
+      }
 
       return data as AuthResponse;
     } catch (error) {
@@ -58,7 +60,9 @@ export class AuthService {
         throw new Error(data.error || "Login failed");
       }
 
-      localStorage.setItem("auth_token", data.token);
+      if (data.token) {
+        localStorage.setItem("auth_token", data.token);
+      }
 
       return data as AuthResponse;
     } catch (error) {
@@ -77,6 +81,9 @@ export class AuthService {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem("auth_token");
+        }
         throw new Error(data.error || "Failed to get user info");
       }
 

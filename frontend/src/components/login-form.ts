@@ -1,5 +1,5 @@
 import { AuthService } from "../services/auth-service";
-import { LoginRequest } from "../types/user";
+import { LoginRequest, User } from "../types/user";
 
 export class LoginForm {
   private container: HTMLElement;
@@ -66,6 +66,11 @@ export class LoginForm {
       "show-register",
     ) as HTMLButtonElement;
 
+    if (!form || !showRegisterBtn) {
+      console.error("Required form elements not found");
+      return;
+    }
+
     form.addEventListener("submit", (e) => this.handleSubmit(e));
     showRegisterBtn.addEventListener("click", () => this.onShowRegister());
   }
@@ -80,6 +85,11 @@ export class LoginForm {
     ) as HTMLButtonElement;
     const errorDiv = document.getElementById("error-message") as HTMLDivElement;
 
+    if (!submitBtn || !errorDiv) {
+      console.error("Required form elements not found");
+      return;
+    }
+
     // ボタン無効化
     submitBtn.disabled = true;
     submitBtn.textContent = "Logging in...";
@@ -90,6 +100,12 @@ export class LoginForm {
         email: formData.get("email") as string,
         password: formData.get("password") as string,
       };
+
+      if (!loginData.email || !loginData.password) {
+        errorDiv.textContent = "Email and password are required";
+        errorDiv.classList.remove("hidden");
+        return;
+      }
 
       const response = await AuthService.login(loginData);
 
@@ -108,16 +124,16 @@ export class LoginForm {
     }
   }
 
-  private onLoginSuccess(user: any): void {
+  private onLoginSuccess(user: User): void {
     console.log("User logged in:", user);
-    alert(`Welcome back, ${user.username}!`);
+    alert(`Welcome back, ${user?.username || "User"}!`);
   }
 
   private onShowRegister(): void {
     console.log("Show register form");
   }
 
-  public setOnLoginSuccess(callback: (user: any) => void): void {
+  public setOnLoginSuccess(callback: (user: User) => void): void {
     this.onLoginSuccess = callback;
   }
 

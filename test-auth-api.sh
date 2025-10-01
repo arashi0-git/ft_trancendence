@@ -116,6 +116,7 @@ if echo "${INVALID_LOGIN_RESPONSE}" | grep -q "error"; then
     echo -e "${GREEN}✅ 無効なログインが正しく拒否されました${NC}"
 else
     echo -e "${RED}❌ 無効なログインが受け入れられました（セキュリティ問題）${NC}"
+    exit 1
 fi
 echo ""
 
