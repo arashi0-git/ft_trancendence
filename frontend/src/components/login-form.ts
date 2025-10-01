@@ -90,23 +90,26 @@ export class LoginForm {
       return;
     }
 
-    // ボタン無効化
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Logging in...";
+    // エラーメッセージを非表示にする
     errorDiv.classList.add("hidden");
 
+    // バリデーション（tryブロックの外で実行）
+    const loginData: LoginRequest = {
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+    };
+
+    if (!loginData.email || !loginData.password) {
+      errorDiv.textContent = "Email and password are required";
+      errorDiv.classList.remove("hidden");
+      return;
+    }
+
+    // バリデーション通過後にボタンを無効化
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Logging in...";
+
     try {
-      const loginData: LoginRequest = {
-        email: formData.get("email") as string,
-        password: formData.get("password") as string,
-      };
-
-      if (!loginData.email || !loginData.password) {
-        errorDiv.textContent = "Email and password are required";
-        errorDiv.classList.remove("hidden");
-        return;
-      }
-
       const response = await AuthService.login(loginData);
 
       console.log("Login successful:", response);
