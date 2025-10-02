@@ -216,6 +216,16 @@ class App {
       ) as HTMLButtonElement;
 
       startBtn?.addEventListener("click", () => {
+        const state = this.pongGame?.getGameState();
+        if (state?.gameStatus === "finished") {
+          this.pongGame?.resetGame();
+          const winnerDisplay = document.getElementById("winner-display");
+          const scoreDisplay = document.getElementById("score-display");
+          winnerDisplay?.classList.add("hidden");
+          if (scoreDisplay) {
+            scoreDisplay.textContent = "Player 1: 0 - Player 2: 0";
+          }
+        }
         this.pongGame?.startGame();
         startBtn.disabled = true;
         pauseBtn.disabled = false;
