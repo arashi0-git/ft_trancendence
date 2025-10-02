@@ -20,7 +20,11 @@ export class PongGame {
 
   constructor(canvas: HTMLCanvasElement, config?: Partial<GameConfig>) {
     this.canvas = canvas;
-    this.ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("Failed to get 2D rendering context");
+    }
+    this.ctx = ctx;
 
     this.config = {
       canvasWidth: 800,
@@ -53,7 +57,6 @@ export class PongGame {
         minX: 10,
         maxX: this.config.canvasWidth / 2 - 50,
       },
-      score: 0,
       keys: {
         up: "KeyW",
         down: "KeyS",
@@ -73,7 +76,6 @@ export class PongGame {
         minX: this.config.canvasWidth / 2 + 50,
         maxX: this.config.canvasWidth - 20,
       },
-      score: 0,
       keys: {
         up: "ArrowUp",
         down: "ArrowDown",
@@ -106,14 +108,25 @@ export class PongGame {
     };
   }
 
-  private setupEventListeners(): void {
-    document.addEventListener("keydown", (e) => {
-      this.keyState[e.code] = true;
-    });
+  private keydownHandler = (e: KeyboardEvent) => {
+    this.keyState[e.code] = true;
+  };
 
-    document.addEventListener("keyup", (e) => {
-      this.keyState[e.code] = false;
-    });
+  private keyupHandler = (e: KeyboardEvent) => {
+    this.keyState[e.code] = false;
+  };
+
+  private setupEventListeners(): void {
+    document.addEventListener("keydown", this.keydownHandler);
+    document.addEventListener("keyup", this.keyupHandler);
+  }
+
+  public destroy(): void {
+    if (this.animationId) {
+      cancelAnimationFrame(this.animationId);
+    }
+    document.removeEventListener("keydown", this.keydownHandler);
+    document.removeEventListener("keyup", this.keyupHandler);
   }
 
   public startGame(): void {
@@ -342,20 +355,14 @@ export class PongGame {
     );
   }
 
-  public on(
-    event: keyof GameEvents,
-    callback: GameEvents[keyof GameEvents],
+  public on<E extends keyof GameEvents>(
+    event: E,
+    callback: GameEvents[E],
   ): void {
-    this.events[event] = callback as any;
+    this.events[event] = callback;
   }
 
   public getGameState(): GameState {
     return { ...this.gameState };
-  }
-
-  public destroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId);
-    }
   }
 }

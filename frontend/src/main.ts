@@ -113,6 +113,20 @@ class App {
                     </button>
                 </div>
 
+                <!-- Score Display -->
+                <div id="score-display" class="text-center text-xl font-bold mb-4 p-3 bg-gray-100 rounded-lg">
+                    Player 1: 0 - Player 2: 0
+                </div>
+
+                <!-- Winner Display -->
+                <div id="winner-display" class="hidden mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg text-center">
+                    <h3 class="text-xl font-bold">🎉 Game Over! 🎉</h3>
+                    <p id="winner-text" class="text-lg mt-2"></p>
+                    <button id="dismiss-winner" class="mt-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                        Continue
+                    </button>
+                </div>
+
                 <div class="mb-4 text-center">
                     <div class="space-x-4">
                         <button id="start-game" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded">
@@ -160,13 +174,24 @@ class App {
 
       this.pongGame = new PongGame(canvas);
 
-      this.pongGame.on("onScoreUpdate", (score: number) => {
+      this.pongGame.on("onScoreUpdate", (score) => {
         console.log("Score updated:", score);
+        const scoreDisplay = document.getElementById("score-display");
+        if (scoreDisplay) {
+          scoreDisplay.textContent = `Player 1: ${score.player1} - Player 2: ${score.player2}`;
+        }
       });
 
       this.pongGame.on("onGameEnd", (winner: number) => {
         console.log("Game ended, winner:", winner);
-        alert(`Player ${winner} wins!`);
+
+        // 専用のUI要素に勝者を表示
+        const winnerDisplay = document.getElementById("winner-display");
+        const winnerText = document.getElementById("winner-text");
+        if (winnerDisplay && winnerText) {
+          winnerText.textContent = `Player ${winner} wins!`;
+          winnerDisplay.classList.remove("hidden");
+        }
 
         const startBtn = document.getElementById(
           "start-game",
@@ -206,6 +231,25 @@ class App {
         this.pongGame?.resetGame();
         startBtn.disabled = false;
         pauseBtn.disabled = true;
+        // リセット時に勝者表示を隠す
+        const winnerDisplay = document.getElementById("winner-display");
+        if (winnerDisplay) {
+          winnerDisplay.classList.add("hidden");
+        }
+        // リセット時にスコア表示を初期化
+        const scoreDisplay = document.getElementById("score-display");
+        if (scoreDisplay) {
+          scoreDisplay.textContent = "Player 1: 0 - Player 2: 0";
+        }
+      });
+
+      // 勝者表示を閉じるボタンのイベントリスナー
+      const dismissWinnerBtn = document.getElementById("dismiss-winner");
+      dismissWinnerBtn?.addEventListener("click", () => {
+        const winnerDisplay = document.getElementById("winner-display");
+        if (winnerDisplay) {
+          winnerDisplay.classList.add("hidden");
+        }
       });
 
       this.pongGame.resetGame();

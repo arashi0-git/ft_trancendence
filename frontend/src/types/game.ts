@@ -10,7 +10,6 @@ export interface GameState {
 export interface Player {
   id: number;
   paddle: Paddle;
-  score: number;
   keys: {
     up: string;
     down: string;
