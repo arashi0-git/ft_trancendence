@@ -1,8 +1,4 @@
-import {
-  Tournament,
-  TournamentPlayer,
-  TournamentConfig,
-} from "../types/tournament";
+import { Tournament, TournamentPlayer, Match } from "../types/tournament";
 
 export class TournamentRegistration {
   private container: HTMLElement;
@@ -96,8 +92,9 @@ export class TournamentRegistration {
       (document.getElementById("player-count") as HTMLSelectElement).value,
     );
     const tournamentName =
-      (document.getElementById("tournament-name") as HTMLInputElement).value ||
-      "Pong Tournament";
+      (
+        document.getElementById("tournament-name") as HTMLInputElement
+      ).value.trim() || "Pong Tournament";
 
     this.tournament = {
       id: this.generateId(),
@@ -107,7 +104,7 @@ export class TournamentRegistration {
       status: "registration",
       maxPlayers: playerCount,
       currentRound: 1,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
 
     document.getElementById("tournament-setup")?.classList.add("hidden");
@@ -151,7 +148,7 @@ export class TournamentRegistration {
     ) as NodeListOf<HTMLInputElement>;
 
     let allValid = true;
-    const aliases = new Set<string>();
+    const aliases = new Map<string, HTMLInputElement[]>();
 
     inputs.forEach((input) => {
       const alias = input.value.trim();
@@ -161,12 +158,19 @@ export class TournamentRegistration {
         return;
       }
 
-      if (aliases.has(alias.toLowerCase())) {
+      const key = alias.toLowerCase();
+      if (!aliases.has(key)) {
+        aliases.set(key, []);
+      }
+      aliases.get(key)!.push(input);
+    });
+
+    aliases.forEach((inputList) => {
+      if (inputList.length > 1) {
         allValid = false;
-        input.classList.add("border-red-500");
+        inputList.forEach((input) => input.classList.add("border-red-500"));
       } else {
-        input.classList.remove("border-red-500");
-        aliases.add(alias.toLowerCase());
+        inputList[0].classList.remove("border-red-500");
       }
     });
 
@@ -186,7 +190,7 @@ export class TournamentRegistration {
       "#player-inputs input",
     ) as NodeListOf<HTMLInputElement>;
 
-    inputs.forEach((input, index) => {
+    inputs.forEach((input) => {
       const player: TournamentPlayer = {
         id: this.generateId(),
         alias: input.value.trim(),
@@ -213,12 +217,12 @@ export class TournamentRegistration {
 
     for (let i = 0; i < players.length; i += 2) {
       if (i + 1 < players.length) {
-        const match = {
+        const match: Match = {
           id: `match-${matchId++}`,
           tournamentId: this.tournament.id,
           round: 1,
-          player1: players[i],
-          player2: players[i + 1],
+          player1Id: players[i].id,
+          player2Id: players[i + 1].id,
           status: "pending" as const,
         };
         this.tournament.matches.push(match);
@@ -227,7 +231,7 @@ export class TournamentRegistration {
   }
 
   private generateId(): string {
-    return Math.random().toString(36).substring(2, 9);
+    return crypto.randomUUID();
   }
 
   public setOnTournamentStart(

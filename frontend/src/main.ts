@@ -3,7 +3,7 @@ import { LoginForm } from "./components/login-form";
 import { AuthService } from "./services/auth-service";
 import { PongGame } from "./game/pong-game";
 import { TournamentRegistration } from "./components/tournament-registration";
-import { Tournament } from "./types/tournament";
+import { Tournament, Match } from "./types/tournament";
 
 class App {
   private currentView:
@@ -26,6 +26,7 @@ class App {
 
   private showWelcomeView(): void {
     this.currentView = "welcome";
+    console.log("Current view:", this.currentView);
     const authContainer = document.getElementById("auth-container");
     const gameContainer = document.getElementById("game-container");
 
@@ -270,17 +271,23 @@ class App {
                     (match) =>
                       match.round === this.currentTournament!.currentRound,
                   )
-                  .map(
-                    (match) => `
+                  .map((match) => {
+                    const player1 = this.currentTournament!.players.find(
+                      (p) => p.id === match.player1Id,
+                    );
+                    const player2 = this.currentTournament!.players.find(
+                      (p) => p.id === match.player2Id,
+                    );
+                    return `
                         <div class="bg-gray-50 p-4 rounded border">
                             <div class="flex justify-between items-center">
                                 <div class="text-center flex-1">
-                                    <div class="font-semibold">${match.player1.alias}</div>
+                                    <div class="font-semibold">${player1?.alias || "Unknown"}</div>
                                     ${match.score ? `<div class="text-sm text-gray-600">${match.score.player1}</div>` : ""}
                                 </div>
                                 <div class="mx-4 text-gray-500">VS</div>
                                 <div class="text-center flex-1">
-                                    <div class="font-semibold">${match.player2.alias}</div>
+                                    <div class="font-semibold">${player2?.alias || "Unknown"}</div>
                                     ${match.score ? `<div class="text-sm text-gray-600">${match.score.player2}</div>` : ""}
                                 </div>
                                 <div class="ml-4">
@@ -294,8 +301,8 @@ class App {
                                 </div>
                             </div>
                         </div>
-                    `,
-                  )
+                    `;
+                  })
                   .join("")}
             </div>
             
@@ -309,7 +316,9 @@ class App {
     // Playボタンのイベントリスナーを追加
     document.querySelectorAll(".play-match-btn").forEach((button) => {
       button.addEventListener("click", (e) => {
-        const matchId = (e.target as HTMLElement).getAttribute("data-match-id");
+        const matchId = (e.currentTarget as HTMLElement).getAttribute(
+          "data-match-id",
+        );
         if (matchId) {
           this.startTournamentMatch(matchId);
         }
@@ -341,9 +350,16 @@ class App {
     this.showTournamentMatchView(match);
   }
 
-  private showTournamentMatchView(match: any): void {
+  private showTournamentMatchView(match: Match): void {
     const gameContainer = document.getElementById("game-container");
-    if (!gameContainer) return;
+    if (!gameContainer || !this.currentTournament) return;
+
+    const player1 = this.currentTournament.players.find(
+      (p) => p.id === match.player1Id,
+    );
+    const player2 = this.currentTournament.players.find(
+      (p) => p.id === match.player2Id,
+    );
 
     gameContainer.innerHTML = `
             <div class="bg-white p-6 rounded-lg shadow-md">
@@ -355,7 +371,7 @@ class App {
                 </div>
 
                 <div class="text-center mb-4">
-                    <h3 class="text-xl font-semibold">${match.player1.alias} vs ${match.player2.alias}</h3>
+                    <h3 class="text-xl font-semibold">${player1?.alias || "Unknown"} vs ${player2?.alias || "Unknown"}</h3>
                     <p class="text-gray-600">Round ${match.round} - First to 5 points wins</p>
                 </div>
 
@@ -378,8 +394,8 @@ class App {
                 </div>
                 
                 <div class="text-center text-sm text-gray-600">
-                    <p><strong>${match.player1.alias}:</strong> W/S (Up/Down), A/D (Left/Right)</p>
-                    <p><strong>${match.player2.alias}:</strong> ↑/↓ (Up/Down), ←/→ (Left/Right)</p>
+                    <p><strong>${player1?.alias || "Player 1"}:</strong> W/S (Up/Down), A/D (Left/Right)</p>
+                    <p><strong>${player2?.alias || "Player 2"}:</strong> ↑/↓ (Up/Down), ←/→ (Left/Right)</p>
                 </div>
             </div>
         `;
@@ -396,7 +412,7 @@ class App {
       });
   }
 
-  private initializeTournamentPongGame(match: any): void {
+  private initializeTournamentPongGame(match: Match): void {
     const canvas = document.getElementById(
       "tournament-pong-canvas",
     ) as HTMLCanvasElement;
@@ -418,9 +434,19 @@ class App {
         this.recordTournamentMatchResult(match, winner);
 
         // 勝者を表示
-        alert(
-          `${winner === 1 ? match.player1.alias : match.player2.alias} wins the match!`,
+        const player1 = this.currentTournament?.players.find(
+          (p) => p.id === match.player1Id,
         );
+        const player2 = this.currentTournament?.players.find(
+          (p) => p.id === match.player2Id,
+        );
+        const winnerName =
+          winner === 1
+            ? player1?.alias
+            : winner === 2
+              ? player2?.alias
+              : "Unknown";
+        alert(`${winnerName} wins the match!`);
 
         // トーナメント表に戻る
         setTimeout(() => {
@@ -462,30 +488,39 @@ class App {
     }
   }
 
-  private recordTournamentMatchResult(match: any, winner: number): void {
+  private recordTournamentMatchResult(match: Match, winner: number): void {
     if (!this.currentTournament) return;
 
     // スコアを記録（PongGameから取得）
     const gameState = this.pongGame?.getGameState();
-    if (gameState) {
-      match.score = {
-        player1: gameState.score.player1,
-        player2: gameState.score.player2,
-      };
-    }
+    match.score = gameState
+      ? {
+          player1: gameState.score.player1,
+          player2: gameState.score.player2,
+        }
+      : {
+          player1: 0,
+          player2: 0,
+        };
 
     // 勝者を設定
-    match.winner = winner === 1 ? match.player1 : match.player2;
+    const player1 = this.currentTournament.players.find(
+      (p) => p.id === match.player1Id,
+    );
+    const player2 = this.currentTournament.players.find(
+      (p) => p.id === match.player2Id,
+    );
+    match.winnerId = winner === 1 ? match.player1Id : match.player2Id;
     match.status = "completed";
     match.playedAt = new Date().toISOString();
 
     // プレイヤーの勝敗記録を更新
-    if (winner === 1) {
-      match.player1.wins++;
-      match.player2.losses++;
-    } else {
-      match.player2.wins++;
-      match.player1.losses++;
+    if (winner === 1 && player1) {
+      player1.wins++;
+      if (player2) player2.losses++;
+    } else if (winner === 2 && player2) {
+      player2.wins++;
+      if (player1) player1.losses++;
     }
 
     console.log("Match result recorded:", match);
@@ -511,7 +546,10 @@ class App {
       if (currentRoundMatches.length === 1) {
         // トーナメント終了
         this.currentTournament.status = "completed";
-        this.currentTournament.winner = currentRoundMatches[0].winner;
+        const winnerId = currentRoundMatches[0].winnerId;
+        this.currentTournament.winner = this.currentTournament.players.find(
+          (p) => p.id === winnerId,
+        );
         console.log(
           "Tournament completed! Winner:",
           this.currentTournament.winner,
@@ -531,7 +569,7 @@ class App {
     );
 
     const winners = currentRoundMatches
-      .map((m) => m.winner)
+      .map((m) => m.winnerId)
       .filter((w) => w !== undefined);
 
     if (winners.length < 2) return;
@@ -542,12 +580,12 @@ class App {
 
     for (let i = 0; i < winners.length; i += 2) {
       if (i + 1 < winners.length) {
-        const nextMatch = {
+        const nextMatch: Match = {
           id: `match-${matchId++}`,
           tournamentId: this.currentTournament.id,
           round: this.currentTournament.currentRound,
-          player1: winners[i]!,
-          player2: winners[i + 1]!,
+          player1Id: winners[i]!,
+          player2Id: winners[i + 1]!,
           status: "pending" as const,
         };
         this.currentTournament.matches.push(nextMatch);

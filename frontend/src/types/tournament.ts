@@ -7,7 +7,7 @@ export interface Tournament {
   maxPlayers: number;
   currentRound: number;
   winner?: TournamentPlayer;
-  createdAt: string;
+  createdAt: Date;
 }
 
 export interface TournamentPlayer {
@@ -23,9 +23,9 @@ export interface Match {
   id: string;
   tournamentId: string;
   round: number;
-  player1: TournamentPlayer;
-  player2: TournamentPlayer;
-  winner?: TournamentPlayer;
+  player1Id: string;
+  player2Id: string;
+  winnerId?: string;
   score?: {
     player1: number;
     player2: number;
