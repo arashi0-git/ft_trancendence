@@ -1,212 +1,188 @@
 # ft_transcendence
 
-A modern Pong game with tournament system, built with TypeScript, Fastify, and Docker.
+A modern Pong game platform with user authentication and tournament system.
 
-## 🚀 Quick Start with Docker
+## Features
 
-### Prerequisites
-- Docker and Docker Compose installed
-- Ports 80, 443, and 3000 available
+- User authentication with JWT tokens
+- Real-time Pong game with tournament support
+- Secure HTTPS connection
+- Responsive web interface
 
-### Running the Application
+## Prerequisites
 
-1. **Clone and navigate to the project:**
-   ```bash
-   git clone <repository-url>
-   cd ft_transcendence
-   ```
+- Docker and Docker Compose
+- Node.js 18+ (for local development)
 
-2. **Start the application:**
-   ```bash
-   docker-compose up --build
-   ```
+## Quick Start
 
-3. **Access the application:**
-   - **Frontend (HTTPS)**: https://localhost
-   - **Frontend (HTTP)**: http://localhost (redirects to HTTPS)
-   - **Backend API**: http://localhost:3000
-
-### SSL Certificate Warning
-Since we use self-signed certificates for development, your browser will show a security warning. Click "Advanced" and "Proceed to localhost" to continue.
-
-### Stopping the Application
-```bash
-docker-compose down
-```
-
-### Viewing Logs
-```bash
-# All services
-docker-compose logs
-
-# Specific service
-docker-compose logs frontend
-docker-compose logs backend
-```
-
-## 🎮 Features
-
-- **Pong Game**: Classic Pong with 4-directional paddle movement
-- **Tournament System**: Multi-player bracket tournaments
-- **User Authentication**: JWT-based authentication with bcrypt password hashing
-- **Real-time Communication**: WebSocket support for live gameplay
-- **Responsive Design**: Built with Tailwind CSS
-- **HTTPS Security**: SSL/TLS encryption for all communications
-
-## 🏗️ Architecture
-
-- **Frontend**: TypeScript + Vite + Tailwind CSS (Nginx container)
-- **Backend**: Node.js + Fastify + TypeScript (Node.js container)
-- **Database**: SQLite with migrations
-- **Containerization**: Docker + Docker Compose
-- **SSL**: Self-signed certificates for development
-
-## 🔧 Development Tools
-
-### PRコメント取得スクリプト
-
-PRの差分レビューコメントをMarkdownファイルとして取得できます。
-
-#### 使い方
+### 1. Clone the repository
 
 ```bash
-# GitHub CLIを使用（推奨）
-gh auth login  # 初回のみ
-npm run pr-comments -- https://github.com/owner/repo/pull/123
-
-# または直接実行
-./pr_comments_to_md.sh https://github.com/owner/repo/pull/123
-
-# オプション指定
-./pr_comments_to_md.sh -o owner -r repo -p 123
+git clone <repository-url>
+cd ft_transcendence
 ```
 
-#### 必要な環境
+### 2. Start the application
 
-- `jq` コマンド
-- `gh` コマンド（GitHub CLI）または `GH_TOKEN` 環境変数
-
-#### 出力
-
-`pr-{PR番号}-review-comments.md` ファイルが生成されます。
-
-## 🧪 API Testing
-
-### Health Check
 ```bash
-curl http://localhost:3000/api/health
+docker-compose up -d
 ```
 
-### User Registration
+This will:
+- Generate self-signed SSL certificates for development
+- Build and start the frontend (Nginx + React/TypeScript)
+- Build and start the backend (Node.js + Fastify)
+- Initialize the SQLite database
+
+### 3. Access the application
+
+- **HTTPS (Recommended)**: https://localhost
+- **HTTP (Redirects to HTTPS)**: http://localhost
+
+**Note**: You'll see a security warning for the self-signed certificate. This is normal for development. Click "Advanced" and "Proceed to localhost" to continue.
+
+## SSL Certificate Configuration
+
+### Development Environment
+
+The application automatically generates self-signed SSL certificates for development:
+
+- Certificates are stored in `./ssl/` directory
+- Generated on first run via the `ssl-cert` service
+- Valid for 365 days with localhost and 127.0.0.1 as valid names
+
+### Production Environment
+
+For production deployment, replace the self-signed certificates with valid SSL certificates:
+
+1. **Option 1: Replace certificate files**
+   ```bash
+   # Place your certificates in the ssl directory
+   cp your-cert.pem ./ssl/cert.pem
+   cp your-private-key.pem ./ssl/key.pem
+   ```
+
+2. **Option 2: Use volume mounts**
+   ```yaml
+   # In docker-compose.yml or docker-compose.prod.yml
+   services:
+     frontend:
+       volumes:
+         - /path/to/your/certs:/etc/nginx/ssl:ro
+   ```
+
+3. **Option 3: Use Let's Encrypt with Certbot**
+   ```bash
+   # Example with certbot
+   certbot certonly --standalone -d yourdomain.com
+   cp /etc/letsencrypt/live/yourdomain.com/fullchain.pem ./ssl/cert.pem
+   cp /etc/letsencrypt/live/yourdomain.com/privkey.pem ./ssl/key.pem
+   ```
+
+### Certificate Requirements
+
+- **Certificate file**: `cert.pem` (full certificate chain)
+- **Private key file**: `key.pem` (private key)
+- **Permissions**: 
+  - Certificate: 644 (readable by all)
+  - Private key: 600 (readable by owner only)
+
+## Development
+
+### Local Development Setup
+
 ```bash
-curl -X POST http://localhost:3000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"username":"testuser","email":"test@example.com","password":"password123"}'
+# Install dependencies
+cd frontend && npm install
+cd ../backend && npm install
+
+# Start development servers
+npm run dev  # In both frontend and backend directories
 ```
 
-### User Login
-```bash
-curl -X POST http://localhost:3000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123"}'
+### Environment Variables
+
+Create `.env` files in frontend and backend directories:
+
+**Frontend (.env)**:
+```env
+VITE_API_BASE_URL=https://localhost/api
 ```
 
-## 🛠️ Local Development (without Docker)
-
-### Backend Setup
-1. Copy the environment file:
-   ```bash
-   cd backend
-   cp .env.example .env
-   ```
-
-2. Edit `.env` and set your JWT secret:
-   ```bash
-   JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-   ```
-
-3. Install dependencies and run:
-   ```bash
-   npm install
-   npm run dev
-   ```
-
-### Frontend Setup
-1. Navigate to frontend directory:
-   ```bash
-   cd frontend
-   ```
-
-2. Install dependencies and run:
-   ```bash
-   npm install
-   npm run dev
-   ```
-
-## 📁 Project Structure
-
-```
-ft_transcendence/
-├── frontend/                 # Frontend application
-│   ├── src/                 # TypeScript source files
-│   ├── Dockerfile           # Frontend container
-│   └── nginx.conf           # Nginx configuration
-├── backend/                 # Backend API
-│   ├── src/                 # TypeScript source files
-│   ├── Dockerfile           # Backend container
-│   └── .env.example         # Environment template
-├── database/                # Database files
-│   ├── schema.sql           # Database schema
-│   └── migrations/          # Database migrations
-├── ssl/                     # SSL certificates (auto-generated)
-└── docker-compose.yml       # Docker orchestration
+**Backend (.env)**:
+```env
+NODE_ENV=development
+DATABASE_PATH=./database/transcendence.db
+JWT_SECRET=your-jwt-secret-key
 ```
 
-## 🔒 Security Features
+## Architecture
 
-- **HTTPS Enforcement**: All traffic encrypted with SSL/TLS
-- **Password Hashing**: bcryptjs with salt rounds
-- **JWT Authentication**: Secure token-based authentication
-- **Input Validation**: Server-side validation for all inputs
-- **CORS Protection**: Configured for secure cross-origin requests
-
-## 🎯 Game Features
-
-- **Classic Pong**: Faithful recreation of the original game
-- **4-Directional Movement**: Enhanced paddle control (W/A/S/D and Arrow keys)
-- **Tournament Mode**: Bracket-style tournaments for multiple players
-- **Real-time Scoring**: Live score updates during gameplay
-- **Player Aliases**: Custom names for tournament participants
-
-## 🚨 Troubleshooting
-
-### Port Already in Use
-```bash
-# Check what's using the ports
-lsof -i :80
-lsof -i :443
-lsof -i :3000
-
-# Stop conflicting services or change ports in docker-compose.yml
 ```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │    Backend      │    │   Database      │
+│   (Nginx +      │────│   (Node.js +    │────│   (SQLite)      │
+│   TypeScript)   │    │   Fastify)      │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+- **Frontend**: TypeScript + Vite, served by Nginx with HTTPS
+- **Backend**: Node.js + Fastify API server
+- **Database**: SQLite with foreign key constraints enabled
+
+## Security Features
+
+- HTTPS enforced with security headers
+- JWT-based authentication
+- XSS protection with input sanitization
+- CSRF protection
+- SQL injection prevention with parameterized queries
+
+## Troubleshooting
 
 ### SSL Certificate Issues
-```bash
-# Regenerate SSL certificates
-docker-compose up ssl-cert
-```
+
+1. **Certificate not found error**:
+   ```bash
+   # Regenerate certificates
+   docker-compose down
+   rm -rf ./ssl
+   docker-compose up ssl-cert
+   ```
+
+2. **Permission denied errors**:
+   ```bash
+   # Fix certificate permissions
+   chmod 644 ./ssl/cert.pem
+   chmod 600 ./ssl/key.pem
+   ```
+
+3. **Browser security warnings**:
+   - This is normal for self-signed certificates
+   - Click "Advanced" → "Proceed to localhost"
+   - Or add the certificate to your browser's trusted certificates
 
 ### Database Issues
-```bash
-# Reset database
-rm -f database/transcendence.db
-docker-compose up --build
-```
 
-### Container Issues
-```bash
-# Clean rebuild
-docker-compose down
-docker system prune -f
-docker-compose up --build
-```
+1. **Database connection errors**:
+   ```bash
+   # Check database directory permissions
+   ls -la ./database/
+   
+   # Recreate database
+   rm -f ./database/transcendence.db
+   docker-compose restart backend
+   ```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+This project is part of the 42 School curriculum.
