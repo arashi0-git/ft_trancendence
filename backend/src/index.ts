@@ -5,20 +5,25 @@ import cors from "@fastify/cors";
 import staticFiles from "@fastify/static";
 import path from "path";
 import fs from "fs";
+import https from "https";
 import { initializeDatabase } from "./database/init";
 import { authRoutes } from "./routes/auth";
 
+const httpsOptions =
+  process.env.NODE_ENV === "production"
+    ? {
+        key: fs.readFileSync(path.join(process.cwd(), "ssl", "key.pem")),
+        cert: fs.readFileSync(path.join(process.cwd(), "ssl", "cert.pem")),
+      }
+    : undefined;
+
 const fastify = Fastify({
   logger: true,
-  // HTTPS設定は開発環境では無効化
-  ...(process.env.NODE_ENV === "production" && fs.existsSync("/app/ssl/key.pem")
-    ? {
-        https: {
-          key: fs.readFileSync("/app/ssl/key.pem"),
-          cert: fs.readFileSync("/app/ssl/cert.pem"),
-        },
+  serverFactory: httpsOptions
+    ? (handler) => {
+        return https.createServer(httpsOptions, handler);
       }
-    : {}),
+    : undefined,
 });
 
 // プラグインの登録

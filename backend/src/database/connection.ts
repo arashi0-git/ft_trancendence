@@ -1,42 +1,91 @@
-import Database from 'better-sqlite3';
-import path from 'path';
-import fs from 'fs';
+import sqlite3 from "sqlite3";
+import path from "path";
+import fs from "fs";
 
 export class DatabaseWrapper {
-    private db: Database.Database;
+  private db!: sqlite3.Database;
+  private ready: Promise<void>;
 
-    constructor(dbPath: string) {
-        const dir = path.dirname(dbPath);
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  constructor(dbPath: string) {
+    const dir = path.dirname(dbPath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
-        this.db = new Database(dbPath);
-        this.db.pragma('foreign_keys = ON');
-        console.log('Connected to SQLite database');
-    }
+    this.ready = new Promise((resolve, reject) => {
+      this.db = new sqlite3.Database(dbPath, (err) => {
+        if (err) {
+          console.error("Error opening database:", err);
+          reject(err);
+        } else {
+          console.log("Connected to SQLite database");
+          this.db.run("PRAGMA foreign_keys = ON", (pragmaErr) => {
+            if (pragmaErr) reject(pragmaErr);
+            else resolve();
+          });
+        }
+      });
+    });
+  }
 
-    async exec(sql: string): Promise<void> {
-        this.db.exec(sql);
-    }
+  private async ensureReady(): Promise<void> {
+    await this.ready;
+  }
 
-    async run(sql: string, params?: any[]): Promise<void> {
-        const stmt = this.db.prepare(sql);
-        stmt.run(params || []);
-    }
+  async exec(sql: string): Promise<void> {
+    await this.ensureReady();
+    return new Promise((resolve, reject) => {
+      this.db.exec(sql, (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+  }
 
-    async get(sql: string, params?: any[]): Promise<any> {
-        const stmt = this.db.prepare(sql);
-        return stmt.get(params || []);
-    }
+  async run(sql: string, params?: any[]): Promise<void> {
+    await this.ensureReady();
+    return new Promise((resolve, reject) => {
+      this.db.run(sql, params || [], (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+  }
 
-    async all(sql: string, params?: any[]): Promise<any[]> {
-        const stmt = this.db.prepare(sql);
-        return stmt.all(params || []);
-    }
+  async get(sql: string, params?: any[]): Promise<any> {
+    await this.ensureReady();
+    return new Promise((resolve, reject) => {
+      this.db.get(sql, params || [], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+  }
 
-    close(): void {
-        this.db.close();
-        console.log('Database connection closed');
-    }
+  async all(sql: string, params?: any[]): Promise<any[]> {
+    await this.ensureReady();
+    return new Promise((resolve, reject) => {
+      this.db.all(sql, params || [], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+  }
+
+  async close(): Promise<void> {
+    await this.ensureReady();
+    return new Promise((resolve, reject) => {
+      this.db.close((err) => {
+        if (err) {
+          console.error("Error closing database:", err);
+          reject(err);
+        } else {
+          console.log("Database connection closed");
+          resolve();
+        }
+      });
+    });
+  }
 }
 
-export const db = new DatabaseWrapper(process.env.DATABASE_PATH || './database/transcendence.db');
+export const db = new DatabaseWrapper(
+  process.env.DATABASE_PATH || "./database/transcendence.db",
+);
