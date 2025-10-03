@@ -71,7 +71,7 @@ export class AuthService {
       if (!user) {
         return {
           success: false,
-          message: "メールアドレスが見つかりません。",
+          message: "メールアドレスまたはパスワードが正しくありません。",
         };
       }
       const isValidPassword = await bcrypt.compare(
@@ -81,7 +81,7 @@ export class AuthService {
       if (!isValidPassword) {
         return {
           success: false,
-          message: "パスワードが違います。",
+          message: "メールアドレスまたはパスワードが正しくありません。",
         };
       }
 
