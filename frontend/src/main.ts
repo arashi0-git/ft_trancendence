@@ -255,13 +255,25 @@ class App {
     this.renderTournamentBracket();
   }
 
+  private sanitizeText(value: string): string {
+    const map: Record<string, string> = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+      "`": "&#96;",
+    };
+    return (value ?? "").replace(/[&<>"'`]/g, (char) => map[char]);
+  }
+
   private renderTournamentBracket(): void {
     const bracketContainer = document.getElementById("tournament-bracket");
     if (!bracketContainer || !this.currentTournament) return;
 
     bracketContainer.innerHTML = `
             <div class="text-center mb-4">
-                <h3 class="text-xl font-bold">${this.currentTournament.name}</h3>
+                <h3 class="text-xl font-bold">${this.sanitizeText(this.currentTournament.name)}</h3>
                 <p class="text-gray-600">Round ${this.currentTournament.currentRound}</p>
             </div>
             
@@ -282,12 +294,12 @@ class App {
                         <div class="bg-gray-50 p-4 rounded border">
                             <div class="flex justify-between items-center">
                                 <div class="text-center flex-1">
-                                    <div class="font-semibold">${player1?.alias || "Unknown"}</div>
+                                    <div class="font-semibold">${this.sanitizeText(player1?.alias || "Unknown")}</div>
                                     ${match.score ? `<div class="text-sm text-gray-600">${match.score.player1}</div>` : ""}
                                 </div>
                                 <div class="mx-4 text-gray-500">VS</div>
                                 <div class="text-center flex-1">
-                                    <div class="font-semibold">${player2?.alias || "Unknown"}</div>
+                                    <div class="font-semibold">${this.sanitizeText(player2?.alias || "Unknown")}</div>
                                     ${match.score ? `<div class="text-sm text-gray-600">${match.score.player2}</div>` : ""}
                                 </div>
                                 <div class="ml-4">
@@ -371,7 +383,7 @@ class App {
                 </div>
 
                 <div class="text-center mb-4">
-                    <h3 class="text-xl font-semibold">${player1?.alias || "Unknown"} vs ${player2?.alias || "Unknown"}</h3>
+                    <h3 class="text-xl font-semibold">${this.sanitizeText(player1?.alias || "Unknown")} vs ${this.sanitizeText(player2?.alias || "Unknown")}</h3>
                     <p class="text-gray-600">Round ${match.round} - First to 5 points wins</p>
                 </div>
 
@@ -394,8 +406,8 @@ class App {
                 </div>
                 
                 <div class="text-center text-sm text-gray-600">
-                    <p><strong>${player1?.alias || "Player 1"}:</strong> W/S (Up/Down), A/D (Left/Right)</p>
-                    <p><strong>${player2?.alias || "Player 2"}:</strong> ↑/↓ (Up/Down), ←/→ (Left/Right)</p>
+                    <p><strong>${this.sanitizeText(player1?.alias || "Player 1")}:</strong> W/S (Up/Down), A/D (Left/Right)</p>
+                    <p><strong>${this.sanitizeText(player2?.alias || "Player 2")}:</strong> ↑/↓ (Up/Down), ←/→ (Left/Right)</p>
                 </div>
             </div>
         `;
