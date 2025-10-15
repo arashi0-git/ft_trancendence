@@ -41,6 +41,14 @@ pids/
 # Coverage directory used by tools like istanbul
 coverage/
 
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+playwright.config.ts
+tests/
+e2e/
+
 # IDE files
 .vscode/
 .idea/
