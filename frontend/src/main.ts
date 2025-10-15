@@ -460,6 +460,18 @@ class App {
               : "Unknown";
         alert(`${winnerName} wins the match!`);
 
+        // ゲーム終了時にボタンの状態をリセット（普通のマッチと同じ処理）
+        const startBtn = document.getElementById(
+          "start-tournament-game",
+        ) as HTMLButtonElement;
+        const pauseBtn = document.getElementById(
+          "pause-tournament-game",
+        ) as HTMLButtonElement;
+        if (startBtn && pauseBtn) {
+          startBtn.disabled = false;
+          pauseBtn.disabled = true;
+        }
+
         // トーナメント表に戻る
         setTimeout(() => {
           this.cleanupGame();
@@ -467,37 +479,68 @@ class App {
         }, 2000);
       });
 
-      // ゲームコントロールボタンのイベントリスナー
-      const startBtn = document.getElementById(
-        "start-tournament-game",
-      ) as HTMLButtonElement;
-      const pauseBtn = document.getElementById(
-        "pause-tournament-game",
-      ) as HTMLButtonElement;
-      const resetBtn = document.getElementById(
-        "reset-tournament-game",
-      ) as HTMLButtonElement;
-
-      startBtn?.addEventListener("click", () => {
-        this.pongGame?.startGame();
-        startBtn.disabled = true;
-        pauseBtn.disabled = false;
-      });
-
-      pauseBtn?.addEventListener("click", () => {
-        this.pongGame?.pauseGame();
-        startBtn.disabled = false;
-        pauseBtn.disabled = true;
-      });
-
-      resetBtn?.addEventListener("click", () => {
-        this.pongGame?.resetGame();
-        startBtn.disabled = false;
-        pauseBtn.disabled = true;
-      });
+      // ゲームコントロールボタンのイベントリスナー（普通のマッチと同じ実装）
+      this.attachTournamentGameControlListeners();
 
       this.pongGame.resetGame();
     }
+  }
+
+  private attachTournamentGameControlListeners(): void {
+    // 既存のイベントリスナーを削除してから新しく追加（重複防止）
+    const startBtn = document.getElementById(
+      "start-tournament-game",
+    ) as HTMLButtonElement;
+    const pauseBtn = document.getElementById(
+      "pause-tournament-game",
+    ) as HTMLButtonElement;
+    const resetBtn = document.getElementById(
+      "reset-tournament-game",
+    ) as HTMLButtonElement;
+
+    // 既存のイベントリスナーをクリア
+    if (startBtn) {
+      startBtn.replaceWith(startBtn.cloneNode(true));
+    }
+    if (pauseBtn) {
+      pauseBtn.replaceWith(pauseBtn.cloneNode(true));
+    }
+    if (resetBtn) {
+      resetBtn.replaceWith(resetBtn.cloneNode(true));
+    }
+
+    // 新しい要素を取得
+    const newStartBtn = document.getElementById(
+      "start-tournament-game",
+    ) as HTMLButtonElement;
+    const newPauseBtn = document.getElementById(
+      "pause-tournament-game",
+    ) as HTMLButtonElement;
+    const newResetBtn = document.getElementById(
+      "reset-tournament-game",
+    ) as HTMLButtonElement;
+
+    // イベントリスナーを追加
+    newStartBtn?.addEventListener("click", () => {
+      console.log("Tournament start button clicked");
+      this.pongGame?.startGame();
+      newStartBtn.disabled = true;
+      newPauseBtn.disabled = false;
+    });
+
+    newPauseBtn?.addEventListener("click", () => {
+      console.log("Tournament pause button clicked");
+      this.pongGame?.pauseGame();
+      newStartBtn.disabled = false;
+      newPauseBtn.disabled = true;
+    });
+
+    newResetBtn?.addEventListener("click", () => {
+      console.log("Tournament reset button clicked");
+      this.pongGame?.resetGame();
+      newStartBtn.disabled = false;
+      newPauseBtn.disabled = true;
+    });
   }
 
   private recordTournamentMatchResult(match: Match, winner: number): void {

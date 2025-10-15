@@ -214,6 +214,49 @@ JWT_SECRET=your-jwt-secret-key
    docker-compose restart backend
    ```
 
+## Known Issues
+
+The following issues have been identified and are tracked in GitHub Issues:
+
+### Critical Issues
+- **[Issue #19](https://github.com/arashi0-git/ft_trancendence/issues/19)**: トーナメントで勝敗決定後、次の試合に進めない
+  - Tournament progression fails after match completion
+  - Next round generation not working properly
+  - **Priority**: Critical
+
+### High Priority Issues
+- **[Issue #21](https://github.com/arashi0-git/ft_trancendence/issues/21)**: パドルがボールをすり抜ける（当たり判定の問題）
+  - Paddle collision detection issues
+  - Ball passes through paddles during fast movement
+  - **Priority**: High
+
+- **[Issue #20](https://github.com/arashi0-git/ft_trancendence/issues/20)**: ゲーム操作時の矢印キーでページスクロールが発生
+  - Arrow keys cause page scrolling during gameplay
+  - Affects Player 2 controls (↑/↓/←/→)
+  - **Priority**: High
+
+- **[Issue #18](https://github.com/arashi0-git/ft_trancendence/issues/18)**: 'Back to Bracket'ボタンが反応しない
+  - Navigation button not responding in tournament match view
+  - Users cannot return to bracket view
+  - **Priority**: High
+
+### Medium Priority Issues
+- **[Issue #17](https://github.com/arashi0-git/ft_trancendence/issues/17)**: トーナメント試合でのreset/pauseボタンの動作不良
+  - Reset and pause buttons not functioning properly in tournament matches
+  - Game control issues during tournament play
+  - **Priority**: Medium
+
+### Issue Status
+To view the latest status of all issues:
+```bash
+gh issue list
+```
+
+To view details of a specific issue:
+```bash
+gh issue view <issue-number>
+```
+
 ## Contributing
 
 1. Fork the repository
@@ -224,16 +267,19 @@ JWT_SECRET=your-jwt-secret-key
 
 ## License
 
+This project is part of the 42 School curriculum.
 
-## modules:
-oliver
+## Planned Modules
+
+### Oliver's Modules
 1. AI-Algo: AI opponent
-2. Gameplay: MultiPlayer(more than 2player)
+2. Gameplay: MultiPlayer (more than 2 players)
 3. Gameplay: Game customization options
-4. Web: first 3 1 Major 2 minor
+4. Web: First 3 (1 Major, 2 Minor)
 5. Graphics: Use Advanced 3D techniques
 6. Accessibility: Supports multiple languages
-7. Cyber Implement Two-Factor Authentication (2FA) and JWT
-スンジュン
-add another game with user history and matchmaking
-serverはやらない
+7. Cybersecurity: Implement Two-Factor Authentication (2FA) and JWT
+
+### スンジュン's Modules
+- Add another game with user history and matchmaking
+- Server modules are not planned
