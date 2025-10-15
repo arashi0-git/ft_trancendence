@@ -1,77 +1,239 @@
-# ft_trancendence
+# ft_transcendence
 
-## 開発ツール
+A modern Pong game platform with user authentication and tournament system.
 
-### PRコメント取得スクリプト
+## Features
 
-PRの差分レビューコメントをMarkdownファイルとして取得できます。
+- User authentication with JWT tokens
+- Real-time Pong game with tournament support
+- Secure HTTPS connection
+- Responsive web interface
 
-#### 使い方
+## Prerequisites
+
+- Docker and Docker Compose
+- Node.js 18+ (for local development)
+
+## Quick Start
+
+### 1. Clone the repository
 
 ```bash
-# GitHub CLIを使用（推奨）
-gh auth login  # 初回のみ
-npm run pr-comments -- https://github.com/owner/repo/pull/123
-
-# または直接実行
-./pr_comments_to_md.sh https://github.com/owner/repo/pull/123
-
-# オプション指定
-./pr_comments_to_md.sh -o owner -r repo -p 123
+git clone <repository-url>
+cd ft_transcendence
 ```
 
-#### 必要な環境
-
-- `jq` コマンド
-- `gh` コマンド（GitHub CLI）または `GH_TOKEN` 環境変数
-
-#### 出力
-
-`pr-{PR番号}-review-comments.md` ファイルが生成されます。
-
-APIテスト
-
-````sh
-# Backend development
-
-## Environment Setup
-1. Copy the environment file:
-```bash
-cd backend
-cp .env.example .env
-````
-
-2. Edit `.env` and set your JWT secret:
+### 2. Start the application
 
 ```bash
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+docker-compose up -d
 ```
 
-## Running the server
+This will:
+- Generate self-signed SSL certificates for development
+- Build and start the frontend (Nginx + React/TypeScript)
+- Build and start the backend (Node.js + Fastify)
+- Initialize the SQLite database
+
+### 3. Access the application
+
+- **HTTPS (Recommended)**: https://localhost
+- **HTTP (Redirects to HTTPS)**: http://localhost
+
+**Note**: You'll see a security warning for the self-signed certificate. This is normal for development. Click "Advanced" and "Proceed to localhost" to continue.
+
+## SSL Certificate Configuration
+
+### Development Environment
+
+The application automatically generates self-signed SSL certificates for development:
+
+- Certificates are stored in `./ssl/` directory
+- Generated on first run via the `ssl-cert` service
+- Valid for 365 days with localhost and 127.0.0.1 as valid names
+- **Cross-platform compatibility**: Works on macOS (LibreSSL/OpenSSL), Linux (OpenSSL), and other Unix systems
+- Automatically detects OpenSSL capabilities and uses appropriate certificate generation method
+
+### Production Environment
+
+For production deployment, replace the self-signed certificates with valid SSL certificates:
+
+1. **Option 1: Replace certificate files**
+   ```bash
+   # Place your certificates in the ssl directory
+   cp your-cert.pem ./ssl/cert.pem
+   cp your-private-key.pem ./ssl/key.pem
+   ```
+
+2. **Option 2: Use volume mounts**
+   ```yaml
+   # In docker-compose.yml or docker-compose.prod.yml
+   services:
+     frontend:
+       volumes:
+         - /path/to/your/certs:/etc/nginx/ssl:ro
+   ```
+
+3. **Option 3: Use Let's Encrypt with Certbot**
+   ```bash
+   # Example with certbot
+   certbot certonly --standalone -d yourdomain.com
+   cp /etc/letsencrypt/live/yourdomain.com/fullchain.pem ./ssl/cert.pem
+   cp /etc/letsencrypt/live/yourdomain.com/privkey.pem ./ssl/key.pem
+   ```
+
+### Certificate Requirements
+
+- **Certificate file**: `cert.pem` (full certificate chain)
+- **Private key file**: `key.pem` (private key)
+- **Permissions**: 
+  - Certificate: 644 (readable by all)
+  - Private key: 600 (readable by owner only)
+- **Cross-platform support**: 
+  - macOS: Works with both system LibreSSL and Homebrew OpenSSL
+  - Linux: Works with system OpenSSL (all distributions)
+  - Docker: Uses Alpine Linux with OpenSSL for consistent behavior
+
+## Development
+
+### Local Development Setup
 
 ```bash
-# Backend development
-cd backend
-npm run dev
+# Install dependencies
+cd frontend && npm install
+cd ../backend && npm install
 
-# Or from project root (if backend entry point is configured)
-npm run backend:dev
+# Start development servers
+npm run dev  # In both frontend and backend directories
 ```
 
-````
+### Environment Variables
 
-```sh
-# ユーザー登録テスト
-curl -X POST http://localhost:3000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"username":"testuser","email":"test@example.com","password":"password123"}'
+Create `.env` files in frontend and backend directories:
 
-# ログインテスト
-curl -X POST http://localhost:3000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123"}'
+**Frontend (.env)**:
+```env
+VITE_API_BASE_URL=https://localhost/api
+```
 
-# ヘルスチェック
-curl http://localhost:3000/api/health
+**Backend (.env)**:
+```env
+NODE_ENV=development
+DATABASE_PATH=./database/transcendence.db
+JWT_SECRET=your-jwt-secret-key
+```
 
-````
+## Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │    Backend      │    │   Database      │
+│   (Nginx +      │────│   (Node.js +    │────│   (SQLite)      │
+│   TypeScript)   │    │   Fastify)      │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+- **Frontend**: TypeScript + Vite, served by Nginx with HTTPS
+- **Backend**: Node.js + Fastify API server
+- **Database**: SQLite with foreign key constraints enabled
+
+## Security Features
+
+- HTTPS enforced with security headers
+- JWT-based authentication
+- XSS protection with input sanitization
+- CSRF protection
+- SQL injection prevention with parameterized queries
+
+## Troubleshooting
+
+### SSL Certificate Issues
+
+1. **Certificate not found error**:
+   ```bash
+   # Regenerate certificates
+   docker-compose down
+   rm -rf ./ssl
+   docker-compose up ssl-cert
+   ```
+
+2. **Permission denied errors**:
+   ```bash
+   # Fix certificate permissions
+   chmod 644 ./ssl/cert.pem
+   chmod 600 ./ssl/key.pem
+   ```
+
+3. **Browser security warnings**:
+   - This is normal for self-signed certificates
+   - Click "Advanced" → "Proceed to localhost"
+   - Or add the certificate to your browser's trusted certificates
+
+4. **Platform-specific issues**:
+   
+   **macOS**:
+   ```bash
+   # If using Homebrew OpenSSL
+   brew install openssl
+   
+   # Check OpenSSL version
+   openssl version
+   
+   # Generate certificates manually if needed
+   ./scripts/generate-ssl.sh
+   ```
+   
+   **Linux**:
+   ```bash
+   # Install OpenSSL if not present
+   # Ubuntu/Debian:
+   sudo apt-get install openssl
+   
+   # CentOS/RHEL/Fedora:
+   sudo yum install openssl  # or dnf install openssl
+   
+   # Check version
+   openssl version
+   ```
+   
+   **Docker Environment**:
+   ```bash
+   # Force regenerate in Docker
+   docker-compose run --rm ssl-cert sh -c "rm -f /certs/*.pem && /bin/sh"
+   ```
+
+### Database Issues
+
+1. **Database connection errors**:
+   ```bash
+   # Check database directory permissions
+   ls -la ./database/
+   
+   # Recreate database
+   rm -f ./database/transcendence.db
+   docker-compose restart backend
+   ```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+
+## modules:
+oliver
+1. AI-Algo: AI opponent
+2. Gameplay: MultiPlayer(more than 2player)
+3. Gameplay: Game customization options
+4. Web: first 3 1 Major 2 minor
+5. Graphics: Use Advanced 3D techniques
+6. Accessibility: Supports multiple languages
+7. Cyber Implement Two-Factor Authentication (2FA) and JWT
+スンジュン
+add another game with user history and matchmaking
+serverはやらない

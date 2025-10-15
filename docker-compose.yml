@@ -11,11 +11,14 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-      - ./ssl:/app/ssl  # SSL証明書をマウント
+      - ./ssl:/etc/nginx/ssl  # SSL証明書をNginxの正しいパスにマウント
     environment:
       - NODE_ENV=development
     depends_on:
-      - backend
+      backend:
+        condition: service_started
+      ssl-cert:
+        condition: service_completed_successfully
 
   backend:
     build:
@@ -32,7 +35,8 @@ services:
       - NODE_ENV=development
       - DATABASE_PATH=/app/database/transcendence.db
     depends_on:
-      - database
+      ssl-cert:
+        condition: service_completed_successfully
 
   database:
     image: alpine:latest
@@ -51,7 +55,53 @@ services:
       sh -c "
       apk add --no-cache openssl &&
       mkdir -p /certs &&
-      openssl req -x509 -newkey rsa:4096 -keyout /certs/key.pem -out /certs/cert.pem -days 365 -nodes -subj '/CN=localhost'
+      if [ ! -f /certs/cert.pem ] || [ ! -f /certs/key.pem ]; then
+        echo 'Generating self-signed SSL certificate for development...' &&
+        echo 'Detected OpenSSL version:' &&
+        openssl version &&
+        
+        # Check if -addext is supported
+        if openssl req -help 2>&1 | grep -q '\-addext'; then
+          echo 'Using modern OpenSSL with -addext option...' &&
+          openssl req -x509 -newkey rsa:4096 -keyout /certs/key.pem -out /certs/cert.pem -days 365 -nodes \
+            -subj '/C=US/ST=Development/L=Local/O=ft_transcendence/CN=localhost' \
+            -addext 'subjectAltName=DNS:localhost,DNS:*.localhost,IP:127.0.0.1,IP:::1'
+        else
+          echo 'Using config file method for compatibility...' &&
+          cat > /tmp/ssl.conf << 'EOF'
+[req]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+C = US
+ST = Development
+L = Local
+O = ft_transcendence
+CN = localhost
+
+[v3_req]
+keyUsage = keyEncipherment, dataEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = localhost
+DNS.2 = *.localhost
+IP.1 = 127.0.0.1
+IP.2 = ::1
+EOF
+          openssl req -x509 -newkey rsa:4096 -keyout /certs/key.pem -out /certs/cert.pem -days 365 -nodes \
+            -config /tmp/ssl.conf -extensions v3_req &&
+          rm -f /tmp/ssl.conf
+        fi &&
+        chmod 644 /certs/cert.pem &&
+        chmod 600 /certs/key.pem &&
+        echo 'SSL certificates generated successfully'
+      else
+        echo 'SSL certificates already exist'
+      fi
       "
     volumes:
       - ./ssl:/certs
