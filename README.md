@@ -51,6 +51,8 @@ The application automatically generates self-signed SSL certificates for develop
 - Certificates are stored in `./ssl/` directory
 - Generated on first run via the `ssl-cert` service
 - Valid for 365 days with localhost and 127.0.0.1 as valid names
+- **Cross-platform compatibility**: Works on macOS (LibreSSL/OpenSSL), Linux (OpenSSL), and other Unix systems
+- Automatically detects OpenSSL capabilities and uses appropriate certificate generation method
 
 ### Production Environment
 
@@ -87,6 +89,10 @@ For production deployment, replace the self-signed certificates with valid SSL c
 - **Permissions**: 
   - Certificate: 644 (readable by all)
   - Private key: 600 (readable by owner only)
+- **Cross-platform support**: 
+  - macOS: Works with both system LibreSSL and Homebrew OpenSSL
+  - Linux: Works with system OpenSSL (all distributions)
+  - Docker: Uses Alpine Linux with OpenSSL for consistent behavior
 
 ## Development
 
@@ -163,6 +169,39 @@ JWT_SECRET=your-jwt-secret-key
    - Click "Advanced" → "Proceed to localhost"
    - Or add the certificate to your browser's trusted certificates
 
+4. **Platform-specific issues**:
+   
+   **macOS**:
+   ```bash
+   # If using Homebrew OpenSSL
+   brew install openssl
+   
+   # Check OpenSSL version
+   openssl version
+   
+   # Generate certificates manually if needed
+   ./scripts/generate-ssl.sh
+   ```
+   
+   **Linux**:
+   ```bash
+   # Install OpenSSL if not present
+   # Ubuntu/Debian:
+   sudo apt-get install openssl
+   
+   # CentOS/RHEL/Fedora:
+   sudo yum install openssl  # or dnf install openssl
+   
+   # Check version
+   openssl version
+   ```
+   
+   **Docker Environment**:
+   ```bash
+   # Force regenerate in Docker
+   docker-compose run --rm ssl-cert sh -c "rm -f /certs/*.pem && /bin/sh"
+   ```
+
 ### Database Issues
 
 1. **Database connection errors**:
@@ -185,4 +224,16 @@ JWT_SECRET=your-jwt-secret-key
 
 ## License
 
-This project is part of the 42 School curriculum.
+
+## modules:
+oliver
+1. AI-Algo: AI opponent
+2. Gameplay: MultiPlayer(more than 2player)
+3. Gameplay: Game customization options
+4. Web: first 3 1 Major 2 minor
+5. Graphics: Use Advanced 3D techniques
+6. Accessibility: Supports multiple languages
+7. Cyber Implement Two-Factor Authentication (2FA) and JWT
+スンジュン
+add another game with user history and matchmaking
+serverはやらない

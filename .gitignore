@@ -57,3 +57,6 @@ coverage/
 ehthumbs.db
 Thumbs.db
 
+pr-*-review-comments.md
+
+.kiro

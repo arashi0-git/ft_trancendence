@@ -30,7 +30,7 @@ export class UserModel {
 
     // Get the newly created user by email since we don't have access to lastID
     const user = (await db.get(
-      "SELECT id, username, email, created_at FROM users WHERE email = ?",
+      "SELECT id, username, email, password_hash, created_at FROM users WHERE email = ?",
       [userData.email],
     )) as User | undefined;
 
