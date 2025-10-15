@@ -1,5 +1,5 @@
 import { db } from "../database/connection";
-import bcrypt from "bcrypt";
+const bcrypt = require("bcryptjs");
 
 export interface User {
   id?: number;
@@ -17,6 +17,8 @@ export interface CreateUserInput {
   email: string;
   password: string;
 }
+
+export type PublicUser = Omit<User, "password_hash">;
 
 export class UserModel {
   static async create(userData: CreateUserInput): Promise<User | undefined> {
@@ -47,10 +49,10 @@ export class UserModel {
     ])) as User | undefined;
   }
 
-  static async findById(id: number): Promise<User | undefined> {
+  static async findById(id: number): Promise<PublicUser | undefined> {
     return (await db.get(
       "SELECT id, username, email, created_at, is_online, last_login FROM users WHERE id = ?",
       [id],
-    )) as User | undefined;
+    )) as PublicUser | undefined;
   }
 }
