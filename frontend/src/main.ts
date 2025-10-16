@@ -247,10 +247,36 @@ class App {
   private showTournamentBracket(): void {
     if (!this.currentTournament) return;
 
-    document
-      .getElementById("tournament-registration-container")
-      ?.classList.add("hidden");
-    document.getElementById("tournament-bracket")?.classList.remove("hidden");
+    // gameContainerをトーナメントモードのHTMLに戻す
+    const gameContainer = document.getElementById("game-container");
+    if (gameContainer) {
+      gameContainer.innerHTML = `
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold">Tournament Mode</h2>
+                        <div class="space-x-2">
+                            ${
+                              AuthService.isAuthenticated()
+                                ? `<button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Logout</button>`
+                                : `<button id="login-tournament-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Login</button>`
+                            }
+                            <button id="back-to-home" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">Home</button>
+                        </div>
+                    </div>
+
+                    <div id="tournament-registration-container" class="hidden">
+                        <!-- トーナメント登録コンポーネントがここに表示される -->
+                    </div>
+                    
+                    <div id="tournament-bracket">
+                        <!-- トーナメント表がここに表示される -->
+                    </div>
+                </div>
+            `;
+
+      // イベントリスナーを再設定
+      this.attachTournamentEventListeners();
+    }
 
     this.renderTournamentBracket();
   }
@@ -412,16 +438,32 @@ class App {
             </div>
         `;
 
-    // トーナメント用のPongゲームを初期化
-    this.initializeTournamentPongGame(match);
+    // Back to Bracketボタンのイベントリスナーを先に設定
+    const backButton = document.getElementById("back-to-bracket");
+    if (backButton) {
+      backButton.addEventListener("click", () => {
+        // 現在進行中のマッチを中断状態に戻す
+        if (this.currentTournament) {
+          const inProgressMatch = this.currentTournament.matches.find(
+            (m) => m.status === "in_progress",
+          );
+          if (inProgressMatch) {
+            inProgressMatch.status = "pending";
+          }
+        }
 
-    // 戻るボタンのイベントリスナー
-    document
-      .getElementById("back-to-bracket")
-      ?.addEventListener("click", () => {
-        this.cleanupGame();
+        // ゲームのみクリーンアップ（トーナメント情報は保持）
+        if (this.pongGame) {
+          this.pongGame.destroy();
+          this.pongGame = null;
+        }
+
         this.showTournamentBracket();
       });
+    }
+
+    // トーナメント用のPongゲームを初期化
+    this.initializeTournamentPongGame(match);
   }
 
   private initializeTournamentPongGame(match: Match): void {
@@ -487,29 +529,22 @@ class App {
   }
 
   private attachTournamentGameControlListeners(): void {
-    // 既存のイベントリスナーを削除してから新しく追加（重複防止）
-    const startBtn = document.getElementById(
+    // ゲームコントロールボタンのみを対象とし、Back to Bracketボタンは触らない
+    const gameControlButtons = [
       "start-tournament-game",
-    ) as HTMLButtonElement;
-    const pauseBtn = document.getElementById(
       "pause-tournament-game",
-    ) as HTMLButtonElement;
-    const resetBtn = document.getElementById(
       "reset-tournament-game",
-    ) as HTMLButtonElement;
+    ];
 
-    // 既存のイベントリスナーをクリア
-    if (startBtn) {
-      startBtn.replaceWith(startBtn.cloneNode(true));
-    }
-    if (pauseBtn) {
-      pauseBtn.replaceWith(pauseBtn.cloneNode(true));
-    }
-    if (resetBtn) {
-      resetBtn.replaceWith(resetBtn.cloneNode(true));
-    }
+    // 既存のイベントリスナーをクリア（ゲームコントロールボタンのみ）
+    gameControlButtons.forEach((buttonId) => {
+      const button = document.getElementById(buttonId);
+      if (button) {
+        button.replaceWith(button.cloneNode(true));
+      }
+    });
 
-    // 新しい要素を取得
+    // 新しい要素を取得してイベントリスナーを追加
     const newStartBtn = document.getElementById(
       "start-tournament-game",
     ) as HTMLButtonElement;
@@ -520,7 +555,6 @@ class App {
       "reset-tournament-game",
     ) as HTMLButtonElement;
 
-    // イベントリスナーを追加
     newStartBtn?.addEventListener("click", () => {
       console.log("Tournament start button clicked");
       this.pongGame?.startGame();
