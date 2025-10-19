@@ -1,10 +1,15 @@
 # ft_transcendence Makefile
 # 単一コマンドでautonomousコンテナを起動する要件を満たす
 
-.PHONY: all build up down clean fclean re logs
+.PHONY: all setup build up down clean fclean re logs
 
 # デフォルトターゲット - 単一コマンドで全て起動
-all: build up
+all: setup build up
+
+# 初期セットアップ（環境変数ファイル作成）
+setup:
+	@echo "Running initial setup..."
+	@./setup.sh
 
 # SSL証明書生成（開発用）
 ssl:
