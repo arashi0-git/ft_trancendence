@@ -9,8 +9,6 @@ services:
       - "443:443"  # HTTPS必須
       - "80:80"     # HTTPからHTTPSにリダイレクト用
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
       - ./ssl:/etc/nginx/ssl  # SSL証明書をNginxの正しいパスにマウント
     environment:
       - NODE_ENV=development
@@ -28,12 +26,14 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./backend:/app
-      - /app/node_modules
+      - ./backend/src:/app
+      - /app/node_module
+      - ./backend/src:/app/src
       - ./database:/app/database  # SQLite用
     environment:
       - NODE_ENV=development
       - DATABASE_PATH=/app/database/transcendence.db
+
     depends_on:
       ssl-cert:
         condition: service_completed_successfully
