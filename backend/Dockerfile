@@ -3,13 +3,13 @@ FROM node:18-alpine
 WORKDIR /app
 
 # 依存のためのツール
-RUN apk add --no-cache python3 make g++ sqlite-dev
+RUN apk add --no-cache python3 make g++ sqlite-dev wget
 
 # 先に package*.json
 COPY backend/package*.json ./
 
 # 依存関係のインストール
-RUN npm install
+RUN npm install && npm cache clean --force
 # アプリ本体
 COPY backend/ .
 
