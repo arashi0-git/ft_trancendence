@@ -26,8 +26,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./backend/src:/app
-      - /app/node_module
+      - /app/node_modules
       - ./backend/src:/app/src
       - ./database:/app/database  # SQLite用
     environment:
