@@ -33,7 +33,7 @@ export class PongGame {
       paddleHeight: 80,
       paddleSpeed: 5,
       ballRadius: 8,
-      ballSpeed: 4,
+      ballSpeed: 14,
       maxScore: 5,
       ...config,
     };
