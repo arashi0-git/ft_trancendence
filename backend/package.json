@@ -16,10 +16,10 @@
     "@fastify/static": "^6.12.0",
     "@fastify/websocket": "^8.3.1",
     "@types/bcryptjs": "^2.4.6",
+    "@types/better-sqlite3": "^7.6.8",
     "@types/jsonwebtoken": "^9.0.5",
     "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^9.2.2",
-    "@types/better-sqlite3": "^7.6.8",
+    "better-sqlite3": "^9.6.0",
     "dotenv": "^16.4.5",
     "fastify": "^4.24.3",
     "jsonwebtoken": "^9.0.2"
