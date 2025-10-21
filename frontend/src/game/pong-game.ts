@@ -7,7 +7,7 @@ import {
   GameConfig,
   KeyState,
   GameEvents,
-} from "../types/game";
+} from "../shared/types/game";
 
 export class PongGame {
   private canvas: HTMLCanvasElement;
@@ -373,19 +373,19 @@ export class PongGame {
     this.ctx.fillText(
       this.gameState.score.player1.toString(),
       this.config.canvasWidth / 4,
-      60,
+      60
     );
 
     this.ctx.fillText(
       this.gameState.score.player2.toString(),
       (this.config.canvasWidth * 3) / 4,
-      60,
+      60
     );
   }
 
   public on<E extends keyof GameEvents>(
     event: E,
-    callback: GameEvents[E],
+    callback: GameEvents[E]
   ): void {
     this.events[event] = callback;
   }

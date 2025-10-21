@@ -43,7 +43,7 @@ export class PongGame {
       paddleHeight: 80,
       paddleSpeed: 5,
       ballRadius: 8,
-      ballSpeed: 4,
+      ballSpeed: 12,
       maxScore: 5,
       ...config,
     };
@@ -98,9 +98,9 @@ export class PongGame {
       x: this.config.canvasWidth / 2,
       y: this.config.canvasHeight / 2,
       radius: this.config.ballRadius,
-      velocityX: this.config.ballSpeed * (Math.random() > 0.5 ? 1 : -1),
-      velocityY: this.config.ballSpeed * (Math.random() > 0.5 ? 1 : -1),
-      speed: this.config.ballSpeed,
+      velocityX: 0,
+      velocityY: 0,
+      speed: this.config.ballSpeed * 0.5,
     };
 
     const score: Score = {
@@ -116,6 +116,7 @@ export class PongGame {
       score,
       gameStatus: "waiting",
     };
+    this.setBallDirection(Math.random() > 0.5 ? 1 : -1, Math.random() * 2 - 1);
   }
 
   private keydownHandler = (e: KeyboardEvent) => {
@@ -263,7 +264,8 @@ export class PongGame {
 
       const paddleCenter = paddle1.y + paddle1.height / 2;
       const hitPos = (ball.y - paddleCenter) / (paddle1.height / 2);
-      ball.velocityY = hitPos * this.config.ballSpeed * 0.7;
+      ball.speed = this.config.ballSpeed;
+      this.setBallDirection(1, hitPos);
     }
 
     if (
@@ -278,7 +280,8 @@ export class PongGame {
 
       const paddleCenter = paddle2.y + paddle2.height / 2;
       const hitPos = (ball.y - paddleCenter) / (paddle2.height / 2);
-      ball.velocityY = hitPos * this.config.ballSpeed * 0.7;
+      ball.speed = this.config.ballSpeed;
+      this.setBallDirection(-1, hitPos);
     }
   }
 
@@ -308,8 +311,20 @@ export class PongGame {
     const ball = this.gameState.ball;
     ball.x = this.config.canvasWidth / 2;
     ball.y = this.config.canvasHeight / 2;
-    ball.velocityX = this.config.ballSpeed * (Math.random() > 0.5 ? 1 : -1);
-    ball.velocityY = this.config.ballSpeed * (Math.random() > 0.5 ? 1 : -1);
+    ball.speed = this.config.ballSpeed * 0.5;
+    this.setBallDirection(Math.random() > 0.5 ? 1 : -1, Math.random() * 2 - 1);
+  }
+
+  private setBallDirection(direction: number, offset: number = 0): void {
+    const ball = this.gameState.ball;
+    const normalizedDirection = direction >= 0 ? 1 : -1;
+    const clampedOffset = Math.max(-1, Math.min(1, offset));
+    const maxBounceAngle = Math.PI / 4;
+    const angle = clampedOffset * maxBounceAngle;
+    const speed = ball.speed ?? this.config.ballSpeed;
+
+    ball.velocityX = Math.cos(angle) * speed * normalizedDirection;
+    ball.velocityY = Math.sin(angle) * speed;
   }
 
   private endGame(winner: number): void {
