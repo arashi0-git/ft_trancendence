@@ -18,8 +18,7 @@ export class Router {
 
   constructor() {
     window.addEventListener("popstate", this.boundHandlePopState);
-
-    this.handleInitialRoute();
+    // handleInitialRoute()はApp.tsでルート登録後に呼び出す
   }
 
   addRoute(
@@ -103,7 +102,7 @@ export class Router {
     this.navigate(path, false);
   }
 
-  private handleInitialRoute(): void {
+  public handleInitialRoute(): void {
     const currentPath = window.location.pathname;
     this.navigate(currentPath, false);
   }

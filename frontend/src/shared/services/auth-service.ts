@@ -96,15 +96,26 @@ export class AuthService {
 
   static async logout(): Promise<void> {
     try {
-      await fetch(`${API_BASE_URL}/auth/logout`, {
+      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
         method: "POST",
         headers: this.getAuthHeaders(),
       });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(
+          data.error || `Logout failed with status ${response.status}`,
+        );
+      }
     } catch (error) {
       console.error("Logout error:", error);
-    } finally {
+      // ローカルトークンは削除するが、エラーは再スロー
       localStorage.removeItem("auth_token");
+      throw error;
     }
+
+    // 成功時のみここに到達
+    localStorage.removeItem("auth_token");
   }
 
   static isAuthenticated(): boolean {

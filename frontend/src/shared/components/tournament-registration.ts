@@ -88,14 +88,21 @@ export class TournamentRegistration {
   }
 
   private showPlayerRegistration(): void {
+    const playerCountElement = document.getElementById("player-count");
+    const tournamentNameElement = document.getElementById("tournament-name");
+
+    if (!playerCountElement || !tournamentNameElement) {
+      console.error("Required tournament setup elements not found");
+      return;
+    }
+
     const playerCount = parseInt(
-      (document.getElementById("player-count") as HTMLSelectElement).value,
+      (playerCountElement as HTMLSelectElement).value,
       10,
     );
     const tournamentName =
-      (
-        document.getElementById("tournament-name") as HTMLInputElement
-      ).value.trim() || "Pong Tournament";
+      (tournamentNameElement as HTMLInputElement).value.trim() ||
+      "Pong Tournament";
 
     this.tournament = {
       id: this.generateId(),
