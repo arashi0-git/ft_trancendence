@@ -1,5 +1,7 @@
 import { AuthService } from "../../shared/services/auth-service";
 import { GameManagerService } from "../../shared/services/game-manager.service";
+import { NotificationService } from "../../shared/services/notification.service";
+import { router } from "../../routes/router";
 import {
   TournamentDataService,
   type TournamentData,
@@ -19,10 +21,20 @@ export class TournamentService {
   private currentPath: string = "/tournament";
   private gameManager: GameManagerService;
   private tournamentData: TournamentDataService;
+  private notificationService: NotificationService;
+  private eventListeners: Array<{
+    element: HTMLElement;
+    event: string;
+    handler: EventListener;
+  }> = [];
+
+  // 定数
+  private readonly MATCH_END_DELAY_MS = 2000;
 
   constructor() {
     this.gameManager = new GameManagerService();
     this.tournamentData = TournamentDataService.getInstance();
+    this.notificationService = NotificationService.getInstance();
   }
 
   setCurrentPath(path: string): void {
@@ -33,7 +45,7 @@ export class TournamentService {
   private determineStepFromPath(path: string): void {
     if (path === "/tournament" || path === "/tournament/") {
       this.currentStep = "setup";
-    } else if (path === "/tournament/setup") {
+    } else if (path === "/tournament/registration") {
       this.currentStep = "registration";
     } else if (path === "/tournament/bracket") {
       this.currentStep = "bracket";
@@ -107,15 +119,26 @@ export class TournamentService {
   }
 
   private createTournament(): void {
-    const playerCountSelect = document.getElementById(
-      "player-count",
-    ) as HTMLSelectElement;
-    const tournamentNameInput = document.getElementById(
-      "tournament-name",
-    ) as HTMLInputElement;
+    const playerCountSelect = document.getElementById("player-count");
+    const tournamentNameInput = document.getElementById("tournament-name");
 
-    const playerCount = parseInt(playerCountSelect.value, 10);
-    const tournamentName = tournamentNameInput.value.trim();
+    if (!playerCountSelect || !tournamentNameInput) {
+      console.error("Required tournament setup elements not found");
+      return;
+    }
+
+    const playerCount = parseInt(
+      (playerCountSelect as HTMLSelectElement).value,
+      10,
+    );
+    const tournamentName = (
+      tournamentNameInput as HTMLInputElement
+    ).value.trim();
+
+    if (!tournamentName) {
+      alert("トーナメント名を入力してください");
+      return;
+    }
 
     this.tournamentData.createTournament(tournamentName, playerCount);
     this.navigateToRegistration();
@@ -371,6 +394,9 @@ export class TournamentService {
   }
 
   private initializeMatchGame(matchId: string): void {
+    // 既存のゲームインスタンスをクリーンアップ
+    this.gameManager.cleanup();
+
     this.gameManager.initializeGame({
       mode: "tournament",
       canvasId: "tournament-pong-canvas",
@@ -418,7 +444,9 @@ export class TournamentService {
     this.tournamentData.completeMatch(matchId, winnerId, score);
 
     const winnerPlayer = this.tournamentData.getPlayer(winnerId);
-    alert(`${winnerPlayer?.alias || "Player"} wins the match!`);
+    this.notificationService.success(
+      `${winnerPlayer?.alias || "Player"} wins the match!`,
+    );
 
     // ゲーム終了時にボタンの状態をリセット
     const startBtn = document.getElementById(
@@ -436,21 +464,27 @@ export class TournamentService {
     setTimeout(() => {
       if (this.tournamentData.isTournamentComplete()) {
         // トーナメント完了
+        this.notificationService.success("Tournament completed! 🏆");
         this.navigateToResults();
       } else if (this.tournamentData.canAdvanceToNextRound()) {
         // 次のラウンドを生成
         const success = this.tournamentData.generateNextRound();
         if (success) {
-          alert(
-            `Round ${this.tournamentData.getCurrentTournament()?.currentRound} begins!`,
-          );
+          const currentRound =
+            this.tournamentData.getCurrentTournament()?.currentRound;
+          const tournament = this.tournamentData.getCurrentTournament();
+          const roundName = tournament
+            ? this.getRoundName(currentRound || 1, tournament.players.length)
+            : `Round ${currentRound}`;
+
+          this.notificationService.info(`${roundName} begins! 🥊`);
         }
         this.navigateToBracket();
       } else {
         // 現在のラウンドが未完了
         this.navigateToBracket();
       }
-    }, 2000);
+    }, this.MATCH_END_DELAY_MS);
   }
 
   private renderResultsView(container: HTMLElement): void {
@@ -491,43 +525,54 @@ export class TournamentService {
 
   // ナビゲーションメソッド
   navigateToSetup(): void {
-    window.history.pushState(null, "", "/tournament");
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    this.navigate("/tournament");
   }
 
   navigateToRegistration(): void {
-    window.history.pushState(null, "", "/tournament/setup");
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    this.navigate("/tournament/registration");
   }
 
   navigateToBracket(): void {
-    window.history.pushState(null, "", "/tournament/bracket");
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    this.navigate("/tournament/bracket");
   }
 
   navigateToMatch(matchId: string): void {
-    window.history.pushState(null, "", `/tournament/match/${matchId}`);
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    this.navigate(`/tournament/match/${matchId}`);
   }
 
   navigateToResults(): void {
-    window.history.pushState(null, "", "/tournament/results");
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    this.navigate("/tournament/results");
   }
 
   navigateToHome(): void {
-    window.history.pushState(null, "", "/");
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    this.navigate("/");
   }
 
   navigateToLogin(): void {
-    window.history.pushState(null, "", "/login");
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    this.navigate("/login");
+  }
+
+  private navigate(path: string): void {
+    router.navigate(path);
   }
 
   async handleLogout(): Promise<void> {
-    await AuthService.logout();
-    this.navigateToHome();
+    try {
+      await AuthService.logout();
+      this.notificationService.success("ログアウトしました");
+      this.navigateToHome();
+    } catch (error) {
+      console.error("ログアウトに失敗しました:", error);
+
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "ログアウト処理でエラーが発生しました";
+      this.notificationService.error(`ログアウトエラー: ${errorMessage}`);
+
+      // エラーが発生してもホームに戻る（ローカルトークンは既に削除済み）
+      this.navigateToHome();
+    }
   }
 
   handleBackNavigation(): void {
@@ -589,5 +634,26 @@ export class TournamentService {
     } else {
       return `Round ${currentRound}`;
     }
+  }
+
+  private addEventListenerWithTracking(
+    element: HTMLElement,
+    event: string,
+    handler: EventListener,
+  ): void {
+    element.addEventListener(event, handler);
+    this.eventListeners.push({ element, event, handler });
+  }
+
+  private clearEventListeners(): void {
+    this.eventListeners.forEach(({ element, event, handler }) => {
+      element.removeEventListener(event, handler);
+    });
+    this.eventListeners = [];
+  }
+
+  cleanup(): void {
+    this.clearEventListeners();
+    this.gameManager.cleanup();
   }
 }

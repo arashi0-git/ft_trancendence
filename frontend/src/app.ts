@@ -8,12 +8,17 @@ export class App {
   private gameContainer: HTMLElement;
 
   constructor() {
-    this.authContainer = document.getElementById(
-      "auth-container",
-    ) as HTMLElement;
-    this.gameContainer = document.getElementById(
-      "game-container",
-    ) as HTMLElement;
+    const authContainer = document.getElementById("auth-container");
+    const gameContainer = document.getElementById("game-container");
+
+    if (!authContainer || !gameContainer) {
+      throw new Error(
+        "Required DOM elements not found. Ensure #auth-container and #game-container exist.",
+      );
+    }
+
+    this.authContainer = authContainer;
+    this.gameContainer = gameContainer;
 
     this.setupRoutes();
     this.init();

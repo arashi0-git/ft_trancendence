@@ -15,7 +15,6 @@ export class GameManagerService {
 
   initializeGame(config: GameConfig): void {
     this.cleanup();
-    this.currentConfig = config;
 
     const canvas = document.getElementById(
       config.canvasId,
@@ -25,6 +24,7 @@ export class GameManagerService {
       return;
     }
 
+    this.currentConfig = config;
     this.pongGame = new PongGame(canvas);
 
     // イベントハンドラーの設定
@@ -61,6 +61,11 @@ export class GameManagerService {
       this.pongGame = null;
     }
     this.currentConfig = null;
+  }
+
+  // エイリアス（後方互換性のため）
+  destroy(): void {
+    this.cleanup();
   }
 
   isGameActive(): boolean {

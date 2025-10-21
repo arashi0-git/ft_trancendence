@@ -15,7 +15,7 @@ export const routeConfig: Record<string, PageConstructor> = {
   "/": HomePage,
   "/quick-play": QuickPlayPage,
   "/tournament": TournamentPage,
-  "/tournament/setup": TournamentPage,
+  "/tournament/registration": TournamentPage,
   "/tournament/bracket": TournamentPage,
   "/tournament/match/:matchId": TournamentPage,
   "/tournament/results": TournamentPage,

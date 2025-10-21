@@ -1,4 +1,5 @@
 import { LoginForm } from "../../shared/components/login-form";
+import { router } from "../../routes/router";
 
 export class LoginService {
   initializeLoginForm(): void {
@@ -17,12 +18,14 @@ export class LoginService {
   }
 
   navigateToHome(): void {
-    window.history.pushState(null, "", "/");
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    this.navigate("/");
   }
 
   navigateToRegister(): void {
-    window.history.pushState(null, "", "/register");
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    this.navigate("/register");
+  }
+
+  private navigate(path: string): void {
+    router.navigate(path);
   }
 }

@@ -1,30 +1,48 @@
 import { AuthService } from "../../shared/services/auth-service";
+import { router } from "../../routes/router";
 
 export class HomeService {
   navigateToQuickPlay(): void {
-    window.history.pushState(null, "", "/quick-play");
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    this.navigate("/quick-play");
   }
 
   navigateToTournament(): void {
-    window.history.pushState(null, "", "/tournament");
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    this.navigate("/tournament");
   }
 
   navigateToLogin(): void {
-    window.history.pushState(null, "", "/login");
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    this.navigate("/login");
   }
 
   navigateToRegister(): void {
-    window.history.pushState(null, "", "/register");
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    this.navigate("/register");
+  }
+
+  private navigate(path: string): void {
+    router.navigate(path);
   }
 
   async handleLogout(): Promise<void> {
-    await AuthService.logout();
-    window.history.pushState(null, "", "/");
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    try {
+      await AuthService.logout();
+      this.navigate("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // エラーをユーザーに通知
+      const NotificationService = (
+        await import("../../shared/services/notification.service")
+      ).NotificationService;
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "ログアウト処理でエラーが発生しました";
+      NotificationService.getInstance().error(
+        `ログアウトエラー: ${errorMessage}`,
+      );
+
+      // エラーが発生してもホームに戻る（ローカルトークンは既に削除済み）
+      this.navigate("/");
+    }
   }
 
   getAuthButtonsTemplate(): string {

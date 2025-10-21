@@ -53,7 +53,15 @@ export class TournamentPage {
     document
       .getElementById("logout-btn")
       ?.addEventListener("click", async () => {
-        await this.service.handleLogout();
+        try {
+          await this.service.handleLogout();
+        } catch (error) {
+          console.error("Logout handler error:", error);
+        }
       });
+  }
+
+  destroy(): void {
+    this.service.cleanup();
   }
 }

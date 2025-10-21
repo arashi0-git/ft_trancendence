@@ -25,8 +25,10 @@ export class RegisterPage {
   }
 
   private attachEventListeners(): void {
-    document.getElementById("back-to-home")?.addEventListener("click", () => {
-      this.service.navigateToHome();
-    });
+    this.container
+      .querySelector<HTMLElement>("#back-to-home")
+      ?.addEventListener("click", () => {
+        this.service.navigateToHome();
+      });
   }
 }

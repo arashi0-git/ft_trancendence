@@ -66,7 +66,18 @@ export class TournamentDataService {
     if (!this.currentTournament) return;
 
     const players = [...this.currentTournament.players];
-    this.currentTournament.matches = [];
+
+    // 最低2人のプレイヤーが必要
+    if (players.length < 2) {
+      throw new Error(
+        "トーナメントを開始するには最低2人のプレイヤーが必要です",
+      );
+    }
+
+    // 既にマッチが存在する場合は生成しない
+    if (this.currentTournament.matches.length > 0) {
+      throw new Error("マッチは既に生成されています");
+    }
 
     for (let i = 0; i < players.length; i += 2) {
       if (i + 1 < players.length) {
@@ -105,6 +116,20 @@ export class TournamentDataService {
 
     const match = this.getMatch(matchId);
     if (!match) return;
+
+    // 勝者がマッチの参加者であることを検証
+    if (winnerId !== match.player1Id && winnerId !== match.player2Id) {
+      throw new Error("勝者IDはマッチの参加者である必要があります");
+    }
+
+    // スコアの検証
+    const winnerScore =
+      winnerId === match.player1Id ? score.player1 : score.player2;
+    const loserScore =
+      winnerId === match.player1Id ? score.player2 : score.player1;
+    if (winnerScore <= loserScore) {
+      throw new Error("勝者のスコアは敗者のスコアより高い必要があります");
+    }
 
     match.winnerId = winnerId;
     match.score = score;

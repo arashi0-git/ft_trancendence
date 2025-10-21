@@ -1,11 +1,20 @@
 import { GameManagerService } from "../../shared/services/game-manager.service";
+import { NotificationService } from "../../shared/services/notification.service";
 import { AuthService } from "../../shared/services/auth-service";
+import { router } from "../../routes/router";
 
 export class QuickPlayService {
   private gameManager: GameManagerService;
+  private notificationService: NotificationService;
+  private controlListeners: Array<{
+    element: HTMLElement;
+    event: string;
+    handler: EventListener;
+  }> = [];
 
   constructor() {
     this.gameManager = new GameManagerService();
+    this.notificationService = NotificationService.getInstance();
   }
 
   initializeGame(canvasId: string): void {
@@ -17,27 +26,44 @@ export class QuickPlayService {
   }
 
   attachGameControls(): void {
-    const startBtn = document.getElementById("start-game") as HTMLButtonElement;
-    const pauseBtn = document.getElementById("pause-game") as HTMLButtonElement;
-    const resetBtn = document.getElementById("reset-game") as HTMLButtonElement;
+    const startBtn = document.getElementById("start-game");
+    const pauseBtn = document.getElementById("pause-game");
+    const resetBtn = document.getElementById("reset-game");
 
-    startBtn?.addEventListener("click", () => {
-      this.startGame(startBtn, pauseBtn);
-    });
+    if (startBtn && pauseBtn && resetBtn) {
+      const startHandler = () =>
+        this.startGame(
+          startBtn as HTMLButtonElement,
+          pauseBtn as HTMLButtonElement,
+        );
+      const pauseHandler = () =>
+        this.pauseGame(
+          startBtn as HTMLButtonElement,
+          pauseBtn as HTMLButtonElement,
+        );
+      const resetHandler = () =>
+        this.resetGame(
+          startBtn as HTMLButtonElement,
+          pauseBtn as HTMLButtonElement,
+        );
 
-    pauseBtn?.addEventListener("click", () => {
-      this.pauseGame(startBtn, pauseBtn);
-    });
+      startBtn.addEventListener("click", startHandler);
+      pauseBtn.addEventListener("click", pauseHandler);
+      resetBtn.addEventListener("click", resetHandler);
 
-    resetBtn?.addEventListener("click", () => {
-      this.resetGame(startBtn, pauseBtn);
-    });
+      this.controlListeners.push(
+        { element: startBtn, event: "click", handler: startHandler },
+        { element: pauseBtn, event: "click", handler: pauseHandler },
+        { element: resetBtn, event: "click", handler: resetHandler },
+      );
+    }
   }
 
   private startGame(
     startBtn: HTMLButtonElement,
     pauseBtn: HTMLButtonElement,
   ): void {
+    if (!startBtn || !pauseBtn) return;
     this.gameManager.startGame();
     startBtn.disabled = true;
     pauseBtn.disabled = false;
@@ -62,28 +88,44 @@ export class QuickPlayService {
   }
 
   private handleGameEnd(winner: number): void {
-    alert(`Player ${winner} wins!`);
-    const startBtn = document.getElementById("start-game") as HTMLButtonElement;
-    const pauseBtn = document.getElementById("pause-game") as HTMLButtonElement;
+    this.notificationService.success(`Player ${winner} wins! 🎉`);
+    const startBtn = document.getElementById("start-game");
+    const pauseBtn = document.getElementById("pause-game");
     if (startBtn && pauseBtn) {
-      startBtn.disabled = false;
-      pauseBtn.disabled = true;
+      (startBtn as HTMLButtonElement).disabled = false;
+      (pauseBtn as HTMLButtonElement).disabled = true;
     }
   }
 
   navigateToHome(): void {
-    window.history.pushState(null, "", "/");
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    this.navigate("/");
   }
 
   navigateToLogin(): void {
-    window.history.pushState(null, "", "/login");
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    this.navigate("/login");
+  }
+
+  private navigate(path: string): void {
+    router.navigate(path);
   }
 
   async handleLogout(): Promise<void> {
-    await AuthService.logout();
-    this.navigateToHome();
+    try {
+      await AuthService.logout();
+      this.notificationService.success("ログアウトしました");
+      this.navigateToHome();
+    } catch (error) {
+      console.error("ログアウトに失敗しました:", error);
+
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "ログアウト処理でエラーが発生しました";
+      this.notificationService.error(`ログアウトエラー: ${errorMessage}`);
+
+      // エラーが発生してもホームに戻る（ローカルトークンは既に削除済み）
+      this.navigateToHome();
+    }
   }
 
   getAuthButtonTemplate(): string {
@@ -93,6 +135,10 @@ export class QuickPlayService {
   }
 
   cleanup(): void {
+    this.controlListeners.forEach(({ element, event, handler }) => {
+      element.removeEventListener(event, handler);
+    });
+    this.controlListeners = [];
     this.gameManager.cleanup();
   }
 }
