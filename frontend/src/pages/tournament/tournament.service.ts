@@ -16,6 +16,14 @@ export type TournamentStep =
   | "match"
   | "results";
 
+/**
+ * TournamentService - トーナメント機能の管理
+ *
+ * 重要: イベントリスナーの管理について
+ * - 直接的な addEventListener の使用は禁止
+ * - 必ず attachEventListenerSafely または addEventListenerWithTracking を使用
+ * - これによりメモリリークを防止し、適切なクリーンアップを保証
+ */
 export class TournamentService {
   private currentStep: TournamentStep = "setup";
   private currentPath: string = "/tournament";
@@ -59,6 +67,9 @@ export class TournamentService {
   initializeCurrentView(): void {
     const container = document.getElementById("tournament-content");
     if (!container) return;
+
+    // 新しいビューをレンダリングする前に既存のイベントリスナーをクリーンアップ
+    this.clearEventListeners();
 
     switch (this.currentStep) {
       case "setup":
@@ -111,11 +122,9 @@ export class TournamentService {
       </div>
     `;
 
-    document
-      .getElementById("create-tournament")
-      ?.addEventListener("click", () => {
-        this.createTournament();
-      });
+    this.attachEventListenerSafely("create-tournament", "click", () =>
+      this.createTournament(),
+    );
   }
 
   private createTournament(): void {
@@ -180,15 +189,13 @@ export class TournamentService {
 
     this.generatePlayerInputs(tournament.playerCount);
 
-    document.getElementById("back-to-setup")?.addEventListener("click", () => {
-      this.navigateToSetup();
-    });
+    this.attachEventListenerSafely("back-to-setup", "click", () =>
+      this.navigateToSetup(),
+    );
 
-    document
-      .getElementById("start-tournament")
-      ?.addEventListener("click", () => {
-        this.startTournament();
-      });
+    this.attachEventListenerSafely("start-tournament", "click", () =>
+      this.startTournament(),
+    );
   }
 
   private generatePlayerInputs(playerCount: number): void {
@@ -213,7 +220,11 @@ export class TournamentService {
       playerInputsContainer.appendChild(inputDiv);
 
       const input = inputDiv.querySelector("input") as HTMLInputElement;
-      input.addEventListener("input", () => this.validatePlayerInputs());
+      if (input) {
+        this.addEventListenerWithTracking(input, "input", () =>
+          this.validatePlayerInputs(),
+        );
+      }
     }
   }
 
@@ -329,23 +340,21 @@ export class TournamentService {
       </div>
     `;
 
-    document.querySelectorAll(".play-match-btn").forEach((button) => {
-      button.addEventListener("click", (e) => {
-        const matchId = (e.currentTarget as HTMLElement).getAttribute(
-          "data-match-id",
-        );
+    this.attachEventListenersToElements(
+      ".play-match-btn",
+      "click",
+      (element) => {
+        const matchId = element.getAttribute("data-match-id");
         if (matchId) {
           this.navigateToMatch(matchId);
         }
-      });
-    });
+      },
+    );
 
-    document
-      .getElementById("new-tournament-btn")
-      ?.addEventListener("click", () => {
-        this.tournamentData.clearTournament();
-        this.navigateToSetup();
-      });
+    this.attachEventListenerSafely("new-tournament-btn", "click", () => {
+      this.tournamentData.clearTournament();
+      this.navigateToSetup();
+    });
   }
 
   private renderMatchView(container: HTMLElement): void {
@@ -410,26 +419,23 @@ export class TournamentService {
     const pauseBtn = document.getElementById(
       "pause-tournament-game",
     ) as HTMLButtonElement;
-    const resetBtn = document.getElementById(
-      "reset-tournament-game",
-    ) as HTMLButtonElement;
 
-    startBtn?.addEventListener("click", () => {
+    this.attachEventListenerSafely("start-tournament-game", "click", () => {
       this.gameManager.startGame();
-      startBtn.disabled = true;
-      pauseBtn.disabled = false;
+      if (startBtn) startBtn.disabled = true;
+      if (pauseBtn) pauseBtn.disabled = false;
     });
 
-    pauseBtn?.addEventListener("click", () => {
+    this.attachEventListenerSafely("pause-tournament-game", "click", () => {
       this.gameManager.pauseGame();
-      startBtn.disabled = false;
-      pauseBtn.disabled = true;
+      if (startBtn) startBtn.disabled = false;
+      if (pauseBtn) pauseBtn.disabled = true;
     });
 
-    resetBtn?.addEventListener("click", () => {
+    this.attachEventListenerSafely("reset-tournament-game", "click", () => {
       this.gameManager.resetGame();
-      startBtn.disabled = false;
-      pauseBtn.disabled = true;
+      if (startBtn) startBtn.disabled = false;
+      if (pauseBtn) pauseBtn.disabled = true;
     });
   }
 
@@ -512,7 +518,7 @@ export class TournamentService {
       </div>
     `;
 
-    document.getElementById("new-tournament")?.addEventListener("click", () => {
+    this.attachEventListenerSafely("new-tournament", "click", () => {
       this.tournamentData.clearTournament();
       this.navigateToSetup();
     });
@@ -655,6 +661,45 @@ export class TournamentService {
   ): void {
     element.addEventListener(event, handler);
     this.eventListeners.push({ element, event, handler });
+  }
+
+  /**
+   * 安全なDOM要素取得とイベントリスナー追加のヘルパーメソッド
+   * 要素が存在しない場合は警告を出力し、存在する場合は自動的にトラッキングを行う
+   */
+  private attachEventListenerSafely(
+    elementId: string,
+    event: string,
+    handler: EventListener,
+    required: boolean = true,
+  ): void {
+    const element = document.getElementById(elementId);
+    if (!element) {
+      if (required) {
+        console.warn(`Required element with ID '${elementId}' not found`);
+      }
+      return;
+    }
+    this.addEventListenerWithTracking(element as HTMLElement, event, handler);
+  }
+
+  /**
+   * 複数要素への安全なイベントリスナー追加
+   */
+  private attachEventListenersToElements(
+    selector: string,
+    event: string,
+    handler: (element: HTMLElement) => void,
+  ): void {
+    const elements = document.querySelectorAll(selector);
+    elements.forEach((element) => {
+      const wrappedHandler = () => handler(element as HTMLElement);
+      this.addEventListenerWithTracking(
+        element as HTMLElement,
+        event,
+        wrappedHandler,
+      );
+    });
   }
 
   private clearEventListeners(): void {
