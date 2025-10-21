@@ -109,10 +109,40 @@ export class PongGame {
   }
 
   private keydownHandler = (e: KeyboardEvent) => {
+    const gameKeys = [
+      "ArrowUp",
+      "ArrowDown",
+      "ArrowLeft",
+      "ArrowRight",
+      "KeyW",
+      "KeyS",
+      "KeyA",
+      "KeyD",
+    ];
+
+    if (gameKeys.includes(e.code)) {
+      e.preventDefault(); // ブラウザのデフォルト動作を防ぐ
+    }
+
     this.keyState[e.code] = true;
   };
 
   private keyupHandler = (e: KeyboardEvent) => {
+    const gameKeys = [
+      "ArrowUp",
+      "ArrowDown",
+      "ArrowLeft",
+      "ArrowRight",
+      "KeyW",
+      "KeyS",
+      "KeyA",
+      "KeyD",
+    ];
+
+    if (gameKeys.includes(e.code)) {
+      e.preventDefault();
+    }
+
     this.keyState[e.code] = false;
   };
 
