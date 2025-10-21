@@ -37,15 +37,4 @@ CMD ["sh", "-c", "if [ \"$NODE_ENV\" = \"production\" ]; then npm start; else np
 
 
 
-# # force native build on musl
-# ENV npm_config_build_from_source=true
-# ENV npm_config_python=python3
-
-
-
-
-
-
-# RUN mkdir -p /app/data /app/ssl
-
 
