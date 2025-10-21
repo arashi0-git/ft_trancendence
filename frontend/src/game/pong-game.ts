@@ -17,6 +17,16 @@ export class PongGame {
   private keyState: KeyState = {};
   private animationId: number | null = null;
   private events: Partial<GameEvents> = {};
+  private readonly GAME_KEYS = [
+    "ArrowUp",
+    "ArrowDown",
+    "ArrowLeft",
+    "ArrowRight",
+    "KeyW",
+    "KeyS",
+    "KeyA",
+    "KeyD",
+  ];
 
   constructor(canvas: HTMLCanvasElement, config?: Partial<GameConfig>) {
     this.canvas = canvas;
@@ -109,18 +119,7 @@ export class PongGame {
   }
 
   private keydownHandler = (e: KeyboardEvent) => {
-    const gameKeys = [
-      "ArrowUp",
-      "ArrowDown",
-      "ArrowLeft",
-      "ArrowRight",
-      "KeyW",
-      "KeyS",
-      "KeyA",
-      "KeyD",
-    ];
-
-    if (gameKeys.includes(e.code)) {
+    if (this.GAME_KEYS.includes(e.code)) {
       e.preventDefault(); // ブラウザのデフォルト動作を防ぐ
     }
 
@@ -128,18 +127,7 @@ export class PongGame {
   };
 
   private keyupHandler = (e: KeyboardEvent) => {
-    const gameKeys = [
-      "ArrowUp",
-      "ArrowDown",
-      "ArrowLeft",
-      "ArrowRight",
-      "KeyW",
-      "KeyS",
-      "KeyA",
-      "KeyD",
-    ];
-
-    if (gameKeys.includes(e.code)) {
+    if (this.GAME_KEYS.includes(e.code)) {
       e.preventDefault();
     }
 
