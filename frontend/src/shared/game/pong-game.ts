@@ -43,7 +43,7 @@ export class PongGame {
       paddleHeight: 80,
       paddleSpeed: 5,
       ballRadius: 8,
-      ballSpeed: 12,
+      ballSpeed: 8,
       maxScore: 5,
       ...config,
     };
@@ -168,11 +168,16 @@ export class PongGame {
     }
   }
 
+  private resetKeyState(): void {
+    this.keyState = {};
+  }
+
   public resetGame(): void {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
       this.animationId = null;
     }
+    this.resetKeyState();
     this.initializeGame();
     this.render();
   }
@@ -239,11 +244,12 @@ export class PongGame {
     ball.x += ball.velocityX;
     ball.y += ball.velocityY;
 
-    if (
-      ball.y <= ball.radius ||
-      ball.y >= this.config.canvasHeight - ball.radius
-    ) {
-      ball.velocityY = -ball.velocityY;
+    if (ball.y <= ball.radius) {
+      ball.y = ball.radius;
+      ball.velocityY = Math.abs(ball.velocityY);
+    } else if (ball.y >= this.config.canvasHeight - ball.radius) {
+      ball.y = this.config.canvasHeight - ball.radius;
+      ball.velocityY = -Math.abs(ball.velocityY);
     }
   }
 
@@ -335,7 +341,7 @@ export class PongGame {
       cancelAnimationFrame(this.animationId);
       this.animationId = null;
     }
-
+    this.resetKeyState();
     this.events.onGameEnd?.(winner);
   }
 
