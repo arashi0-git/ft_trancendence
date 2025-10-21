@@ -47,8 +47,6 @@ export class Router {
 
       if (path !== "/" && this.routes.some((r) => r.path === "/")) {
         this.navigate("/", pushState);
-      } else {
-        console.error(`Cannot navigate: no route registered for ${path}`);
       }
     }
   }
