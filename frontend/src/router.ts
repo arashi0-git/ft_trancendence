@@ -1,7 +1,8 @@
 export interface Route {
   path: string;
-  handler: (params?: Record<string, string>) => void;
+  handler: (params?: Record<string, string>, query?: URLSearchParams) => void;
   params?: Record<string, string>;
+  query?: URLSearchParams;
 }
 
 export type RouterEventType = "routeChange";
@@ -13,18 +14,17 @@ export class Router {
   private currentRoute: Route | null = null;
   private eventListeners: Map<RouterEventType, RouterEventCallback[]> =
     new Map();
+  private boundHandlePopState = this.handlePopState.bind(this);
 
   constructor() {
-    window.addEventListener("popstate", (event) => {
-      this.handlePopState(event);
-    });
+    window.addEventListener("popstate", this.boundHandlePopState);
 
     this.handleInitialRoute();
   }
 
   addRoute(
     path: string,
-    handler: (params?: Record<string, string>) => void,
+    handler: (params?: Record<string, string>, query?: URLSearchParams) => void,
   ): void {
     this.routes.push({ path, handler });
   }
@@ -39,14 +39,16 @@ export class Router {
         window.history.pushState({ path }, "", path);
       }
 
-      route.handler(route.params);
+      route.handler(route.params, route.query);
 
       this.emit("routeChange", { path, route });
     } else {
       console.warn(`No route found for path: ${path}`);
 
-      if (path !== "/") {
+      if (path !== "/" && this.routes.some((r) => r.path === "/")) {
         this.navigate("/", pushState);
+      } else {
+        console.error(`Cannot navigate: no route registered for ${path}`);
       }
     }
   }
@@ -58,6 +60,7 @@ export class Router {
         return {
           ...route,
           params: match.params,
+          query: match.query,
         };
       }
     }
@@ -67,10 +70,12 @@ export class Router {
   private matchPath(
     routePath: string,
     actualPath: string,
-  ): { params: Record<string, string> } | null {
-    const cleanActualPath = actualPath.split("?")[0];
+  ): { params: Record<string, string>; query?: URLSearchParams } | null {
+    const [cleanActualPath, queryString] = actualPath.split("?");
+    const query = queryString ? new URLSearchParams(queryString) : undefined;
+
     if (routePath === cleanActualPath) {
-      return { params: {} };
+      return { params: {}, query };
     }
 
     const routeParts = routePath.split("/");
@@ -93,7 +98,7 @@ export class Router {
         return null;
       }
     }
-    return { params };
+    return { params, query };
   }
   private handlePopState(event: PopStateEvent): void {
     const path = event.state?.path || window.location.pathname;
@@ -146,7 +151,7 @@ export class Router {
   }
 
   destroy(): void {
-    window.removeEventListener("popstate", this.handlePopState);
+    window.removeEventListener("popstate", this.boundHandlePopState);
     this.eventListeners.clear();
   }
 }
