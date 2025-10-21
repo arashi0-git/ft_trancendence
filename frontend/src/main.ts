@@ -1,9 +1,9 @@
 import "./style.css";
-import { LoginForm } from "./components/login-form";
-import { AuthService } from "./services/auth-service";
-import { PongGame } from "./game/pong-game";
-import { TournamentRegistration } from "./components/tournament-registration";
-import { Tournament, Match } from "./types/tournament";
+import { LoginForm } from "./shared/components/login-form";
+import { AuthService } from "./shared/services/auth-service";
+import { PongGame } from "./shared/game/pong-game";
+import { TournamentRegistration } from "./shared/components/tournament-registration";
+import { Tournament, Match } from "./shared/types/tournament";
 
 class App {
   private currentView:
