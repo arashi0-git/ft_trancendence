@@ -154,7 +154,7 @@ export class TournamentService {
     container.innerHTML = `
       <div class="text-center mb-4">
         <h3 class="text-lg font-semibold">Enter Player Aliases</h3>
-        <p class="text-sm text-gray-600">Tournament: ${tournament.name} (${tournament.playerCount} players)</p>
+        <p class="text-sm text-gray-600">Tournament: ${this.escapeHtml(tournament.name)} (${tournament.playerCount} players)</p>
       </div>
 
       <div id="player-inputs" class="space-y-3 mb-4">
@@ -285,12 +285,12 @@ export class TournamentService {
         <div class="bg-gray-50 p-4 rounded border">
           <div class="flex justify-between items-center">
             <div class="text-center flex-1">
-              <div class="font-semibold">${player1?.alias || "Unknown"}</div>
+              <div class="font-semibold">${this.escapeHtml(player1?.alias || "Unknown")}</div>
               ${match.score ? `<div class="text-sm text-gray-600">${match.score.player1}</div>` : ""}
             </div>
             <div class="mx-4 text-gray-500">VS</div>
             <div class="text-center flex-1">
-              <div class="font-semibold">${player2?.alias || "Unknown"}</div>
+              <div class="font-semibold">${this.escapeHtml(player2?.alias || "Unknown")}</div>
               ${match.score ? `<div class="text-sm text-gray-600">${match.score.player2}</div>` : ""}
             </div>
             <div class="ml-4">
@@ -362,7 +362,7 @@ export class TournamentService {
 
     container.innerHTML = `
       <div class="text-center mb-4">
-        <h3 class="text-xl font-semibold">${player1?.alias || "Player 1"} vs ${player2?.alias || "Player 2"}</h3>
+        <h3 class="text-xl font-semibold">${this.escapeHtml(player1?.alias || "Player 1")} vs ${this.escapeHtml(player2?.alias || "Player 2")}</h3>
         <p class="text-gray-600">Match ${matchId} - First to 5 points wins</p>
       </div>
 
@@ -385,8 +385,8 @@ export class TournamentService {
       </div>
       
       <div class="text-center text-sm text-gray-600">
-        <p><strong>${player1?.alias || "Player 1"}:</strong> W/S (Up/Down), A/D (Left/Right)</p>
-        <p><strong>${player2?.alias || "Player 2"}:</strong> ↑/↓ (Up/Down), ←/→ (Left/Right)</p>
+        <p><strong>${this.escapeHtml(player1?.alias || "Player 1")}:</strong> W/S (Up/Down), A/D (Left/Right)</p>
+        <p><strong>${this.escapeHtml(player2?.alias || "Player 2")}:</strong> ↑/↓ (Up/Down), ←/→ (Left/Right)</p>
       </div>
     `;
 
@@ -500,7 +500,7 @@ export class TournamentService {
       <div class="text-center">
         <h3 class="text-2xl font-bold mb-4">🏆 Tournament Complete!</h3>
         <div class="bg-yellow-50 p-6 rounded-lg mb-6">
-          <h4 class="text-xl font-semibold text-yellow-800">Winner: ${winner.alias}</h4>
+          <h4 class="text-xl font-semibold text-yellow-800">Winner: ${this.escapeHtml(winner.alias)}</h4>
           <p class="text-yellow-600">Wins: ${winner.wins} | Losses: ${winner.losses}</p>
         </div>
         
@@ -634,6 +634,17 @@ export class TournamentService {
     } else {
       return `Round ${currentRound}`;
     }
+  }
+
+  private escapeHtml(text: string): string {
+    const map: Record<string, string> = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    };
+    return String(text).replace(/[&<>"']/g, (ch) => map[ch]);
   }
 
   private addEventListenerWithTracking(

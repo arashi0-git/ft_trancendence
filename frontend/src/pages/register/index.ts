@@ -1,4 +1,4 @@
-import { RegisterService } from "./register.service";
+import { RegisterService } from "./register.service.js";
 
 export class RegisterPage {
   private service: RegisterService;
