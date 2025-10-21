@@ -61,18 +61,20 @@ export class LoginForm {
   }
 
   private attachEventListeners(): void {
-    const form = document.getElementById("login-form") as HTMLFormElement;
-    const showRegisterBtn = document.getElementById(
-      "show-register",
-    ) as HTMLButtonElement;
+    const form = document.getElementById("login-form");
+    const showRegisterBtn = document.getElementById("show-register");
 
     if (!form || !showRegisterBtn) {
       console.error("Required form elements not found");
       return;
     }
 
-    form.addEventListener("submit", (e) => this.handleSubmit(e));
-    showRegisterBtn.addEventListener("click", () => this.onShowRegister());
+    (form as HTMLFormElement).addEventListener("submit", (e) =>
+      this.handleSubmit(e),
+    );
+    (showRegisterBtn as HTMLButtonElement).addEventListener("click", () =>
+      this.onShowRegister(),
+    );
   }
 
   private async handleSubmit(event: Event): Promise<void> {
@@ -80,10 +82,8 @@ export class LoginForm {
 
     const form = event.target as HTMLFormElement;
     const formData = new FormData(form);
-    const submitBtn = document.getElementById(
-      "login-submit",
-    ) as HTMLButtonElement;
-    const errorDiv = document.getElementById("error-message") as HTMLDivElement;
+    const submitBtn = document.getElementById("login-submit");
+    const errorDiv = document.getElementById("error-message");
 
     if (!submitBtn || !errorDiv) {
       console.error("Required form elements not found");
@@ -106,8 +106,8 @@ export class LoginForm {
     }
 
     // バリデーション通過後にボタンを無効化
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Logging in...";
+    (submitBtn as HTMLButtonElement).disabled = true;
+    (submitBtn as HTMLButtonElement).textContent = "Logging in...";
 
     try {
       const response = await AuthService.login(loginData);
@@ -118,12 +118,12 @@ export class LoginForm {
     } catch (error) {
       console.error("Login failed:", error);
 
-      errorDiv.textContent =
+      (errorDiv as HTMLDivElement).textContent =
         error instanceof Error ? error.message : "Login failed";
-      errorDiv.classList.remove("hidden");
+      (errorDiv as HTMLDivElement).classList.remove("hidden");
     } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Login";
+      (submitBtn as HTMLButtonElement).disabled = false;
+      (submitBtn as HTMLButtonElement).textContent = "Login";
     }
   }
 
