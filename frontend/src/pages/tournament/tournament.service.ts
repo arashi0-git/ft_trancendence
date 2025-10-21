@@ -363,7 +363,7 @@ export class TournamentService {
     container.innerHTML = `
       <div class="text-center mb-4">
         <h3 class="text-xl font-semibold">${this.escapeHtml(player1?.alias || "Player 1")} vs ${this.escapeHtml(player2?.alias || "Player 2")}</h3>
-        <p class="text-gray-600">Match ${matchId} - First to 5 points wins</p>
+        <p class="text-gray-600">Match ${this.escapeHtml(matchId)} - First to 5 points wins</p>
       </div>
 
       <div class="mb-4 text-center">
@@ -519,8 +519,8 @@ export class TournamentService {
   }
 
   private extractMatchIdFromPath(): string {
-    const pathParts = this.currentPath.split("/");
-    return pathParts[pathParts.length - 1] || "unknown";
+    const parts = this.currentPath.split("/").filter(Boolean);
+    return parts[parts.length - 1] || "unknown";
   }
 
   // ナビゲーションメソッド
@@ -553,6 +553,7 @@ export class TournamentService {
   }
 
   private navigate(path: string): void {
+    this.cleanup();
     router.navigate(path);
   }
 

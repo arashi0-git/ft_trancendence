@@ -2,12 +2,15 @@ import { RegisterService } from "./register.service.js";
 
 export class RegisterPage {
   private service: RegisterService;
+  private abortController?: AbortController;
 
   constructor(private container: HTMLElement) {
     this.service = new RegisterService();
   }
 
   render(): void {
+    this.cleanup();
+    this.abortController = new AbortController();
     this.container.innerHTML = this.getTemplate();
     this.attachEventListeners();
   }
@@ -27,8 +30,16 @@ export class RegisterPage {
   private attachEventListeners(): void {
     this.container
       .querySelector<HTMLElement>("#back-to-home")
-      ?.addEventListener("click", () => {
-        this.service.navigateToHome();
-      });
+      ?.addEventListener(
+        "click",
+        () => {
+          this.service.navigateToHome();
+        },
+        { signal: this.abortController?.signal },
+      );
+  }
+
+  cleanup(): void {
+    this.abortController?.abort();
   }
 }
