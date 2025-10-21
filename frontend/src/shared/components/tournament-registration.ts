@@ -1,4 +1,4 @@
-import { Tournament, TournamentPlayer, Match } from "../types/tournament";
+import type { Tournament, TournamentPlayer, Match } from "../types/tournament";
 
 export class TournamentRegistration {
   private container: HTMLElement;
@@ -90,6 +90,7 @@ export class TournamentRegistration {
   private showPlayerRegistration(): void {
     const playerCount = parseInt(
       (document.getElementById("player-count") as HTMLSelectElement).value,
+      10,
     );
     const tournamentName =
       (
@@ -155,20 +156,25 @@ export class TournamentRegistration {
 
       if (!alias) {
         allValid = false;
-        return;
+        return; // This is fine in forEach
       }
 
       const key = alias.toLowerCase();
       if (!aliases.has(key)) {
         aliases.set(key, []);
       }
-      aliases.get(key)!.push(input);
+      const aliasArray = aliases.get(key);
+      if (aliasArray) {
+        aliasArray.push(input);
+      }
     });
 
     aliases.forEach((inputList) => {
       if (inputList.length > 1) {
         allValid = false;
-        inputList.forEach((input) => input.classList.add("border-red-500"));
+        inputList.forEach((input) => {
+          input.classList.add("border-red-500");
+        });
       } else {
         inputList[0].classList.remove("border-red-500");
       }
@@ -198,7 +204,9 @@ export class TournamentRegistration {
         wins: 0,
         losses: 0,
       };
-      this.tournament!.players.push(player);
+      if (this.tournament) {
+        this.tournament.players.push(player);
+      }
     });
 
     this.generateMatches();
