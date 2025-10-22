@@ -182,6 +182,9 @@ export class PongGame3D {
       this.gameState.gameStatus === "paused"
     ) {
       this.gameState.gameStatus = "playing";
+      this.eventListeners.onGameStateChange?.forEach((callback) => {
+        callback(this.getReadonlyGameState());
+      });
       this.gameLoop();
     }
   }
@@ -344,6 +347,9 @@ export class PongGame3D {
       this.animationId = null;
     }
     this.keyState = {};
+    this.eventListeners.onGameStateChange?.forEach((callback) => {
+      callback(this.getReadonlyGameState());
+    });
     this.eventListeners.onGameEnd?.forEach((callback) => {
       callback(winner);
     });
@@ -356,6 +362,9 @@ export class PongGame3D {
         cancelAnimationFrame(this.animationId);
         this.animationId = null;
       }
+      this.eventListeners.onGameStateChange?.forEach((callback) => {
+        callback(this.getReadonlyGameState());
+      });
     }
   }
 
@@ -367,6 +376,9 @@ export class PongGame3D {
     this.keyState = {};
     this.initializeGame();
     this.renderer.updateGameObjects(this.gameState);
+    this.eventListeners.onGameStateChange?.forEach((callback) => {
+      callback(this.getReadonlyGameState());
+    });
   }
 
   public destroy(): void {
@@ -402,6 +414,20 @@ export class PongGame3D {
     }
   }
 
+  private deepFreeze<T>(obj: T): Readonly<T> {
+    if (obj === null || typeof obj !== "object") return obj as Readonly<T>;
+    if (Array.isArray(obj))
+      return Object.freeze(
+        obj.map((v) => this.deepFreeze(v)),
+      ) as unknown as Readonly<T>;
+    const out: any = {};
+    for (const k in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, k))
+        out[k] = this.deepFreeze((obj as any)[k]);
+    }
+    return Object.freeze(out);
+  }
+
   private deepClone<T>(obj: T): T {
     if (obj === null || typeof obj !== "object") {
       return obj;
@@ -417,7 +443,7 @@ export class PongGame3D {
 
     const cloned = {} as T;
     for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
         cloned[key] = this.deepClone(obj[key]);
       }
     }
@@ -429,7 +455,7 @@ export class PongGame3D {
   }
 
   public getReadonlyGameState(): Readonly<GameState> {
-    return { ...this.gameState };
+    return this.deepFreeze(this.deepClone(this.gameState));
   }
 
   public getCanvasSize(): { width: number; height: number } {
