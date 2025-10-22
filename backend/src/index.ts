@@ -4,33 +4,35 @@ import websocket from "@fastify/websocket";
 import cors from "@fastify/cors";
 import staticFiles from "@fastify/static";
 import path from "path";
-import fs from "fs";
-import https from "https";
+// import fs from "fs";
+// import https from "https";
 import { initializeDatabase } from "./database/init";
 import { authRoutes } from "./routes/auth";
 
-const httpsOptions =
-  process.env.NODE_ENV === "production"
-    ? {
-        key: fs.readFileSync(path.join(process.cwd(), "ssl", "key.pem")),
-        cert: fs.readFileSync(path.join(process.cwd(), "ssl", "cert.pem")),
-      }
-    : undefined;
+
+// const httpsOptions =
+//   process.env.NODE_ENV === "production"
+//     ? {
+//         key: fs.readFileSync(path.join(process.cwd(), "ssl", "key.pem")),
+//         cert: fs.readFileSync(path.join(process.cwd(), "ssl", "cert.pem")),
+//       }
+//     : undefined;
 
 const fastify = Fastify({
   logger: true,
-  serverFactory: httpsOptions
-    ? (handler) => {
-        return https.createServer(httpsOptions, handler);
-      }
-    : undefined,
+  trustProxy: true
+  // serverFactory: httpsOptions
+  //   ? (handler) => {
+  //       return https.createServer(httpsOptions, handler);
+  //     }
+  //   : undefined,
 });
 
 // プラグインの登録
 async function registerPlugins() {
   // CORS設定
   await fastify.register(cors, {
-    origin: true,
+    origin:  process.env.CORS_ORIGIN ?? "https://localhost",
     credentials: true,
   });
 

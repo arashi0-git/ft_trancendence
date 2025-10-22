@@ -22,8 +22,8 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     container_name: ft_transcendence_backend
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000" 
     volumes:
       # - /app/node_modules
       - ./backend/src:/app/src
@@ -31,6 +31,7 @@ services:
     environment:
       - NODE_ENV=development
       - DATABASE_PATH=/app/database/transcendence.db
+      - TRUST_PROXY=1 
 
     depends_on:
       ssl-cert:
