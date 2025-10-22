@@ -34,6 +34,13 @@ export class HomePage {
               <div class="text-sm opacity-90">2-8 Players - Bracket style competition</div>
             </div>
           </button>
+
+          <button id="custom-play-btn" class="w-full bg-pink-500 hover:bg-pink-600 text-white py-3 px-4 rounded">
+            <div class="text-center">
+              <div class="font-semibold text-lg">⚙️ Custom Game</div>
+              <div class="text-sm opacity-90">Change game map, color, etc.</div>
+            </div>
+          </button>
         </div>
         
         <div class="border-t pt-4">
@@ -53,6 +60,12 @@ export class HomePage {
       .getElementById("tournament-play-btn")
       ?.addEventListener("click", () => {
         this.service.navigateToTournament();
+      });
+
+    document
+      .getElementById("custom-play-btn")
+      ?.addEventListener("click", () => {
+        this.service.navigateToCustomGame();
       });
 
     document.getElementById("login-btn")?.addEventListener("click", () => {
