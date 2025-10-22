@@ -21,6 +21,7 @@ export class AiPlayer {
   private config: AiConfig;
   private updateTimer: number | null = null;
   private moveTimer: number | null = null;
+  private reactionTimer: number | null = null;
   private targetY: number = 0;
   private isActive: boolean = false;
   private isMoving: boolean = false;
@@ -61,16 +62,19 @@ export class AiPlayer {
   pause(): void {
     this.isActive = false;
     this.stopUpdateLoop();
+    this.clearReactionTimer();
   }
 
   stop(): void {
     this.isActive = false;
     this.stopUpdateLoop();
+    this.clearReactionTimer();
     this.stopMovement();
   }
 
   reset(): void {
     this.stop();
+    this.clearReactionTimer();
     this.targetY = 0;
     this.currentDirection = "none";
   }
@@ -99,6 +103,13 @@ export class AiPlayer {
     if (this.updateTimer) {
       clearInterval(this.updateTimer);
       this.updateTimer = null;
+    }
+  }
+
+  private clearReactionTimer(): void {
+    if (this.reactionTimer) {
+      clearTimeout(this.reactionTimer);
+      this.reactionTimer = null;
     }
   }
 
@@ -138,8 +149,10 @@ export class AiPlayer {
       `AI Target Y: ${this.targetY}, Predicted Y: ${predictedPosition.y}`,
     );
 
-    setTimeout(() => {
+    this.clearReactionTimer();
+    this.reactionTimer = window.setTimeout(() => {
       this.executeMovement();
+      this.reactionTimer = null;
     }, this.config.reactionTime);
   }
 
@@ -276,6 +289,7 @@ export class AiPlayer {
 
   cleanup(): void {
     this.stop();
+    this.clearReactionTimer();
     this.stopMovement();
     this.gameManager = null;
   }

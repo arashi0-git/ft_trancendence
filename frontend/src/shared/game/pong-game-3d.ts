@@ -17,7 +17,9 @@ export class PongGame3D {
   private gameState!: GameState;
   private config: GameConfig;
   private keyState: KeyState = {};
-  private events: Partial<GameEvents> = {};
+  private eventListeners: Partial<
+    Record<keyof GameEvents, Array<(...args: any[]) => void>>
+  > = {};
   private isAiMode: boolean = false;
   private animationId: number | null = null;
 
@@ -305,13 +307,17 @@ export class PongGame3D {
     if (ball.x < 0) {
       this.gameState.score.player2++;
       this.resetBall();
-      this.events.onScoreUpdate?.(this.gameState.score);
+      this.eventListeners.onScoreUpdate?.forEach((callback) => {
+        callback(this.gameState.score);
+      });
     }
 
     if (ball.x > this.config.canvasWidth) {
       this.gameState.score.player1++;
       this.resetBall();
-      this.events.onScoreUpdate?.(this.gameState.score);
+      this.eventListeners.onScoreUpdate?.forEach((callback) => {
+        callback(this.gameState.score);
+      });
     }
 
     if (this.gameState.score.player1 >= this.config.maxScore) {
@@ -338,7 +344,9 @@ export class PongGame3D {
       this.animationId = null;
     }
     this.keyState = {};
-    this.events.onGameEnd?.(winner);
+    this.eventListeners.onGameEnd?.forEach((callback) => {
+      callback(winner);
+    });
   }
 
   public pauseGame(): void {
@@ -375,10 +383,52 @@ export class PongGame3D {
     event: E,
     callback: GameEvents[E],
   ): void {
-    this.events[event] = callback;
+    if (!this.eventListeners[event]) {
+      this.eventListeners[event] = [];
+    }
+    this.eventListeners[event]?.push(callback);
+  }
+
+  public off<E extends keyof GameEvents>(
+    event: E,
+    callback: GameEvents[E],
+  ): void {
+    if (!this.eventListeners[event]) {
+      return;
+    }
+    const index = this.eventListeners[event]?.indexOf(callback) ?? -1;
+    if (index > -1) {
+      this.eventListeners[event]?.splice(index, 1);
+    }
+  }
+
+  private deepClone<T>(obj: T): T {
+    if (obj === null || typeof obj !== "object") {
+      return obj;
+    }
+
+    if (obj instanceof Date) {
+      return new Date(obj.getTime()) as T;
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map((item) => this.deepClone(item)) as T;
+    }
+
+    const cloned = {} as T;
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        cloned[key] = this.deepClone(obj[key]);
+      }
+    }
+    return cloned;
   }
 
   public getGameState(): GameState {
+    return this.deepClone(this.gameState);
+  }
+
+  public getReadonlyGameState(): Readonly<GameState> {
     return { ...this.gameState };
   }
 

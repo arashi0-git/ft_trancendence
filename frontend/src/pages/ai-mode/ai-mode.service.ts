@@ -12,6 +12,9 @@ export class AiModeService extends BaseAiGameService {
         onScoreUpdate: (score) => this.handleScoreUpdate(score),
       });
 
+      if (this.aiPlayer) {
+        this.aiPlayer.stop();
+      }
       this.aiPlayer = new AiPlayer(this.currentDifficulty);
     } catch (error) {
       this.notificationService.error("AI-modeの初期化に失敗しました");

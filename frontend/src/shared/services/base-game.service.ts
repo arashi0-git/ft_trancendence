@@ -19,9 +19,10 @@ export abstract class BaseGameService {
   protected startGame(): void {
     try {
       this.gameManager.startGame();
-      this.onGameStart();
       this.updateButtonStates(true);
+      this.onGameStart();
     } catch (error) {
+      this.updateButtonStates(false);
       this.notificationService.error("ゲームの開始に失敗しました");
       console.error("Failed to start game:", error);
     }
@@ -30,9 +31,10 @@ export abstract class BaseGameService {
   protected pauseGame(): void {
     try {
       this.gameManager.pauseGame();
-      this.onGamePause();
       this.updateButtonStates(false);
+      this.onGamePause();
     } catch (error) {
+      this.updateButtonStates(false);
       this.notificationService.error("ゲームの一時停止に失敗しました");
       console.error("Failed to pause game:", error);
     }
@@ -41,9 +43,10 @@ export abstract class BaseGameService {
   protected resetGame(): void {
     try {
       this.gameManager.resetGame();
-      this.onGameReset();
       this.updateButtonStates(false);
+      this.onGameReset();
     } catch (error) {
+      this.updateButtonStates(false);
       this.notificationService.error("ゲームのリセットに失敗しました");
       console.error("Failed to reset game:", error);
     }

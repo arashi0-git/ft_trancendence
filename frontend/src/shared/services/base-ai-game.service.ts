@@ -7,10 +7,10 @@ export abstract class BaseAiGameService extends BaseGameService {
 
   protected onGameStart(): void {
     try {
-      console.log("BaseAiGameService: Starting AI player", this.aiPlayer);
       if (!this.aiPlayer) {
         throw new Error("AI player not initialized");
       }
+      console.log("BaseAiGameService: Starting AI player", this.aiPlayer);
       this.aiPlayer.start(this.gameManager);
     } catch (error) {
       console.error("Failed to start AI player:", error);

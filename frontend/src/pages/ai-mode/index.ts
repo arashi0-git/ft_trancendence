@@ -52,9 +52,22 @@ export class AiModePage implements PageComponent {
   }
 
   private initialize(): void {
-    this.aiModeService.initializeGame("ai-game-canvas");
-    this.aiModeService.attachGameControls();
-    this.aiModeService.attachNavigationControls();
+    try {
+      const canvas = document.getElementById("ai-game-canvas");
+      if (!canvas) {
+        throw new Error("Canvas element not found");
+      }
+      this.aiModeService.initializeGame("ai-game-canvas");
+      this.aiModeService.attachGameControls();
+      this.aiModeService.attachNavigationControls();
+    } catch (error) {
+      console.error("Failed to initialize AI mode:", error);
+      this.container.innerHTML = `
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <p>Failed to initialize game. Please try again.</p>
+        </div>
+      `;
+    }
   }
 
   destroy(): void {
