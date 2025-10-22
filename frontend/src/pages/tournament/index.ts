@@ -1,9 +1,11 @@
 import { TournamentService } from "./tournament.service";
+import { SpacePageBase } from "../../shared/components/space-page-base";
 
-export class TournamentPage {
+export class TournamentPage extends SpacePageBase {
   private service: TournamentService;
 
-  constructor(private container: HTMLElement) {
+  constructor(container: HTMLElement) {
+    super(container);
     this.service = new TournamentService();
   }
 
@@ -15,6 +17,7 @@ export class TournamentPage {
     this.container.innerHTML = this.getTemplate();
     this.attachEventListeners();
     this.service.initializeCurrentView();
+    this.initializeSpaceBackground();
   }
 
   private getTemplate(): string {
@@ -22,10 +25,9 @@ export class TournamentPage {
     const backButton = this.service.getBackButtonTemplate();
     const title = this.service.getPageTitle();
 
-    return `
-      <div class="bg-white p-6 rounded-lg shadow-md">
+    const content = `
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold">${title}</h2>
+          <h2 class="text-2xl font-bold text-white">${title}</h2>
           <div class="space-x-2">
             ${authButton}
             ${backButton}
@@ -35,8 +37,9 @@ export class TournamentPage {
         <div id="tournament-content">
           <!-- 動的コンテンツがここに表示される -->
         </div>
-      </div>
     `;
+
+    return this.getSpaceTemplate(content);
   }
 
   private attachEventListeners(): void {
@@ -63,5 +66,6 @@ export class TournamentPage {
 
   destroy(): void {
     this.service.cleanup();
+    this.cleanupSpaceBackground();
   }
 }

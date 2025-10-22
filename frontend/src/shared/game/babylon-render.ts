@@ -55,7 +55,10 @@ export class BabylonRender {
       new Vector3(0, 1, 0),
       this.scene,
     );
-    light.intensity = 0.7;
+    light.intensity = 1.2; // より明るいライティング
+
+    // 宇宙空間の背景を作成
+    this.createSpaceBackground();
 
     this.createGameObjects();
   }
@@ -67,7 +70,8 @@ export class BabylonRender {
       this.scene,
     );
     const fieldMaterial = new StandardMaterial("fieldMaterial", this.scene);
-    fieldMaterial.diffuseColor = new Color3(0.1, 0.1, 0.1);
+    fieldMaterial.diffuseColor = new Color3(0.2, 0.3, 0.2); // 緑がかった色で見やすく
+    fieldMaterial.emissiveColor = new Color3(0.05, 0.1, 0.05); // 少し光らせる
     this.fieldMesh.material = fieldMaterial;
 
     this.paddle1Mesh = MeshBuilder.CreateBox(
@@ -77,6 +81,7 @@ export class BabylonRender {
     );
     const paddle1Material = new StandardMaterial("paddle1Material", this.scene);
     paddle1Material.diffuseColor = new Color3(1, 1, 1);
+    paddle1Material.emissiveColor = new Color3(0.3, 0.3, 0.3); // より明るく光らせる
     this.paddle1Mesh.material = paddle1Material;
     this.paddle1Mesh.position = new Vector3(-7, 0.1, 0);
 
@@ -87,6 +92,7 @@ export class BabylonRender {
     );
     const paddle2Material = new StandardMaterial("paddle2Material", this.scene);
     paddle2Material.diffuseColor = new Color3(1, 1, 1);
+    paddle2Material.emissiveColor = new Color3(0.3, 0.3, 0.3); // より明るく光らせる
     this.paddle2Mesh.material = paddle2Material;
     this.paddle2Mesh.position = new Vector3(7, 0.1, 0);
 
@@ -97,6 +103,7 @@ export class BabylonRender {
     );
     const ballMaterial = new StandardMaterial("ballMaterial", this.scene);
     ballMaterial.diffuseColor = new Color3(1, 1, 1);
+    ballMaterial.emissiveColor = new Color3(0.4, 0.4, 0.4); // ボールを特に明るく
     this.ballMesh.material = ballMaterial;
     this.ballMesh.position = new Vector3(0, 0.15, 0);
 
@@ -143,10 +150,94 @@ export class BabylonRender {
           this.scene,
         );
         lineMaterial.diffuseColor = new Color3(1, 1, 1);
-        lineMaterial.emissiveColor = new Color3(0.2, 0.2, 0.2); // 少し光らせる
+        lineMaterial.emissiveColor = new Color3(0.5, 0.5, 0.5); // より明るく光らせる
         lineSegment.material = lineMaterial;
       }
     }
+  }
+
+  private createSpaceBackground() {
+    // 宇宙空間のSkybox作成
+    const skybox = MeshBuilder.CreateSphere(
+      "skyBox",
+      { diameter: 1000 },
+      this.scene,
+    );
+    const skyboxMaterial = new StandardMaterial("skyBox", this.scene);
+
+    // 内側から見えるように設定
+    skyboxMaterial.backFaceCulling = false;
+
+    // 宇宙のグラデーション色
+    skyboxMaterial.diffuseColor = new Color3(0.02, 0.02, 0.1);
+    skyboxMaterial.emissiveColor = new Color3(0.01, 0.01, 0.05);
+
+    skybox.material = skyboxMaterial;
+    skybox.infiniteDistance = true;
+
+    // 星を作成
+    this.createStars();
+
+    // 遠くの惑星を作成
+    this.createPlanets();
+  }
+
+  private createStars() {
+    // ランダムな位置に星を配置
+    for (let i = 0; i < 200; i++) {
+      const star = MeshBuilder.CreateSphere(
+        `star${i}`,
+        { diameter: 0.1 + Math.random() * 0.3 },
+        this.scene,
+      );
+
+      // ランダムな位置（球面上）
+      const radius = 400 + Math.random() * 100;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.random() * Math.PI;
+
+      star.position.x = radius * Math.sin(phi) * Math.cos(theta);
+      star.position.y = radius * Math.cos(phi);
+      star.position.z = radius * Math.sin(phi) * Math.sin(theta);
+
+      const starMaterial = new StandardMaterial(`starMaterial${i}`, this.scene);
+      starMaterial.emissiveColor = new Color3(1, 1, 0.8 + Math.random() * 0.2);
+      star.material = starMaterial;
+    }
+  }
+
+  private createPlanets() {
+    // 遠くの惑星1
+    const planet1 = MeshBuilder.CreateSphere(
+      "planet1",
+      { diameter: 20 },
+      this.scene,
+    );
+    planet1.position = new Vector3(-200, 50, -300);
+    const planet1Material = new StandardMaterial("planet1Material", this.scene);
+    planet1Material.diffuseColor = new Color3(0.8, 0.4, 0.2);
+    planet1Material.emissiveColor = new Color3(0.1, 0.05, 0.02);
+    planet1.material = planet1Material;
+
+    // 遠くの惑星2
+    const planet2 = MeshBuilder.CreateSphere(
+      "planet2",
+      { diameter: 15 },
+      this.scene,
+    );
+    planet2.position = new Vector3(250, -30, -400);
+    const planet2Material = new StandardMaterial("planet2Material", this.scene);
+    planet2Material.diffuseColor = new Color3(0.3, 0.5, 0.8);
+    planet2Material.emissiveColor = new Color3(0.03, 0.05, 0.08);
+    planet2.material = planet2Material;
+
+    // 月のような天体
+    const moon = MeshBuilder.CreateSphere("moon", { diameter: 8 }, this.scene);
+    moon.position = new Vector3(150, 80, -200);
+    const moonMaterial = new StandardMaterial("moonMaterial", this.scene);
+    moonMaterial.diffuseColor = new Color3(0.7, 0.7, 0.6);
+    moonMaterial.emissiveColor = new Color3(0.05, 0.05, 0.04);
+    moon.material = moonMaterial;
   }
 
   private createScoreBoards() {
