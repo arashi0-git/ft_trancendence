@@ -1,4 +1,4 @@
-import { PongGame } from "../game/pong-game";
+import { PongGame3D } from "../game/pong-game-3d";
 
 export type GameMode = "quick-play" | "tournament" | "ai-mode";
 
@@ -10,7 +10,7 @@ export interface GameConfig {
 }
 
 export class GameManagerService {
-  private pongGame: PongGame | null = null;
+  private pongGame: PongGame3D | null = null;
   private currentConfig: GameConfig | null = null;
 
   initializeGame(config: GameConfig): void {
@@ -25,7 +25,7 @@ export class GameManagerService {
       }
 
       this.currentConfig = config;
-      this.pongGame = new PongGame(canvas);
+      this.pongGame = new PongGame3D(canvas);
 
       // AIモードの設定
       if (config.mode === "ai-mode") {
