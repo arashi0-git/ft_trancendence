@@ -1,6 +1,6 @@
 import { PongGame } from "../game/pong-game";
 
-export type GameMode = "quick-play" | "tournament";
+export type GameMode = "quick-play" | "tournament" | "ai-mode";
 
 export interface GameConfig {
   mode: GameMode;
@@ -26,6 +26,11 @@ export class GameManagerService {
 
     this.currentConfig = config;
     this.pongGame = new PongGame(canvas);
+
+    // AIモードの設定
+    if (config.mode === "ai-mode") {
+      this.pongGame.setAiMode(true);
+    }
 
     // イベントハンドラーの設定
     if (config.onGameEnd) {
@@ -74,5 +79,9 @@ export class GameManagerService {
 
   getCurrentMode(): GameMode | null {
     return this.currentConfig?.mode || null;
+  }
+
+  moveAiPaddle(deltaY: number): void {
+    this.pongGame?.moveAiPaddle(deltaY);
   }
 }

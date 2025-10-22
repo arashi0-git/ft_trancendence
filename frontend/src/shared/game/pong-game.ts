@@ -17,6 +17,7 @@ export class PongGame {
   private keyState: KeyState = {};
   private animationId: number | null = null;
   private events: Partial<GameEvents> = {};
+  private isAiMode: boolean = false;
   private readonly GAME_KEYS = [
     "ArrowUp",
     "ArrowDown",
@@ -53,6 +54,22 @@ export class PongGame {
 
     this.initializeGame();
     this.setupEventListeners();
+  }
+
+  public setAiMode(isAiMode: boolean): void {
+    this.isAiMode = isAiMode;
+  }
+
+  public moveAiPaddle(deltaY: number): void {
+    if (!this.isAiMode) return;
+
+    const paddle = this.gameState.player2.paddle;
+    const newY = paddle.y + deltaY;
+
+    // 境界チェック
+    if (newY >= 0 && newY <= this.config.canvasHeight - paddle.height) {
+      paddle.y = newY;
+    }
   }
 
   private initializeGame(): void {
@@ -98,9 +115,9 @@ export class PongGame {
       x: this.config.canvasWidth / 2,
       y: this.config.canvasHeight / 2,
       radius: this.config.ballRadius,
-      velocityX: 0,
-      velocityY: 0,
-      speed: this.config.ballSpeed * 0.5,
+      velocityX: this.config.ballSpeed * (Math.random() > 0.5 ? 1 : -1),
+      velocityY: this.config.ballSpeed * (Math.random() > 0.5 ? 0.5 : -0.5),
+      speed: this.config.ballSpeed,
     };
 
     const score: Score = {
@@ -218,23 +235,26 @@ export class PongGame {
       p1.paddle.x += p1.paddle.speed;
     }
 
-    const p2 = this.gameState.player2;
+    // AIモードではPlayer2のキー入力を無視
+    if (!this.isAiMode) {
+      const p2 = this.gameState.player2;
 
-    if (this.keyState[p2.keys.up] && p2.paddle.y > 0) {
-      p2.paddle.y -= p2.paddle.speed;
-    }
-    if (
-      this.keyState[p2.keys.down] &&
-      p2.paddle.y < this.config.canvasHeight - this.config.paddleHeight
-    ) {
-      p2.paddle.y += p2.paddle.speed;
-    }
+      if (this.keyState[p2.keys.up] && p2.paddle.y > 0) {
+        p2.paddle.y -= p2.paddle.speed;
+      }
+      if (
+        this.keyState[p2.keys.down] &&
+        p2.paddle.y < this.config.canvasHeight - this.config.paddleHeight
+      ) {
+        p2.paddle.y += p2.paddle.speed;
+      }
 
-    if (this.keyState[p2.keys.left] && p2.paddle.x > p2.paddle.minX) {
-      p2.paddle.x -= p2.paddle.speed;
-    }
-    if (this.keyState[p2.keys.right] && p2.paddle.x < p2.paddle.maxX) {
-      p2.paddle.x += p2.paddle.speed;
+      if (this.keyState[p2.keys.left] && p2.paddle.x > p2.paddle.minX) {
+        p2.paddle.x -= p2.paddle.speed;
+      }
+      if (this.keyState[p2.keys.right] && p2.paddle.x < p2.paddle.maxX) {
+        p2.paddle.x += p2.paddle.speed;
+      }
     }
   }
 

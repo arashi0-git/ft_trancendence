@@ -34,6 +34,13 @@ export class HomePage {
               <div class="text-sm opacity-90">2-8 Players - Bracket style competition</div>
             </div>
           </button>
+          
+          <button id="ai-mode-btn" class="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded">
+            <div class="text-center">
+              <div class="font-semibold text-lg">🤖 AI Mode</div>
+              <div class="text-sm opacity-90">1 Player vs Computer - Test your skills</div>
+            </div>
+          </button>
         </div>
         
         <div class="border-t pt-4">
@@ -54,6 +61,10 @@ export class HomePage {
       ?.addEventListener("click", () => {
         this.service.navigateToTournament();
       });
+
+    document.getElementById("ai-mode-btn")?.addEventListener("click", () => {
+      this.service.navigateToAiMode();
+    });
 
     document.getElementById("login-btn")?.addEventListener("click", () => {
       this.service.navigateToLogin();

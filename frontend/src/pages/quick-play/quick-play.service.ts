@@ -1,22 +1,8 @@
-import { GameManagerService } from "../../shared/services/game-manager.service";
-import { NotificationService } from "../../shared/services/notification.service";
+import { BaseGameService } from "../../shared/services/base-game.service";
 import { AuthService } from "../../shared/services/auth-service";
 import { router } from "../../routes/router";
 
-export class QuickPlayService {
-  private gameManager: GameManagerService;
-  private notificationService: NotificationService;
-  private controlListeners: Array<{
-    element: HTMLElement;
-    event: string;
-    handler: EventListener;
-  }> = [];
-
-  constructor() {
-    this.gameManager = new GameManagerService();
-    this.notificationService = NotificationService.getInstance();
-  }
-
+export class QuickPlayService extends BaseGameService {
   initializeGame(canvasId: string): void {
     this.gameManager.initializeGame({
       mode: "quick-play",
@@ -26,75 +12,34 @@ export class QuickPlayService {
   }
 
   attachGameControls(): void {
-    const startBtn = document.getElementById("start-game");
-    const pauseBtn = document.getElementById("pause-game");
-    const resetBtn = document.getElementById("reset-game");
-
-    if (startBtn && pauseBtn && resetBtn) {
-      const startHandler = () =>
-        this.startGame(
-          startBtn as HTMLButtonElement,
-          pauseBtn as HTMLButtonElement,
-        );
-      const pauseHandler = () =>
-        this.pauseGame(
-          startBtn as HTMLButtonElement,
-          pauseBtn as HTMLButtonElement,
-        );
-      const resetHandler = () =>
-        this.resetGame(
-          startBtn as HTMLButtonElement,
-          pauseBtn as HTMLButtonElement,
-        );
-
-      startBtn.addEventListener("click", startHandler);
-      pauseBtn.addEventListener("click", pauseHandler);
-      resetBtn.addEventListener("click", resetHandler);
-
-      this.controlListeners.push(
-        { element: startBtn, event: "click", handler: startHandler },
-        { element: pauseBtn, event: "click", handler: pauseHandler },
-        { element: resetBtn, event: "click", handler: resetHandler },
-      );
-    }
+    this.addControlListener("start-game", "click", () => this.startGame());
+    this.addControlListener("pause-game", "click", () => this.pauseGame());
+    this.addControlListener("reset-game", "click", () => this.resetGame());
   }
 
-  private startGame(
-    startBtn: HTMLButtonElement,
-    pauseBtn: HTMLButtonElement,
-  ): void {
-    if (!startBtn || !pauseBtn) return;
-    this.gameManager.startGame();
-    startBtn.disabled = true;
-    pauseBtn.disabled = false;
+  protected onGameStart(): void {
+    // Quick-play specific logic if needed
   }
 
-  private pauseGame(
-    startBtn: HTMLButtonElement,
-    pauseBtn: HTMLButtonElement,
-  ): void {
-    this.gameManager.pauseGame();
-    startBtn.disabled = false;
-    pauseBtn.disabled = true;
+  protected onGamePause(): void {
+    // Quick-play specific logic if needed
   }
 
-  private resetGame(
-    startBtn: HTMLButtonElement,
-    pauseBtn: HTMLButtonElement,
-  ): void {
-    this.gameManager.resetGame();
-    startBtn.disabled = false;
-    pauseBtn.disabled = true;
+  protected onGameReset(): void {
+    // Quick-play specific logic if needed
+  }
+
+  protected getStartButton(): HTMLButtonElement | null {
+    return document.getElementById("start-game") as HTMLButtonElement;
+  }
+
+  protected getPauseButton(): HTMLButtonElement | null {
+    return document.getElementById("pause-game") as HTMLButtonElement;
   }
 
   private handleGameEnd(winner: number): void {
     this.notificationService.success(`Player ${winner} wins! 🎉`);
-    const startBtn = document.getElementById("start-game");
-    const pauseBtn = document.getElementById("pause-game");
-    if (startBtn && pauseBtn) {
-      (startBtn as HTMLButtonElement).disabled = false;
-      (pauseBtn as HTMLButtonElement).disabled = true;
-    }
+    this.updateButtonStates(false);
   }
 
   navigateToHome(): void {
@@ -134,11 +79,5 @@ export class QuickPlayService {
       : `<button id="login-quick-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Login</button>`;
   }
 
-  cleanup(): void {
-    this.controlListeners.forEach(({ element, event, handler }) => {
-      element.removeEventListener(event, handler);
-    });
-    this.controlListeners = [];
-    this.gameManager.cleanup();
-  }
+  // cleanup()はBaseGameServiceから継承
 }
