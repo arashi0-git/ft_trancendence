@@ -23,6 +23,8 @@ export class BabylonRender {
   private scoreBoard2!: Mesh;
   private scoreTexture1!: DynamicTexture;
   private scoreTexture2!: DynamicTexture;
+  private prevScore1 = -1;
+  private prevScore2 = -1;
 
   constructor(engine: Engine) {
     this.scene = new Scene(engine);
@@ -237,8 +239,13 @@ export class BabylonRender {
     this.ballMesh.position.x = (gameState.ball.x - 400) * scaleX;
     this.ballMesh.position.z = (200 - gameState.ball.y) * scaleY;
 
-    // スコア表示更新
-    this.updateScoreDisplay(gameState.score.player1, gameState.score.player2);
+    // スコア表示は変更時のみ更新
+    const { player1, player2 } = gameState.score;
+    if (player1 !== this.prevScore1 || player2 !== this.prevScore2) {
+      this.updateScoreDisplay(player1, player2);
+      this.prevScore1 = player1;
+      this.prevScore2 = player2;
+    }
   }
 
   public render() {

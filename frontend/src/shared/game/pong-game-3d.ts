@@ -304,7 +304,7 @@ export class PongGame3D {
   private checkScore(): void {
     const ball = this.gameState.ball;
 
-    if (ball.x < 0) {
+    if (ball.x + ball.radius < 0) {
       this.gameState.score.player2++;
       this.resetBall();
       this.eventListeners.onScoreUpdate?.forEach((callback) => {
@@ -312,7 +312,7 @@ export class PongGame3D {
       });
     }
 
-    if (ball.x > this.config.canvasWidth) {
+    if (ball.x - ball.radius > this.config.canvasWidth) {
       this.gameState.score.player1++;
       this.resetBall();
       this.eventListeners.onScoreUpdate?.forEach((callback) => {

@@ -32,19 +32,19 @@ export class AiPlayer {
       reactionTime: 500, // 反応を遅く
       predictionAccuracy: 0.4, // 予測精度を下げる
       missRate: 0.5, // ミス率を上げる
-      updateInterval: 300, // 更新間隔を長く
+      updateInterval: 1000, // 更新間隔 1秒
     },
     medium: {
       reactionTime: 300, // 適度な反応時間
       predictionAccuracy: 0.65, // 適度な予測精度
       missRate: 0.25, // 適度なミス率
-      updateInterval: 200, // 適度な更新間隔
+      updateInterval: 1000, // 更新間隔 1秒
     },
     hard: {
       reactionTime: 200, // 速い反応（無理ゲーを避ける）
       predictionAccuracy: 0.8, // 高い予測精度（完璧ではない）
       missRate: 0.1, // 低いミス率（たまにミス）
-      updateInterval: 150, // 速い更新間隔
+      updateInterval: 1000, // 更新間隔 1秒
     },
   };
 

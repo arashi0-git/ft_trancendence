@@ -173,6 +173,9 @@ export class PongGame {
       this.gameState.gameStatus === "paused"
     ) {
       this.gameState.gameStatus = "playing";
+      this.eventListeners.onGameStateChange?.forEach((callback) => {
+        callback(this.getReadonlyGameState());
+      });
       this.gameLoop();
     }
   }
@@ -184,6 +187,9 @@ export class PongGame {
         cancelAnimationFrame(this.animationId);
         this.animationId = null;
       }
+      this.eventListeners.onGameStateChange?.forEach((callback) => {
+        callback(this.getReadonlyGameState());
+      });
     }
   }
 
@@ -198,6 +204,9 @@ export class PongGame {
     }
     this.resetKeyState();
     this.initializeGame();
+    this.eventListeners.onGameStateChange?.forEach((callback) => {
+      callback(this.getReadonlyGameState());
+    });
     this.render();
   }
 
@@ -368,6 +377,9 @@ export class PongGame {
       this.animationId = null;
     }
     this.resetKeyState();
+    this.eventListeners.onGameStateChange?.forEach((callback) => {
+      callback(this.getReadonlyGameState());
+    });
     this.eventListeners.onGameEnd?.forEach((callback) => {
       callback(winner);
     });
@@ -471,8 +483,22 @@ export class PongGame {
     return this.deepClone(this.gameState);
   }
 
+  private deepFreeze<T>(obj: T): Readonly<T> {
+    if (obj === null || typeof obj !== "object") return obj as Readonly<T>;
+    if (Array.isArray(obj))
+      return Object.freeze(
+        obj.map((v) => this.deepFreeze(v)),
+      ) as unknown as Readonly<T>;
+    const out: any = {};
+    for (const k in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, k))
+        out[k] = this.deepFreeze((obj as any)[k]);
+    }
+    return Object.freeze(out);
+  }
+
   public getReadonlyGameState(): Readonly<GameState> {
-    return { ...this.gameState };
+    return this.deepFreeze(this.deepClone(this.gameState));
   }
 
   public getCanvasSize(): { width: number; height: number } {
