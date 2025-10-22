@@ -18,6 +18,7 @@ export class BabylonRender {
   private paddle1Mesh!: Mesh;
   private paddle2Mesh!: Mesh;
   private ballMesh!: Mesh;
+  private withBackground: boolean;
   private fieldMesh!: Mesh;
   private scoreBoard1!: Mesh;
   private scoreBoard2!: Mesh;
@@ -26,7 +27,8 @@ export class BabylonRender {
   private prevScore1 = -1;
   private prevScore2 = -1;
 
-  constructor(engine: Engine) {
+  constructor(engine: Engine, withBackground: boolean = false) {
+    this.withBackground = withBackground;
     this.scene = new Scene(engine);
 
     // カメラを斜め上から見下ろす角度に設定（Pongらしい視点）
@@ -59,8 +61,10 @@ export class BabylonRender {
     );
     light.intensity = 1.2; // より明るいライティング
 
-    // 宇宙空間の背景を作成
-    this.createSpaceBackground();
+    // 宇宙空間の背景を作成（オプション）
+    if (this.withBackground) {
+      this.createSpaceBackground();
+    }
 
     this.createGameObjects();
   }
