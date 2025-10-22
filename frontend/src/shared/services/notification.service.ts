@@ -52,7 +52,6 @@ export class NotificationService {
     const {
       type = "info",
       duration = this.DEFAULT_DURATION,
-      position = "top-right",
     } = options;
 
     const notification = this.createNotification(message, type);
