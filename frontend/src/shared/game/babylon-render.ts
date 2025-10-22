@@ -198,7 +198,7 @@ export class BabylonRender {
       );
 
       // ランダムな位置（球面上）
-      const radius = 400 + Math.random() * 100;
+      const radius = 200 + Math.random() * 200;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.random() * Math.PI;
 
