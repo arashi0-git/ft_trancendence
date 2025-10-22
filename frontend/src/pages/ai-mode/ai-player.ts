@@ -149,7 +149,8 @@ export class AiPlayer {
 
     // ボールがAI側に向かっていない場合は中央に戻る
     if (ball.velocityX <= 0) {
-      const canvasHeight = 400;
+      const canvasSize = this.gameManager?.getCanvasSize();
+      const canvasHeight = canvasSize?.height || 400; // フォールバック値
       return {
         x: paddle.x,
         y: canvasHeight / 2, // 画面中央
@@ -163,7 +164,8 @@ export class AiPlayer {
     let velocityY = ball.velocityY;
     let time = 0;
 
-    const canvasHeight = 400;
+    const canvasSize = this.gameManager?.getCanvasSize();
+    const canvasHeight = canvasSize?.height || 400; // フォールバック値
     const paddleX = paddle.x;
 
     // ボールがパドルのX位置に到達するまでシミュレート
@@ -204,7 +206,8 @@ export class AiPlayer {
     const paddle = currentState.player2.paddle;
     const paddleCenter = paddle.y + paddle.height / 2;
     const difference = this.targetY - paddleCenter;
-    const threshold = 20; // しきい値を少し大きく
+    const canvasSize = this.gameManager.getCanvasSize();
+    const threshold = canvasSize ? canvasSize.height * 0.05 : 20; // キャンバス高さの5%、フォールバック20
 
     // 目標に近い場合は停止
     if (Math.abs(difference) < threshold) {
@@ -246,8 +249,11 @@ export class AiPlayer {
       const difference = this.targetY - paddleCenter;
 
       // 目標に到達したか、方向が変わった場合は停止
+      const canvasSize = this.gameManager.getCanvasSize();
+      const threshold = canvasSize ? canvasSize.height * 0.05 : 20; // キャンバス高さの5%、フォールバック20
+
       if (
-        Math.abs(difference) < 20 ||
+        Math.abs(difference) < threshold ||
         (direction === "up" && difference > 0) ||
         (direction === "down" && difference < 0)
       ) {
@@ -259,7 +265,12 @@ export class AiPlayer {
       const moveSpeed = paddle.speed * 0.8; // 少し遅めに
       const moveDistance = direction === "down" ? moveSpeed : -moveSpeed;
 
-      this.gameManager.moveAiPaddle(moveDistance);
+      try {
+        this.gameManager.moveAiPaddle(moveDistance);
+      } catch (error) {
+        console.error("AI movement error:", error);
+        this.stopMovement();
+      }
     }, 16); // 約60FPSで滑らかに移動
   }
 

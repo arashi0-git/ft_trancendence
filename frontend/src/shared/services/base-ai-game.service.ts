@@ -6,8 +6,16 @@ export abstract class BaseAiGameService extends BaseGameService {
   protected currentDifficulty: AiDifficulty = "medium";
 
   protected onGameStart(): void {
-    console.log("BaseAiGameService: Starting AI player", this.aiPlayer);
-    this.aiPlayer?.start(this.gameManager);
+    try {
+      console.log("BaseAiGameService: Starting AI player", this.aiPlayer);
+      if (!this.aiPlayer) {
+        throw new Error("AI player not initialized");
+      }
+      this.aiPlayer.start(this.gameManager);
+    } catch (error) {
+      console.error("Failed to start AI player:", error);
+      throw error; // Re-throw to be handled by BaseGameService
+    }
   }
 
   protected onGamePause(): void {

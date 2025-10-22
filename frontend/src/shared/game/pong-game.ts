@@ -115,8 +115,8 @@ export class PongGame {
       x: this.config.canvasWidth / 2,
       y: this.config.canvasHeight / 2,
       radius: this.config.ballRadius,
-      velocityX: this.config.ballSpeed * (Math.random() > 0.5 ? 1 : -1),
-      velocityY: this.config.ballSpeed * (Math.random() > 0.5 ? 0.5 : -0.5),
+      velocityX: 0,
+      velocityY: 0,
       speed: this.config.ballSpeed,
     };
 
@@ -423,5 +423,12 @@ export class PongGame {
 
   public getGameState(): GameState {
     return { ...this.gameState };
+  }
+
+  public getCanvasSize(): { width: number; height: number } {
+    return {
+      width: this.config.canvasWidth,
+      height: this.config.canvasHeight,
+    };
   }
 }

@@ -14,46 +14,59 @@ export class GameManagerService {
   private currentConfig: GameConfig | null = null;
 
   initializeGame(config: GameConfig): void {
-    this.cleanup();
+    try {
+      this.cleanup();
 
-    const canvas = document.getElementById(
-      config.canvasId,
-    ) as HTMLCanvasElement;
-    if (!canvas) {
-      console.error(`Canvas with id '${config.canvasId}' not found`);
-      return;
+      const canvas = document.getElementById(
+        config.canvasId,
+      ) as HTMLCanvasElement;
+      if (!canvas) {
+        throw new Error(`Canvas with id '${config.canvasId}' not found`);
+      }
+
+      this.currentConfig = config;
+      this.pongGame = new PongGame(canvas);
+
+      // AIモードの設定
+      if (config.mode === "ai-mode") {
+        this.pongGame.setAiMode(true);
+      }
+
+      // イベントハンドラーの設定
+      if (config.onGameEnd) {
+        this.pongGame.on("onGameEnd", config.onGameEnd);
+      }
+
+      if (config.onScoreUpdate) {
+        this.pongGame.on("onScoreUpdate", config.onScoreUpdate);
+      }
+
+      this.pongGame.resetGame();
+    } catch (error) {
+      console.error("Failed to initialize game:", error);
+      throw error;
     }
-
-    this.currentConfig = config;
-    this.pongGame = new PongGame(canvas);
-
-    // AIモードの設定
-    if (config.mode === "ai-mode") {
-      this.pongGame.setAiMode(true);
-    }
-
-    // イベントハンドラーの設定
-    if (config.onGameEnd) {
-      this.pongGame.on("onGameEnd", config.onGameEnd);
-    }
-
-    if (config.onScoreUpdate) {
-      this.pongGame.on("onScoreUpdate", config.onScoreUpdate);
-    }
-
-    this.pongGame.resetGame();
   }
 
   startGame(): void {
-    this.pongGame?.startGame();
+    if (!this.pongGame) {
+      throw new Error("Game not initialized");
+    }
+    this.pongGame.startGame();
   }
 
   pauseGame(): void {
-    this.pongGame?.pauseGame();
+    if (!this.pongGame) {
+      throw new Error("Game not initialized");
+    }
+    this.pongGame.pauseGame();
   }
 
   resetGame(): void {
-    this.pongGame?.resetGame();
+    if (!this.pongGame) {
+      throw new Error("Game not initialized");
+    }
+    this.pongGame.resetGame();
   }
 
   getGameState() {
@@ -82,6 +95,13 @@ export class GameManagerService {
   }
 
   moveAiPaddle(deltaY: number): void {
-    this.pongGame?.moveAiPaddle(deltaY);
+    if (!this.pongGame) {
+      throw new Error("Game not initialized");
+    }
+    this.pongGame.moveAiPaddle(deltaY);
+  }
+
+  getCanvasSize(): { width: number; height: number } | null {
+    return this.pongGame?.getCanvasSize() || null;
   }
 }

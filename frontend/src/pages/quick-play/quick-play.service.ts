@@ -30,11 +30,13 @@ export class QuickPlayService extends BaseGameService {
   }
 
   protected getStartButton(): HTMLButtonElement | null {
-    return document.getElementById("start-game") as HTMLButtonElement;
+    const element = document.getElementById("start-game");
+    return element instanceof HTMLButtonElement ? element : null;
   }
 
   protected getPauseButton(): HTMLButtonElement | null {
-    return document.getElementById("pause-game") as HTMLButtonElement;
+    const element = document.getElementById("pause-game");
+    return element instanceof HTMLButtonElement ? element : null;
   }
 
   private handleGameEnd(winner: number): void {

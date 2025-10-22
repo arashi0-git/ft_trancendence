@@ -17,21 +17,36 @@ export abstract class BaseGameService {
 
   // 共通のゲーム制御メソッド
   protected startGame(): void {
-    this.gameManager.startGame();
-    this.onGameStart();
-    this.updateButtonStates(true);
+    try {
+      this.gameManager.startGame();
+      this.onGameStart();
+      this.updateButtonStates(true);
+    } catch (error) {
+      this.notificationService.error("ゲームの開始に失敗しました");
+      console.error("Failed to start game:", error);
+    }
   }
 
   protected pauseGame(): void {
-    this.gameManager.pauseGame();
-    this.onGamePause();
-    this.updateButtonStates(false);
+    try {
+      this.gameManager.pauseGame();
+      this.onGamePause();
+      this.updateButtonStates(false);
+    } catch (error) {
+      this.notificationService.error("ゲームの一時停止に失敗しました");
+      console.error("Failed to pause game:", error);
+    }
   }
 
   protected resetGame(): void {
-    this.gameManager.resetGame();
-    this.onGameReset();
-    this.updateButtonStates(false);
+    try {
+      this.gameManager.resetGame();
+      this.onGameReset();
+      this.updateButtonStates(false);
+    } catch (error) {
+      this.notificationService.error("ゲームのリセットに失敗しました");
+      console.error("Failed to reset game:", error);
+    }
   }
 
   // 共通のボタン状態管理

@@ -4,14 +4,20 @@ import { AiPlayer, type AiDifficulty } from "./ai-player";
 
 export class AiModeService extends BaseAiGameService {
   initializeGame(canvasId: string): void {
-    this.gameManager.initializeGame({
-      mode: "ai-mode",
-      canvasId,
-      onGameEnd: (winner: number) => this.handleGameEnd(winner),
-      onScoreUpdate: (score) => this.handleScoreUpdate(score),
-    });
+    try {
+      this.gameManager.initializeGame({
+        mode: "ai-mode",
+        canvasId,
+        onGameEnd: (winner: number) => this.handleGameEnd(winner),
+        onScoreUpdate: (score) => this.handleScoreUpdate(score),
+      });
 
-    this.aiPlayer = new AiPlayer(this.currentDifficulty);
+      this.aiPlayer = new AiPlayer(this.currentDifficulty);
+    } catch (error) {
+      this.notificationService.error("AI-modeの初期化に失敗しました");
+      console.error("Failed to initialize AI mode:", error);
+      throw error;
+    }
   }
   attachGameControls(): void {
     this.addControlListener("start-ai-game", "click", () => this.startGame());
@@ -19,7 +25,10 @@ export class AiModeService extends BaseAiGameService {
     this.addControlListener("reset-ai-game", "click", () => this.resetGame());
     this.addControlListener("difficulty-select", "change", (e) => {
       const target = e.target as HTMLSelectElement;
-      this.changeDifficulty(target.value as AiDifficulty);
+      const value = target.value;
+      if (value === "easy" || value === "medium" || value === "hard") {
+        this.changeDifficulty(value as AiDifficulty);
+      }
     });
   }
 
