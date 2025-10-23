@@ -40,6 +40,7 @@ export class PageTransition {
     if (!this.spaceBackground) return;
 
     const camera = this.spaceBackground.getCamera();
+    const originalRadius = camera.radius;
 
     // ワープエフェクト: カメラが急速に前進
     Animation.CreateAndStartAnimation(
@@ -55,7 +56,7 @@ export class PageTransition {
       () => {
         // アニメーション完了後、元の位置に戻す
         setTimeout(() => {
-          camera.radius = 5;
+          camera.radius = originalRadius;
           onComplete();
         }, 100);
       },
@@ -66,6 +67,7 @@ export class PageTransition {
     if (!this.spaceBackground) return;
 
     const camera = this.spaceBackground.getCamera();
+    const originalRadius = camera.radius;
 
     // ズームアウト → ズームイン
     Animation.CreateAndStartAnimation(
@@ -87,7 +89,7 @@ export class PageTransition {
           60,
           duration / 2 / 16.67,
           50,
-          5, // 元の位置に戻る
+          originalRadius, // 元の位置に戻る
           Animation.ANIMATIONLOOPMODE_CONSTANT,
           undefined,
           onComplete,

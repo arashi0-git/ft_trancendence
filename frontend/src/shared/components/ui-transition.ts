@@ -35,6 +35,8 @@ export class UITransition {
     duration: number,
     onComplete: () => void,
   ): void {
+    let completed = false;
+
     // 超滑らかな流れ星エフェクト（ブラー効果を削除してパフォーマンス向上）
     const keyframes = `
       @keyframes shootingStar {
@@ -86,6 +88,8 @@ export class UITransition {
     element.style.transformOrigin = "center center";
 
     const handleAnimationEnd = () => {
+      if (completed) return;
+      completed = true;
       element.removeEventListener("animationend", handleAnimationEnd);
       element.style.willChange = "auto";
       element.style.backfaceVisibility = "";
@@ -115,6 +119,8 @@ export class UITransition {
     duration: number,
     onComplete: () => void,
   ): void {
+    let completed = false;
+
     const keyframes = `
       @keyframes warpOut {
         0% {
@@ -142,6 +148,8 @@ export class UITransition {
     element.style.backfaceVisibility = "hidden";
 
     const handleAnimationEnd = () => {
+      if (completed) return;
+      completed = true;
       element.removeEventListener("animationend", handleAnimationEnd);
       element.style.willChange = "auto";
       element.style.backfaceVisibility = "";
@@ -165,6 +173,8 @@ export class UITransition {
     duration: number,
     onComplete: () => void,
   ): void {
+    let completed = false;
+
     const keyframes = `
       @keyframes spiralOut {
         0% {
@@ -197,6 +207,8 @@ export class UITransition {
     element.style.backfaceVisibility = "hidden";
 
     const handleAnimationEnd = () => {
+      if (completed) return;
+      completed = true;
       element.removeEventListener("animationend", handleAnimationEnd);
       element.style.willChange = "auto";
       element.style.backfaceVisibility = "";
@@ -219,6 +231,8 @@ export class UITransition {
     duration: number,
     onComplete: () => void,
   ): void {
+    let completed = false;
+
     const keyframes = `
       @keyframes fadeZoom {
         0% {
@@ -246,6 +260,8 @@ export class UITransition {
     element.style.backfaceVisibility = "hidden";
 
     const handleAnimationEnd = () => {
+      if (completed) return;
+      completed = true;
       element.removeEventListener("animationend", handleAnimationEnd);
       element.style.willChange = "auto";
       element.style.backfaceVisibility = "";
