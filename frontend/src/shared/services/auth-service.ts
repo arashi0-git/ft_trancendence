@@ -5,8 +5,20 @@ import {
   AuthResponse,
 } from "../types/user";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+const resolveApiBaseUrl = (): string => {
+  const configured = import.meta.env.VITE_API_BASE_URL;
+  if (configured) {
+    return configured.replace(/\/+$/, "");
+  }
+
+  if (typeof window !== "undefined" && window.location.origin) {
+    return `${window.location.origin}/api`;
+  }
+
+  return "https://localhost/api";
+};
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 export class AuthService {
   private static getAuthHeaders(): HeadersInit {

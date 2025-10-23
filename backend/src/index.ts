@@ -4,28 +4,12 @@ import websocket from "@fastify/websocket";
 import cors from "@fastify/cors";
 import staticFiles from "@fastify/static";
 import path from "path";
-// import fs from "fs";
-// import https from "https";
 import { initializeDatabase } from "./database/init";
 import { authRoutes } from "./routes/auth";
 
-
-// const httpsOptions =
-//   process.env.NODE_ENV === "production"
-//     ? {
-//         key: fs.readFileSync(path.join(process.cwd(), "ssl", "key.pem")),
-//         cert: fs.readFileSync(path.join(process.cwd(), "ssl", "cert.pem")),
-//       }
-//     : undefined;
-
 const fastify = Fastify({
   logger: true,
-  trustProxy: true
-  // serverFactory: httpsOptions
-  //   ? (handler) => {
-  //       return https.createServer(httpsOptions, handler);
-  //     }
-  //   : undefined,
+  trustProxy: true,
 });
 
 // プラグインの登録
@@ -107,10 +91,10 @@ async function start() {
     await fastify.listen({ port, host });
 
     fastify.log.info(
-      `ft_transcendence backend server listening on ${host}:${port}`,
+      `ft_transcendence backend server listening on http://${host}:${port}`,
     );
     fastify.log.info(
-      `WebSocket endpoint: ws${process.env.NODE_ENV === "production" ? "s" : ""}://${host}:${port}/ws`,
+      `WebSocket endpoint: ws://${host}:${port}/ws`,
     );
   } catch (error) {
     fastify.log.error(error);

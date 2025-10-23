@@ -17,12 +17,13 @@ export class GameManagerService {
     try {
       this.cleanup();
 
-      const canvas = document.getElementById(
-        config.canvasId,
-      ) as HTMLCanvasElement;
-      if (!canvas) {
-        throw new Error(`Canvas with id '${config.canvasId}' not found`);
+      const element = document.getElementById(config.canvasId);
+      if (!(element instanceof HTMLCanvasElement)) {
+        throw new Error(
+          `Canvas with id '${config.canvasId}' not found or is not a canvas element`,
+        );
       }
+      const canvas = element;
 
       this.currentConfig = config;
       this.pongGame = new PongGame3D(canvas);
