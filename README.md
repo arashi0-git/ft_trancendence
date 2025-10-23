@@ -2,6 +2,9 @@
 
 A modern Pong game platform with user authentication and tournament system.
 
+<img width="1470" height="794" alt="image" src="https://github.com/user-attachments/assets/96aef5ee-fb55-40f1-861c-fd6b4a138669" />
+
+
 ## Features
 
 - User authentication with JWT tokens
