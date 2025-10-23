@@ -36,6 +36,7 @@
 		"typescript": "^5.3.3"
 	},
 	"dependencies": {
+		"@babylonjs/core": "^8.33.0",
 		"@types/bcrypt": "^6.0.0",
 		"@types/jsonwebtoken": "^9.0.10",
 		"bcrypt": "^6.0.0",

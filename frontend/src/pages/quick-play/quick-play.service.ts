@@ -15,6 +15,9 @@ export class QuickPlayService extends BaseGameService {
     this.addControlListener("start-game", "click", () => this.startGame());
     this.addControlListener("pause-game", "click", () => this.pauseGame());
     this.addControlListener("reset-game", "click", () => this.resetGame());
+    this.addControlListener("reset-game-modal-btn", "click", () =>
+      this.resetGame(),
+    );
   }
 
   protected onGameStart(): void {
@@ -26,7 +29,15 @@ export class QuickPlayService extends BaseGameService {
   }
 
   protected onGameReset(): void {
-    // Quick-play specific logic if needed
+    const modal = document.getElementById("game-over-modal");
+    modal?.classList.add("hidden");
+
+    // 2. Najdeme a zobrazíme hlavní tlačítka
+    const startBtn = this.getStartButton();
+    const pauseBtn = this.getPauseButton();
+
+    startBtn?.classList.remove("hidden");
+    pauseBtn?.classList.remove("hidden");
   }
 
   protected getStartButton(): HTMLButtonElement | null {
@@ -40,7 +51,20 @@ export class QuickPlayService extends BaseGameService {
   }
 
   private handleGameEnd(winner: number): void {
-    this.notificationService.success(`Player ${winner} wins! 🎉`);
+    const modal = document.getElementById("game-over-modal");
+    const winnerNameEl = document.getElementById("winner-name");
+    const finalScoreEl = document.getElementById("final-score");
+    const startBtn = this.getStartButton();
+    const pauseBtn = this.getPauseButton();
+
+    if (modal && winnerNameEl && finalScoreEl) {
+      winnerNameEl.textContent = `Player ${winner}`;
+      startBtn?.classList.add("hidden");
+      pauseBtn?.classList.add("hidden");
+      modal.classList.remove("hidden");
+    } else {
+      this.notificationService.success(`Player ${winner} wins! 🎉`);
+    }
     this.updateButtonStates(false);
   }
 
