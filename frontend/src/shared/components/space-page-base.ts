@@ -1,4 +1,5 @@
 import { SpaceBackground } from "./space-background";
+import { UITransition, type UITransitionType } from "./ui-transition";
 
 export abstract class SpacePageBase {
   protected spaceBackground: SpaceBackground | null = null;
@@ -39,11 +40,30 @@ export abstract class SpacePageBase {
     `;
   }
 
+  protected async playTransitionAndNavigate(
+    navigationFn: () => void | Promise<void>,
+    uiTransitionType: UITransitionType = "shootingStar",
+    duration: number = 800,
+  ): Promise<void> {
+    // UIアニメーションを優先して実行（滑らかさを重視）
+    const uiElement = this.container.querySelector(
+      ".bg-transparent",
+    ) as HTMLElement;
+
+    if (uiElement) {
+      // UIアニメーションのみを実行
+      await UITransition.playTransition(uiElement, uiTransitionType, duration);
+    }
+
+    await navigationFn();
+  }
+
   protected cleanupSpaceBackground(): void {
     if (this.spaceBackground) {
       this.spaceBackground.dispose();
       this.spaceBackground = null;
     }
+
     const canvas = document.getElementById("space-background");
     if (canvas) {
       canvas.remove();
