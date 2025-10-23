@@ -1,8 +1,11 @@
 import { SpaceBackground } from "./space-background";
+import { PageTransition, TransitionType } from "./page-transition";
+import { UITransition, UITransitionType } from "./ui-transition";
 
 export abstract class SpacePageBase {
   protected spaceBackground: SpaceBackground | null = null;
   protected container: HTMLElement;
+  protected pageTransition: PageTransition | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -25,6 +28,7 @@ export abstract class SpacePageBase {
     requestAnimationFrame(() => {
       try {
         this.spaceBackground = new SpaceBackground("space-background");
+        this.pageTransition = new PageTransition(this.spaceBackground);
       } catch (error) {
         console.warn("Space background initialization failed:", error);
       }
@@ -39,11 +43,31 @@ export abstract class SpacePageBase {
     `;
   }
 
+  protected async playTransitionAndNavigate(
+    navigationFn: () => void,
+    transitionType: TransitionType = "warp",
+    uiTransitionType: UITransitionType = "shootingStar",
+    duration: number = 800,
+  ): Promise<void> {
+    // UIアニメーションを優先して実行（滑らかさを重視）
+    const uiElement = this.container.querySelector(
+      ".bg-transparent",
+    ) as HTMLElement;
+
+    if (uiElement) {
+      // UIアニメーションのみを実行
+      await UITransition.playTransition(uiElement, uiTransitionType, duration);
+    }
+
+    navigationFn();
+  }
+
   protected cleanupSpaceBackground(): void {
     if (this.spaceBackground) {
       this.spaceBackground.dispose();
       this.spaceBackground = null;
     }
+    this.pageTransition = null;
     const canvas = document.getElementById("space-background");
     if (canvas) {
       canvas.remove();

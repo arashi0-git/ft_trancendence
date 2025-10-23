@@ -163,6 +163,15 @@ export class SpaceBackground {
     });
   }
 
+  // アニメーション用のアクセサー
+  public getCamera() {
+    return this.camera;
+  }
+
+  public getScene() {
+    return this.scene;
+  }
+
   public dispose() {
     try {
       window.removeEventListener("resize", this.onResize);

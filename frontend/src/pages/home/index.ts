@@ -55,19 +55,38 @@ export class HomePage extends SpacePageBase {
   }
 
   private attachEventListeners(): void {
-    document.getElementById("quick-play-btn")?.addEventListener("click", () => {
-      this.service.navigateToQuickPlay();
-    });
+    document
+      .getElementById("quick-play-btn")
+      ?.addEventListener("click", async () => {
+        await this.playTransitionAndNavigate(
+          () => this.service.navigateToQuickPlay(),
+          "warp",
+          "shootingStar",
+          500,
+        );
+      });
 
     document
       .getElementById("tournament-play-btn")
-      ?.addEventListener("click", () => {
-        this.service.navigateToTournament();
+      ?.addEventListener("click", async () => {
+        await this.playTransitionAndNavigate(
+          () => this.service.navigateToTournament(),
+          "rotate",
+          "spiralOut",
+          600,
+        );
       });
 
-    document.getElementById("ai-mode-btn")?.addEventListener("click", () => {
-      this.service.navigateToAiMode();
-    });
+    document
+      .getElementById("ai-mode-btn")
+      ?.addEventListener("click", async () => {
+        await this.playTransitionAndNavigate(
+          () => this.service.navigateToAiMode(),
+          "zoom",
+          "warpOut",
+          1000,
+        );
+      });
 
     document.getElementById("login-btn")?.addEventListener("click", () => {
       this.service.navigateToLogin();
