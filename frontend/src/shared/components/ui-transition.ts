@@ -13,16 +13,16 @@ export class UITransition {
     return new Promise((resolve) => {
       switch (type) {
         case "shootingStar":
-          this.playShootingStarTransition(element, duration, resolve);
+          UITransition.playShootingStarTransition(element, duration, resolve);
           break;
         case "warpOut":
-          this.playWarpOutTransition(element, duration, resolve);
+          UITransition.playWarpOutTransition(element, duration, resolve);
           break;
         case "spiralOut":
-          this.playSpiralOutTransition(element, duration, resolve);
+          UITransition.playSpiralOutTransition(element, duration, resolve);
           break;
         case "fadeZoom":
-          this.playFadeZoomTransition(element, duration, resolve);
+          UITransition.playFadeZoomTransition(element, duration, resolve);
           break;
         default:
           resolve();
@@ -74,27 +74,40 @@ export class UITransition {
     `;
 
     // スタイルシートに追加
-    this.addKeyframesToDocument(keyframes);
+    UITransition.addKeyframesToDocument(keyframes);
 
     // ブラウザに最適化を事前準備させる
     element.style.willChange = "transform, opacity";
     element.style.backfaceVisibility = "hidden";
     element.style.transform = "translateZ(0)";
-    (element.style as any).webkitFontSmoothing = "antialiased"; // TypeScript型エラー回避
+    (
+      element.style as CSSStyleDeclaration & { webkitFontSmoothing: string }
+    ).webkitFontSmoothing = "antialiased";
     element.style.transformOrigin = "center center";
+
+    const handleAnimationEnd = () => {
+      element.removeEventListener("animationend", handleAnimationEnd);
+      element.style.willChange = "auto";
+      element.style.backfaceVisibility = "";
+      element.style.transform = "";
+      element.style.transformOrigin = "";
+      (
+        element.style as CSSStyleDeclaration & { webkitFontSmoothing: string }
+      ).webkitFontSmoothing = "";
+      onComplete();
+    };
+
+    element.addEventListener("animationend", handleAnimationEnd, {
+      once: true,
+    });
 
     // 次のフレームでアニメーション開始（ブラウザの準備を待つ）
     requestAnimationFrame(() => {
       element.style.animation = `shootingStar ${duration}ms cubic-bezier(0.4, 0.0, 0.2, 1) forwards`;
     });
 
-    // アニメーション完了後のクリーンアップ
-    const cleanup = () => {
-      element.style.willChange = "auto";
-      onComplete();
-    };
-
-    setTimeout(cleanup, duration);
+    // Fallback in case animationend doesn't fire
+    setTimeout(handleAnimationEnd, duration + 100);
   }
 
   private static playWarpOutTransition(
@@ -122,15 +135,29 @@ export class UITransition {
       }
     `;
 
-    this.addKeyframesToDocument(keyframes);
+    UITransition.addKeyframesToDocument(keyframes);
 
     // ハードウェアアクセラレーション
     element.style.willChange = "transform, opacity, filter";
     element.style.backfaceVisibility = "hidden";
 
+    const handleAnimationEnd = () => {
+      element.removeEventListener("animationend", handleAnimationEnd);
+      element.style.willChange = "auto";
+      element.style.backfaceVisibility = "";
+      element.style.transform = "";
+      element.style.opacity = "";
+      element.style.filter = "";
+      onComplete();
+    };
+
+    element.addEventListener("animationend", handleAnimationEnd, {
+      once: true,
+    });
     element.style.animation = `warpOut ${duration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`;
 
-    setTimeout(onComplete, duration);
+    // Fallback in case animationend doesn't fire
+    setTimeout(handleAnimationEnd, duration + 100);
   }
 
   private static playSpiralOutTransition(
@@ -163,15 +190,28 @@ export class UITransition {
       }
     `;
 
-    this.addKeyframesToDocument(keyframes);
+    UITransition.addKeyframesToDocument(keyframes);
 
     // ハードウェアアクセラレーション
     element.style.willChange = "transform, opacity";
     element.style.backfaceVisibility = "hidden";
 
+    const handleAnimationEnd = () => {
+      element.removeEventListener("animationend", handleAnimationEnd);
+      element.style.willChange = "auto";
+      element.style.backfaceVisibility = "";
+      element.style.transform = "";
+      element.style.opacity = "";
+      onComplete();
+    };
+
+    element.addEventListener("animationend", handleAnimationEnd, {
+      once: true,
+    });
     element.style.animation = `spiralOut ${duration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`;
 
-    setTimeout(onComplete, duration);
+    // Fallback in case animationend doesn't fire
+    setTimeout(handleAnimationEnd, duration + 100);
   }
 
   private static playFadeZoomTransition(
@@ -199,15 +239,29 @@ export class UITransition {
       }
     `;
 
-    this.addKeyframesToDocument(keyframes);
+    UITransition.addKeyframesToDocument(keyframes);
 
     // ハードウェアアクセラレーション
     element.style.willChange = "transform, opacity, filter";
     element.style.backfaceVisibility = "hidden";
 
+    const handleAnimationEnd = () => {
+      element.removeEventListener("animationend", handleAnimationEnd);
+      element.style.willChange = "auto";
+      element.style.backfaceVisibility = "";
+      element.style.transform = "";
+      element.style.opacity = "";
+      element.style.filter = "";
+      onComplete();
+    };
+
+    element.addEventListener("animationend", handleAnimationEnd, {
+      once: true,
+    });
     element.style.animation = `fadeZoom ${duration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`;
 
-    setTimeout(onComplete, duration);
+    // Fallback in case animationend doesn't fire
+    setTimeout(handleAnimationEnd, duration + 100);
   }
 
   private static addKeyframesToDocument(keyframes: string): void {
@@ -220,9 +274,13 @@ export class UITransition {
       document.head.appendChild(styleElement);
     }
 
-    // 既存のキーフレームと重複しないように追加
-    if (!styleElement.textContent?.includes(keyframes)) {
-      styleElement.textContent += keyframes;
+    // アニメーション名を抽出して重複をチェック
+    const animationNameMatch = keyframes.match(/@keyframes\s+(\w+)/);
+    if (animationNameMatch) {
+      const animationName = animationNameMatch[1];
+      if (!styleElement.textContent?.includes(`@keyframes ${animationName}`)) {
+        styleElement.textContent += keyframes;
+      }
     }
   }
 

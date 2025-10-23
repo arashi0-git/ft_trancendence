@@ -58,34 +58,43 @@ export class HomePage extends SpacePageBase {
     document
       .getElementById("quick-play-btn")
       ?.addEventListener("click", async () => {
-        await this.playTransitionAndNavigate(
-          () => this.service.navigateToQuickPlay(),
-          "warp",
-          "shootingStar",
-          500,
-        );
+        try {
+          await this.playTransitionAndNavigate(
+            () => this.service.navigateToQuickPlay(),
+            "shootingStar",
+            500,
+          );
+        } catch (error) {
+          console.error("Quick Play navigation error:", error);
+        }
       });
 
     document
       .getElementById("tournament-play-btn")
       ?.addEventListener("click", async () => {
-        await this.playTransitionAndNavigate(
-          () => this.service.navigateToTournament(),
-          "rotate",
-          "spiralOut",
-          600,
-        );
+        try {
+          await this.playTransitionAndNavigate(
+            () => this.service.navigateToTournament(),
+            "spiralOut",
+            600,
+          );
+        } catch (error) {
+          console.error("Tournament navigation error:", error);
+        }
       });
 
     document
       .getElementById("ai-mode-btn")
       ?.addEventListener("click", async () => {
-        await this.playTransitionAndNavigate(
-          () => this.service.navigateToAiMode(),
-          "zoom",
-          "warpOut",
-          1000,
-        );
+        try {
+          await this.playTransitionAndNavigate(
+            () => this.service.navigateToAiMode(),
+            "warpOut",
+            800,
+          );
+        } catch (error) {
+          console.error("AI Mode navigation error:", error);
+        }
       });
 
     document.getElementById("login-btn")?.addEventListener("click", () => {

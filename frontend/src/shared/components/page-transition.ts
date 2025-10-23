@@ -40,7 +40,6 @@ export class PageTransition {
     if (!this.spaceBackground) return;
 
     const camera = this.spaceBackground.getCamera();
-    const scene = this.spaceBackground.getScene();
 
     // ワープエフェクト: カメラが急速に前進
     Animation.CreateAndStartAnimation(
