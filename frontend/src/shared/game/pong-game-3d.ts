@@ -1,43 +1,31 @@
+import { Engine } from "@babylonjs/core";
 import {
   GameState,
   Player,
   Ball,
-  Paddle,
   Score,
   GameConfig,
   KeyState,
   GameEvents,
 } from "../types/game";
+import { BabylonRender } from "./babylon-render";
 
-export class PongGame {
+export class PongGame3D {
   private canvas: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D;
+  private engine: Engine;
+  private renderer: BabylonRender;
   private gameState!: GameState;
   private config: GameConfig;
   private keyState: KeyState = {};
-  private animationId: number | null = null;
   private eventListeners: Partial<
     Record<keyof GameEvents, Array<(...args: any[]) => void>>
   > = {};
   private isAiMode: boolean = false;
-  private readonly GAME_KEYS = [
-    "ArrowUp",
-    "ArrowDown",
-    "ArrowLeft",
-    "ArrowRight",
-    "KeyW",
-    "KeyS",
-    "KeyA",
-    "KeyD",
-  ];
+  private animationId: number | null = null;
 
   constructor(canvas: HTMLCanvasElement, config?: Partial<GameConfig>) {
     this.canvas = canvas;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      throw new Error("Failed to get 2D rendering context");
-    }
-    this.ctx = ctx;
+    this.engine = new Engine(canvas, true);
 
     this.config = {
       canvasWidth: 800,
@@ -54,27 +42,18 @@ export class PongGame {
     this.canvas.width = this.config.canvasWidth;
     this.canvas.height = this.config.canvasHeight;
 
+    this.renderer = new BabylonRender(this.engine);
     this.initializeGame();
     this.setupEventListeners();
-  }
 
-  public setAiMode(isAiMode: boolean): void {
-    this.isAiMode = isAiMode;
-  }
-
-  public moveAiPaddle(deltaY: number): void {
-    if (!this.isAiMode) return;
-
-    const paddle = this.gameState.player2.paddle;
-    const newY = paddle.y + deltaY;
-
-    // 境界チェック
-    if (newY >= 0 && newY <= this.config.canvasHeight - paddle.height) {
-      paddle.y = newY;
-    }
+    // レンダリングループ開始
+    this.engine.runRenderLoop(() => {
+      this.renderer.render();
+    });
   }
 
   private initializeGame(): void {
+    // 既存のPongGameと同じ初期化処理をコピー
     const player1: Player = {
       id: 1,
       paddle: {
@@ -135,14 +114,37 @@ export class PongGame {
       score,
       gameStatus: "waiting",
     };
+
     this.setBallDirection(Math.random() > 0.5 ? 1 : -1, Math.random() * 2 - 1);
   }
 
+  private setBallDirection(direction: number, offset: number = 0): void {
+    const ball = this.gameState.ball;
+    const normalizedDirection = direction >= 0 ? 1 : -1;
+    const clampedOffset = Math.max(-1, Math.min(1, offset));
+    const maxBounceAngle = Math.PI / 4;
+    const angle = clampedOffset * maxBounceAngle;
+    const speed = ball.speed ?? this.config.ballSpeed;
+
+    ball.velocityX = Math.cos(angle) * speed * normalizedDirection;
+    ball.velocityY = Math.sin(angle) * speed;
+  }
+
+  private readonly GAME_KEYS = [
+    "ArrowUp",
+    "ArrowDown",
+    "ArrowLeft",
+    "ArrowRight",
+    "KeyW",
+    "KeyS",
+    "KeyA",
+    "KeyD",
+  ];
+
   private keydownHandler = (e: KeyboardEvent) => {
     if (this.GAME_KEYS.includes(e.code)) {
-      e.preventDefault(); // ブラウザのデフォルト動作を防ぐ
+      e.preventDefault();
     }
-
     this.keyState[e.code] = true;
   };
 
@@ -150,7 +152,6 @@ export class PongGame {
     if (this.GAME_KEYS.includes(e.code)) {
       e.preventDefault();
     }
-
     this.keyState[e.code] = false;
   };
 
@@ -159,12 +160,20 @@ export class PongGame {
     document.addEventListener("keyup", this.keyupHandler);
   }
 
-  public destroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId);
+  public setAiMode(isAiMode: boolean): void {
+    this.isAiMode = isAiMode;
+  }
+
+  public moveAiPaddle(deltaY: number): void {
+    if (!this.isAiMode) return;
+
+    const paddle = this.gameState.player2.paddle;
+    const newY = paddle.y + deltaY;
+
+    // 境界チェック
+    if (newY >= 0 && newY <= this.config.canvasHeight - paddle.height) {
+      paddle.y = newY;
     }
-    document.removeEventListener("keydown", this.keydownHandler);
-    document.removeEventListener("keyup", this.keyupHandler);
   }
 
   public startGame(): void {
@@ -180,41 +189,14 @@ export class PongGame {
     }
   }
 
-  public pauseGame(): void {
-    if (this.gameState.gameStatus === "playing") {
-      this.gameState.gameStatus = "paused";
-      if (this.animationId) {
-        cancelAnimationFrame(this.animationId);
-        this.animationId = null;
-      }
-      this.eventListeners.onGameStateChange?.forEach((callback) => {
-        callback(this.getReadonlyGameState());
-      });
-    }
-  }
-
-  private resetKeyState(): void {
-    this.keyState = {};
-  }
-
-  public resetGame(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId);
-      this.animationId = null;
-    }
-    this.resetKeyState();
-    this.initializeGame();
-    this.eventListeners.onGameStateChange?.forEach((callback) => {
-      callback(this.getReadonlyGameState());
-    });
-    this.render();
-  }
-
   private gameLoop(): void {
     if (this.gameState.gameStatus !== "playing") return;
 
+    // ゲーム状態更新
     this.update();
-    this.render();
+
+    // 3Dオブジェクト更新
+    this.renderer.updateGameObjects(this.gameState);
 
     this.animationId = requestAnimationFrame(() => this.gameLoop());
   }
@@ -325,7 +307,7 @@ export class PongGame {
   private checkScore(): void {
     const ball = this.gameState.ball;
 
-    if (ball.x < 0) {
+    if (ball.x + ball.radius < 0) {
       this.gameState.score.player2++;
       this.resetBall();
       this.eventListeners.onScoreUpdate?.forEach((callback) => {
@@ -333,7 +315,7 @@ export class PongGame {
       });
     }
 
-    if (ball.x > this.config.canvasWidth) {
+    if (ball.x - ball.radius > this.config.canvasWidth) {
       this.gameState.score.player1++;
       this.resetBall();
       this.eventListeners.onScoreUpdate?.forEach((callback) => {
@@ -356,18 +338,6 @@ export class PongGame {
     this.setBallDirection(Math.random() > 0.5 ? 1 : -1, Math.random() * 2 - 1);
   }
 
-  private setBallDirection(direction: number, offset: number = 0): void {
-    const ball = this.gameState.ball;
-    const normalizedDirection = direction >= 0 ? 1 : -1;
-    const clampedOffset = Math.max(-1, Math.min(1, offset));
-    const maxBounceAngle = Math.PI / 4;
-    const angle = clampedOffset * maxBounceAngle;
-    const speed = ball.speed ?? this.config.ballSpeed;
-
-    ball.velocityX = Math.cos(angle) * speed * normalizedDirection;
-    ball.velocityY = Math.sin(angle) * speed;
-  }
-
   private endGame(winner: number): void {
     this.gameState.gameStatus = "finished";
     this.gameState.winner = winner;
@@ -376,7 +346,7 @@ export class PongGame {
       cancelAnimationFrame(this.animationId);
       this.animationId = null;
     }
-    this.resetKeyState();
+    this.keyState = {};
     this.eventListeners.onGameStateChange?.forEach((callback) => {
       callback(this.getReadonlyGameState());
     });
@@ -385,53 +355,40 @@ export class PongGame {
     });
   }
 
-  private render(): void {
-    this.ctx.fillStyle = "#000";
-    this.ctx.fillRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
-
-    this.ctx.setLineDash([5, 15]);
-    this.ctx.beginPath();
-    this.ctx.moveTo(this.config.canvasWidth / 2, 0);
-    this.ctx.lineTo(this.config.canvasWidth / 2, this.config.canvasHeight);
-    this.ctx.strokeStyle = "#fff";
-    this.ctx.stroke();
-    this.ctx.setLineDash([]);
-
-    this.ctx.fillStyle = "#fff";
-    this.drawPaddle(this.gameState.player1.paddle);
-    this.drawPaddle(this.gameState.player2.paddle);
-
-    this.drawBall(this.gameState.ball);
-
-    this.drawScore();
+  public pauseGame(): void {
+    if (this.gameState.gameStatus === "playing") {
+      this.gameState.gameStatus = "paused";
+      if (this.animationId) {
+        cancelAnimationFrame(this.animationId);
+        this.animationId = null;
+      }
+      this.eventListeners.onGameStateChange?.forEach((callback) => {
+        callback(this.getReadonlyGameState());
+      });
+    }
   }
 
-  private drawPaddle(paddle: Paddle): void {
-    this.ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+  public resetGame(): void {
+    if (this.animationId) {
+      cancelAnimationFrame(this.animationId);
+      this.animationId = null;
+    }
+    this.keyState = {};
+    this.initializeGame();
+    this.renderer.updateGameObjects(this.gameState);
+    this.eventListeners.onGameStateChange?.forEach((callback) => {
+      callback(this.getReadonlyGameState());
+    });
   }
 
-  private drawBall(ball: Ball): void {
-    this.ctx.beginPath();
-    this.ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-    this.ctx.fill();
-  }
-
-  private drawScore(): void {
-    this.ctx.font = "48px Arial";
-    this.ctx.textAlign = "center";
-    this.ctx.fillStyle = "#fff";
-
-    this.ctx.fillText(
-      this.gameState.score.player1.toString(),
-      this.config.canvasWidth / 4,
-      60,
-    );
-
-    this.ctx.fillText(
-      this.gameState.score.player2.toString(),
-      (this.config.canvasWidth * 3) / 4,
-      60,
-    );
+  public destroy(): void {
+    if (this.animationId) {
+      cancelAnimationFrame(this.animationId);
+    }
+    document.removeEventListener("keydown", this.keydownHandler);
+    document.removeEventListener("keyup", this.keyupHandler);
+    this.engine.dispose();
+    this.renderer.dispose();
   }
 
   public on<E extends keyof GameEvents>(
@@ -457,6 +414,20 @@ export class PongGame {
     }
   }
 
+  private deepFreeze<T>(obj: T): Readonly<T> {
+    if (obj === null || typeof obj !== "object") return obj as Readonly<T>;
+    if (Array.isArray(obj))
+      return Object.freeze(
+        obj.map((v) => this.deepFreeze(v)),
+      ) as unknown as Readonly<T>;
+    const out: any = {};
+    for (const k in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, k))
+        out[k] = this.deepFreeze((obj as any)[k]);
+    }
+    return Object.freeze(out);
+  }
+
   private deepClone<T>(obj: T): T {
     if (obj === null || typeof obj !== "object") {
       return obj;
@@ -472,7 +443,7 @@ export class PongGame {
 
     const cloned = {} as T;
     for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
         cloned[key] = this.deepClone(obj[key]);
       }
     }
@@ -481,20 +452,6 @@ export class PongGame {
 
   public getGameState(): GameState {
     return this.deepClone(this.gameState);
-  }
-
-  private deepFreeze<T>(obj: T): Readonly<T> {
-    if (obj === null || typeof obj !== "object") return obj as Readonly<T>;
-    if (Array.isArray(obj))
-      return Object.freeze(
-        obj.map((v) => this.deepFreeze(v)),
-      ) as unknown as Readonly<T>;
-    const out: any = {};
-    for (const k in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, k))
-        out[k] = this.deepFreeze((obj as any)[k]);
-    }
-    return Object.freeze(out);
   }
 
   public getReadonlyGameState(): Readonly<GameState> {

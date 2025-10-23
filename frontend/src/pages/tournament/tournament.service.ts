@@ -91,7 +91,7 @@ export class TournamentService {
     container.innerHTML = `
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Number of Players</label>
+          <label class="block text-sm font-medium text-white mb-2">Number of Players</label>
           <select id="player-count" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
             <option value="2">2 Players</option>
             <option value="4">4 Players</option>
@@ -100,7 +100,7 @@ export class TournamentService {
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Tournament Name</label>
+          <label class="block text-sm font-medium text-white mb-2">Tournament Name</label>
           <input
             type="text"
             id="tournament-name"
@@ -112,7 +112,7 @@ export class TournamentService {
 
         <button
           id="create-tournament"
-          class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded border border-blue-400 shadow-lg"
         >
           Create Tournament
         </button>
@@ -160,7 +160,7 @@ export class TournamentService {
     container.innerHTML = `
       <div class="text-center mb-4">
         <h3 class="text-lg font-semibold">Enter Player Aliases</h3>
-        <p class="text-sm text-gray-600">Tournament: ${this.escapeHtml(tournament.name)} (${tournament.playerCount} players)</p>
+        <p class="text-sm text-gray-300">Tournament: ${this.escapeHtml(tournament.name)} (${tournament.playerCount} players)</p>
       </div>
 
       <div id="player-inputs" class="space-y-3 mb-4">
@@ -170,13 +170,13 @@ export class TournamentService {
       <div class="flex space-x-4">
         <button
           id="back-to-setup"
-          class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded"
+          class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded border border-purple-400 shadow-lg"
         >
           Back to Setup
         </button>
         <button
           id="start-tournament"
-          class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"
+          class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg"
           disabled
         >
           Start Tournament
@@ -204,7 +204,7 @@ export class TournamentService {
     for (let i = 1; i <= playerCount; i++) {
       const inputDiv = document.createElement("div");
       inputDiv.innerHTML = `
-        <label class="block text-sm font-medium text-gray-700 mb-1">Player ${i} Alias</label>
+        <label class="block text-sm font-medium text-white mb-1">Player ${i} Alias</label>
         <input
           type="text"
           id="player-${i}-alias"
@@ -290,15 +290,15 @@ export class TournamentService {
         const player2 = this.tournamentData.getPlayer(match.player2Id);
 
         return `
-        <div class="bg-gray-50 p-4 rounded border">
+        <div class="bg-black bg-opacity-30 p-4 rounded border border-cyan-400 border-opacity-50">
           <div class="flex justify-between items-center">
             <div class="text-center flex-1">
-              <div class="font-semibold">${this.escapeHtml(player1?.alias || "Unknown")}</div>
+              <div class="font-semibold text-white">${this.escapeHtml(player1?.alias || "Unknown")}</div>
               ${match.score ? `<div class="text-sm text-gray-600">${match.score.player1}</div>` : ""}
             </div>
-            <div class="mx-4 text-gray-500">VS</div>
+            <div class="mx-4 text-gray-300">VS</div>
             <div class="text-center flex-1">
-              <div class="font-semibold">${this.escapeHtml(player2?.alias || "Unknown")}</div>
+              <div class="font-semibold text-white">${this.escapeHtml(player2?.alias || "Unknown")}</div>
               ${match.score ? `<div class="text-sm text-gray-600">${match.score.player2}</div>` : ""}
             </div>
             <div class="ml-4">
@@ -323,7 +323,7 @@ export class TournamentService {
     container.innerHTML = `
       <div class="text-center mb-4">
         <h3 class="text-xl font-bold">Current Bracket</h3>
-        <p class="text-gray-600">${roundName} (${remainingPlayers} players remaining)</p>
+        <p class="text-gray-300">${roundName} (${remainingPlayers} players remaining)</p>
       </div>
       
       <div class="space-y-4 mb-6">
@@ -368,8 +368,8 @@ export class TournamentService {
 
     container.innerHTML = `
       <div class="text-center mb-4">
-        <h3 class="text-xl font-semibold">${this.escapeHtml(player1?.alias || "Player 1")} vs ${this.escapeHtml(player2?.alias || "Player 2")}</h3>
-        <p class="text-gray-600">Match ${this.escapeHtml(matchId)} - First to 5 points wins</p>
+        <h3 class="text-xl font-semibold text-white">${this.escapeHtml(player1?.alias || "Player 1")} vs ${this.escapeHtml(player2?.alias || "Player 2")}</h3>
+        <p class="text-gray-300">Match ${this.escapeHtml(matchId)} - First to 5 points wins</p>
       </div>
 
       <div class="mb-4 text-center">
@@ -390,7 +390,7 @@ export class TournamentService {
         <canvas id="tournament-pong-canvas" class="border-2 border-gray-300 bg-black"></canvas>
       </div>
       
-      <div class="text-center text-sm text-gray-600">
+      <div class="text-center text-sm text-gray-300">
         <p><strong>${this.escapeHtml(player1?.alias || "Player 1")}:</strong> W/S (Up/Down), A/D (Left/Right)</p>
         <p><strong>${this.escapeHtml(player2?.alias || "Player 2")}:</strong> ↑/↓ (Up/Down), ←/→ (Left/Right)</p>
       </div>
@@ -617,7 +617,7 @@ export class TournamentService {
 
   getBackButtonTemplate(): string {
     const backText = this.currentStep === "setup" ? "Home" : "Back";
-    return `<button id="back-button" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">${backText}</button>`;
+    return `<button id="back-button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">${backText}</button>`;
   }
 
   getAuthButtonTemplate(): string {
