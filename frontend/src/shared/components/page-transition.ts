@@ -63,7 +63,10 @@ export class PageTransition {
     onComplete: () => void,
     onError: (error: Error) => void,
   ): void {
-    if (!this.spaceBackground) return;
+    if (!this.spaceBackground) {
+      onError(new Error("SpaceBackground is not available"));
+      return;
+    }
 
     try {
       const camera = this.spaceBackground.getCamera();
@@ -110,7 +113,10 @@ export class PageTransition {
     onComplete: () => void,
     onError: (error: Error) => void,
   ): void {
-    if (!this.spaceBackground) return;
+    if (!this.spaceBackground) {
+      onError(new Error("SpaceBackground is not available"));
+      return;
+    }
 
     try {
       const camera = this.spaceBackground.getCamera();
@@ -157,7 +163,10 @@ export class PageTransition {
     onComplete: () => void,
     onError: (error: Error) => void,
   ): void {
-    if (!this.spaceBackground) return;
+    if (!this.spaceBackground) {
+      onError(new Error("SpaceBackground is not available"));
+      return;
+    }
 
     try {
       const camera = this.spaceBackground.getCamera();
@@ -185,7 +194,10 @@ export class PageTransition {
     onComplete: () => void,
     onError: (error: Error) => void,
   ): void {
-    if (!this.spaceBackground) return;
+    if (!this.spaceBackground) {
+      onError(new Error("SpaceBackground is not available"));
+      return;
+    }
 
     try {
       const scene = this.spaceBackground.getScene();
