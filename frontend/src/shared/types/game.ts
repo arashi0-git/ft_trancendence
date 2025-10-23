@@ -63,3 +63,18 @@ export interface GameEvents {
   onGameEnd: (winner: number) => void;
   onGameStateChange: (state: GameState) => void;
 }
+
+export interface Vector3D {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export interface Paddle3D extends Paddle {
+  z?: number;
+  depth?: number;
+}
+
+export interface Ball3D extends Ball {
+  z?: number;
+}

@@ -10,6 +10,10 @@ export class HomeService {
     this.navigate("/tournament");
   }
 
+  navigateToAiMode(): void {
+    this.navigate("/ai-mode");
+  }
+
   navigateToLogin(): void {
     this.navigate("/login");
   }

@@ -1,71 +1,100 @@
 import { HomeService } from "./home.service";
+import { SpacePageBase } from "../../shared/components/space-page-base";
 
-export class HomePage {
+export class HomePage extends SpacePageBase {
   private service: HomeService;
 
-  constructor(private container: HTMLElement) {
+  constructor(container: HTMLElement) {
+    super(container);
     this.service = new HomeService();
   }
 
   render(): void {
     this.container.innerHTML = this.getTemplate();
     this.attachEventListeners();
+    this.initializeSpaceBackground();
   }
 
   private getTemplate(): string {
     const authButtons = this.service.getAuthButtonsTemplate();
 
-    return `
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold mb-4 text-center">Welcome to ft_transcendence</h2>
-        <p class="text-center text-gray-600 mb-6">Choose how you want to play Pong!</p>
+    const content = `
+        <h2 class="text-2xl font-bold mb-4 text-center text-white">Welcome to ft_transcendence</h2>
+        <p class="text-center text-gray-300 mb-6">Choose how you want to play Pong!</p>
         
         <div class="space-y-4 mb-6">
-          <button id="quick-play-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded">
+          <button id="quick-play-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded border border-blue-400 shadow-lg">
             <div class="text-center">
               <div class="font-semibold text-lg">🎮 Quick Play</div>
               <div class="text-sm opacity-90">2 Players - Start playing immediately</div>
             </div>
           </button>
           
-          <button id="tournament-play-btn" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-3 px-4 rounded">
+          <button id="tournament-play-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 rounded border border-purple-400 shadow-lg">
             <div class="text-center">
               <div class="font-semibold text-lg">🏆 Tournament</div>
               <div class="text-sm opacity-90">2-8 Players - Bracket style competition</div>
             </div>
           </button>
-
-          <button id="custom-play-btn" class="w-full bg-pink-500 hover:bg-pink-600 text-white py-3 px-4 rounded">
+          
+          <button id="ai-mode-btn" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded border border-green-400 shadow-lg">
             <div class="text-center">
-              <div class="font-semibold text-lg">⚙️ Custom Game</div>
-              <div class="text-sm opacity-90">Change game map, color, etc.</div>
+              <div class="font-semibold text-lg">🤖 AI Mode</div>
+              <div class="text-sm opacity-90">1 Player vs Computer - Test your skills</div>
             </div>
           </button>
         </div>
         
-        <div class="border-t pt-4">
-          <p class="text-center text-sm text-gray-600 mb-3">Want to save your progress?</p>
+        <div class="border-t border-gray-600 pt-4">
+          <p class="text-center text-sm text-gray-300 mb-3">Want to save your progress?</p>
           ${authButtons}
         </div>
-      </div>
     `;
+
+    return this.getSpaceTemplate(content);
   }
 
   private attachEventListeners(): void {
-    document.getElementById("quick-play-btn")?.addEventListener("click", () => {
-      this.service.navigateToQuickPlay();
-    });
-
     document
-      .getElementById("tournament-play-btn")
-      ?.addEventListener("click", () => {
-        this.service.navigateToTournament();
+      .getElementById("quick-play-btn")
+      ?.addEventListener("click", async () => {
+        try {
+          await this.playTransitionAndNavigate(
+            () => this.service.navigateToQuickPlay(),
+            "shootingStar",
+            500,
+          );
+        } catch (error) {
+          console.error("Quick Play navigation error:", error);
+        }
       });
 
     document
-      .getElementById("custom-play-btn")
-      ?.addEventListener("click", () => {
-        this.service.navigateToCustomGame();
+      .getElementById("tournament-play-btn")
+      ?.addEventListener("click", async () => {
+        try {
+          await this.playTransitionAndNavigate(
+            () => this.service.navigateToTournament(),
+            "spiralOut",
+            600,
+          );
+        } catch (error) {
+          console.error("Tournament navigation error:", error);
+        }
+      });
+
+    document
+      .getElementById("ai-mode-btn")
+      ?.addEventListener("click", async () => {
+        try {
+          await this.playTransitionAndNavigate(
+            () => this.service.navigateToAiMode(),
+            "warpOut",
+            800,
+          );
+        } catch (error) {
+          console.error("AI Mode navigation error:", error);
+        }
       });
 
     document.getElementById("login-btn")?.addEventListener("click", () => {
@@ -85,5 +114,9 @@ export class HomePage {
           console.error("Logout handler error:", error);
         }
       });
+  }
+
+  destroy(): void {
+    this.cleanupSpaceBackground();
   }
 }

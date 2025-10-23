@@ -3,7 +3,7 @@ import { QuickPlayPage } from "../pages/quick-play";
 import { TournamentPage } from "../pages/tournament";
 import { LoginPage } from "../pages/login";
 import { RegisterPage } from "../pages/register";
-import { CustomGamePage } from '../pages/custom/CustomGamePage';
+import { AiModePage } from "../pages/ai-mode";
 
 export interface PageComponent {
   render(): void;
@@ -20,7 +20,7 @@ export const routeConfig: Record<string, PageConstructor> = {
   "/tournament/bracket": TournamentPage,
   "/tournament/match/:matchId": TournamentPage,
   "/tournament/results": TournamentPage,
-  "/custom-game": CustomGamePage,
+  "/ai-mode": AiModePage,
   "/login": LoginPage,
   "/register": RegisterPage,
 };
