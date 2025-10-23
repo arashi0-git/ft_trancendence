@@ -44,6 +44,23 @@ export class QuickPlayPage extends SpacePageBase {
           <p><strong class="text-white">Player 1:</strong> W/S (Up/Down), A/D (Left/Right)</p>
           <p><strong class="text-white">Player 2:</strong> ↑/↓ (Up/Down), ←/→ (Left/Right)</p>
         </div>
+
+        <div id="game-over-modal" class="hidden absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-75 z-50">
+          
+          <div class="bg-white p-8 rounded-lg shadow-xl text-center text-black">
+            
+            <h2 class="text-3xl font-bold mb-4">Game Over</h2>
+            
+            <p class="text-xl mb-2">Winner: <span id="winner-name" class="font-semibold"></span></p>
+            
+            <p class="text-lg mb-6">Final Score: <span id="final-score" class="font-semibold"></span></p>
+            
+            <button id="reset-game-modal-btn" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded">
+              Reset Game
+            </button>
+          </div>
+        
+        </div>
     `;
 
     return this.getSpaceTemplate(content);
