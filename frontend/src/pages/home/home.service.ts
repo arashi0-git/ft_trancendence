@@ -66,10 +66,10 @@ export class HomeService {
 
     return `
       <div class="space-y-2">
-        <button id="login-btn" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">
+        <button id="login-btn" class="w-full bg-green-500 hover:bg-transparent text-white py-2 px-4 rounded">
           Login to Account
         </button>
-        <button id="register-btn" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded">
+        <button id="register-btn" class="w-full bg-gray-500 hover:bg-transparent text-white py-2 px-4 rounded">
           Create Account
         </button>
       </div>

@@ -49,7 +49,7 @@ export class QuickPlayPage extends SpacePageBase {
           
           <div class="bg-white p-8 rounded-lg shadow-xl text-center text-black">
             
-            <h2 class="text-3xl font-bold mb-4">Game Over</h2>
+            <h2 class="text-3xl font-bold mb-4">Game finished!</h2>
             
             <p class="text-xl mb-2">Winner: <span id="winner-name" class="font-semibold"></span></p>
             

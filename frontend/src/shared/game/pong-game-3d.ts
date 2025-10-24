@@ -350,8 +350,13 @@ export class PongGame3D {
     this.eventListeners.onGameStateChange?.forEach((callback) => {
       callback(this.getReadonlyGameState());
     });
+    const gameEndData = {
+      winner: winner,
+      score1: this.gameState.score.player1,
+      score2: this.gameState.score.player2,
+    };
     this.eventListeners.onGameEnd?.forEach((callback) => {
-      callback(winner);
+      callback(gameEndData);
     });
   }
 
