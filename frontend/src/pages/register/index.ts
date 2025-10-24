@@ -1,45 +1,42 @@
-import { RegisterService } from "./register.service.js";
+import { RegisterService } from "./register.service";
+import { SpacePageBase } from "../../shared/components/space-page-base";
 
-export class RegisterPage {
+export class RegisterPage extends SpacePageBase {
   private service: RegisterService;
-  private abortController?: AbortController;
 
-  constructor(private container: HTMLElement) {
+  constructor(container: HTMLElement) {
+    super(container);
     this.service = new RegisterService();
   }
 
   render(): void {
-    this.cleanup();
-    this.abortController = new AbortController();
     this.container.innerHTML = this.getTemplate();
     this.attachEventListeners();
+    this.service.initializeRegisterForm();
+    this.initializeSpaceBackground();
   }
 
   private getTemplate(): string {
-    return `
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold mb-4 text-center">Register</h2>
-        <p class="text-center text-gray-600 mb-4">Registration form coming soon...</p>
-        <button id="back-to-home" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded">
-          Back to Home
-        </button>
+    const content = `
+      <div id="register-form-container">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-white">Create Account</h2>
+          <button id="back-to-home" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">Home</button>
+        </div>
+        <!-- The registration form will be injected here by register.service.ts -->
       </div>
     `;
+    return this.getSpaceTemplate(content);
   }
 
   private attachEventListeners(): void {
-    this.container
-      .querySelector<HTMLElement>("#back-to-home")
-      ?.addEventListener(
-        "click",
-        () => {
-          this.service.navigateToHome();
-        },
-        { signal: this.abortController?.signal },
-      );
+    document
+      .getElementById("back-to-home")
+      ?.addEventListener("click", () => this.service.navigateToHome());
   }
 
-  cleanup(): void {
-    this.abortController?.abort();
+  destroy(): void {
+    this.service.destroy();
+    this.cleanupSpaceBackground();
   }
 }

@@ -19,7 +19,7 @@ ssl:
 # イメージのビルド
 build: ssl
 	@echo "Building Docker images..."
-	@docker-compose build
+	@docker-compose build --no-cache
 
 # コンテナの起動（autonomous実行）
 up:

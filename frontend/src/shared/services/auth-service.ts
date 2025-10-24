@@ -96,26 +96,19 @@ export class AuthService {
 
   static async logout(): Promise<void> {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+      await fetch(`${API_BASE_URL}/auth/logout`, {
         method: "POST",
         headers: this.getAuthHeaders(),
       });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(
-          data.error || `Logout failed with status ${response.status}`,
-        );
-      }
+      // We don't need to check the response. The token will be cleared regardless.
     } catch (error) {
       console.error("Logout error:", error);
-      // ローカルトークンは削除するが、エラーは再スロー
+      // We can log the error, but we don't need to re-throw it.
+      // The primary goal of logout on the client is to clear the token.
+    } finally {
+      // This block will always execute, ensuring the token is removed.
       localStorage.removeItem("auth_token");
-      throw error;
     }
-
-    // 成功時のみここに到達
-    localStorage.removeItem("auth_token");
   }
 
   static isAuthenticated(): boolean {
