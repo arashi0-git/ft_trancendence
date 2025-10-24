@@ -49,11 +49,7 @@ export class NotificationService {
   }
 
   show(message: string, options: NotificationOptions = {}): void {
-    const {
-      type = "info",
-      duration = this.DEFAULT_DURATION,
-      position = "top-right",
-    } = options;
+    const { type = "info", duration = this.DEFAULT_DURATION } = options;
 
     const notification = this.createNotification(message, type);
 
