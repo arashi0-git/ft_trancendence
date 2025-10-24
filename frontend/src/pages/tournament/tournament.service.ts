@@ -2,12 +2,7 @@ import { AuthService } from "../../shared/services/auth-service";
 import { GameManagerService } from "../../shared/services/game-manager.service";
 import { NotificationService } from "../../shared/services/notification.service";
 import { router } from "../../routes/router";
-import {
-  TournamentDataService,
-  type TournamentData,
-  type TournamentMatch,
-  type TournamentPlayer,
-} from "../../shared/services/tournament-data.service";
+import { TournamentDataService } from "../../shared/services/tournament-data.service";
 
 export type TournamentStep =
   | "setup"

@@ -1,6 +1,5 @@
 import "dotenv/config";
 import Fastify from "fastify";
-import websocket from "@fastify/websocket";
 import cors from "@fastify/cors";
 import staticFiles from "@fastify/static";
 import path from "path";
@@ -34,9 +33,6 @@ async function registerPlugins() {
     credentials: true,
   });
 
-  // WebSocket対応
-  await fastify.register(websocket);
-
   // 静的ファイル配信（フロントエンド用）
   await fastify.register(staticFiles, {
     root: path.join(__dirname, "../../frontend/dist"),
@@ -52,33 +48,6 @@ async function setupRoutes() {
     return { status: "ok", timestamp: new Date().toISOString() };
   });
 
-  // WebSocket接続（リアルタイム通信用）
-  fastify.register(async function (fastify) {
-    fastify.get("/ws", { websocket: true }, (connection) => {
-      connection.socket.on("message", (message: Buffer) => {
-        try {
-          const data = JSON.parse(message.toString());
-          fastify.log.info("WebSocket message received:", data);
-
-          // エコーバック（開発用）
-          connection.socket.send(
-            JSON.stringify({
-              type: "echo",
-              data: data,
-              timestamp: new Date().toISOString(),
-            }),
-          );
-        } catch (error) {
-          fastify.log.error("WebSocket message error: " + String(error));
-        }
-      });
-
-      connection.socket.on("close", () => {
-        fastify.log.info("WebSocket connection closed");
-      });
-    });
-  });
-
   // API基本ルート
   fastify.get("/api", async (request, reply) => {
     return {
@@ -86,7 +55,6 @@ async function setupRoutes() {
       version: "1.0.0",
       endpoints: {
         health: "/api/health",
-        websocket: "/ws",
       },
     };
   });
@@ -106,9 +74,6 @@ async function start() {
 
     fastify.log.info(
       `ft_transcendence backend server listening on ${host}:${port}`,
-    );
-    fastify.log.info(
-      `WebSocket endpoint: ws${process.env.NODE_ENV === "production" ? "s" : ""}://${host}:${port}/ws`,
     );
   } catch (error) {
     fastify.log.error(error);
