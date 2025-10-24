@@ -34,7 +34,7 @@ export class PongGame3D {
       paddleHeight: 80,
       paddleSpeed: 5,
       ballRadius: 8,
-      ballSpeed: 8,
+      ballSpeed: 11,
       maxScore: 5,
       ...config,
     };
@@ -98,7 +98,7 @@ export class PongGame3D {
       radius: this.config.ballRadius,
       velocityX: 0,
       velocityY: 0,
-      speed: this.config.ballSpeed,
+      speed: this.config.ballSpeed * 0.5,
     };
 
     const score: Score = {

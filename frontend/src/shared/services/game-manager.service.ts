@@ -17,10 +17,9 @@ export class GameManagerService {
     try {
       this.cleanup();
 
-      const canvas = document.getElementById(
-        config.canvasId,
-      ) as unknown as HTMLCanvasElement;
-      if (!canvas) {
+      const canvas = document.getElementById(config.canvasId);
+
+      if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
         throw new Error(`Canvas with id '${config.canvasId}' not found`);
       }
 

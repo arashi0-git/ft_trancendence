@@ -1,4 +1,5 @@
 import { AuthService } from "../../shared/services/auth-service";
+import { NotificationService } from "../../shared/services/notification.service";
 import { router } from "../../routes/router";
 
 export class HomeService {
@@ -37,9 +38,6 @@ export class HomeService {
     } catch (error) {
       console.error("Logout failed:", error);
       // エラーをユーザーに通知
-      const NotificationService = (
-        await import("../../shared/services/notification.service")
-      ).NotificationService;
       const errorMessage =
         error instanceof Error
           ? error.message
