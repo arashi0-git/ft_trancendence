@@ -5,7 +5,7 @@ export type GameMode = "quick-play" | "tournament" | "ai-mode";
 export interface GameConfig {
   mode: GameMode;
   canvasId: string;
-  onGameEnd?: (winner: number) => void;
+  onGameEnd?: (data: any) => void;
   onScoreUpdate?: (score: { player1: number; player2: number }) => void;
 }
 

@@ -7,7 +7,7 @@ export class QuickPlayService extends BaseGameService {
     this.gameManager.initializeGame({
       mode: "quick-play",
       canvasId,
-      onGameEnd: (winner: number) => this.handleGameEnd(winner),
+      onGameEnd: (data: any) => this.handleGameEnd(data),
     });
   }
 
@@ -32,7 +32,6 @@ export class QuickPlayService extends BaseGameService {
     const modal = document.getElementById("game-over-modal");
     modal?.classList.add("hidden");
 
-    // 2. Najdeme a zobrazíme hlavní tlačítka
     const startBtn = this.getStartButton();
     const pauseBtn = this.getPauseButton();
 
@@ -50,7 +49,7 @@ export class QuickPlayService extends BaseGameService {
     return element instanceof HTMLButtonElement ? element : null;
   }
 
-  private handleGameEnd(winner: number): void {
+  private handleGameEnd(data: any): void {
     const modal = document.getElementById("game-over-modal");
     const winnerNameEl = document.getElementById("winner-name");
     const finalScoreEl = document.getElementById("final-score");
@@ -58,12 +57,13 @@ export class QuickPlayService extends BaseGameService {
     const pauseBtn = this.getPauseButton();
 
     if (modal && winnerNameEl && finalScoreEl) {
-      winnerNameEl.textContent = `Player ${winner}`;
+      winnerNameEl.textContent = `Player ${data.winner}`;
+      finalScoreEl.textContent = `${data.score1} - ${data.score2}`;
       startBtn?.classList.add("hidden");
       pauseBtn?.classList.add("hidden");
       modal.classList.remove("hidden");
     } else {
-      this.notificationService.success(`Player ${winner} wins! 🎉`);
+      this.notificationService.success(`Player ${data.winner} wins! 🎉`);
     }
     this.updateButtonStates(false);
   }
