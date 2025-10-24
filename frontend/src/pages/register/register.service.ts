@@ -5,6 +5,10 @@ export class RegisterService {
   private registerForm?: RegisterForm;
 
   initializeRegisterForm(): void {
+    if (this.registerForm) {
+      this.destroy();
+    }
+
     const registerContainer = document.getElementById(
       "register-form-container",
     );
@@ -23,7 +27,7 @@ export class RegisterService {
     this.registerForm.setOnShowLogin(() => {
       this.navigateToLogin();
     });
-
+    
     this.registerForm.setOnShowHome(() => {
       this.navigateToHome();
     });

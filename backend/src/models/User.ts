@@ -70,7 +70,7 @@ export class UserModel {
 
   static async updateLoginMetadata(id: number): Promise<void> {
     await db.run(
-      "UPDATE users SET last_login = CURRENT_TIMESTAMP, is_online = TRUE, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      "UPDATE users SET last_login = CURRENT_TIMESTAMP, is_online = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
       [id],
     );
   }

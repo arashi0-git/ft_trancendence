@@ -3,6 +3,8 @@ import { SpacePageBase } from "../../shared/components/space-page-base";
 
 export class RegisterPage extends SpacePageBase {
   private service: RegisterService;
+  private backToHomeEl: HTMLButtonElement | null = null;
+  private onBackToHomeClick = () => this.service.navigateToHome();
 
   constructor(container: HTMLElement) {
     super(container);
@@ -30,12 +32,13 @@ export class RegisterPage extends SpacePageBase {
   }
 
   private attachEventListeners(): void {
-    document
-      .getElementById("back-to-home")
-      ?.addEventListener("click", () => this.service.navigateToHome());
+    this.backToHomeEl = this.container.querySelector("#back-to-home");
+    this.backToHomeEl?.addEventListener("click", this.onBackToHomeClick);
   }
 
   destroy(): void {
+    this.backToHomeEl?.removeEventListener("click", this.onBackToHomeClick);
+    this.backToHomeEl = null;
     this.service.destroy();
     this.cleanupSpaceBackground();
   }
