@@ -15,7 +15,7 @@
     "sourceMap": true
   },
   "include": [
-    "src/**/*"
+    "backend/src/**/*.ts"
   ],
   "exclude": [
     "node_modules",
