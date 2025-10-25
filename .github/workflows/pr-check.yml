@@ -4,10 +4,12 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "src/**"
+      - "backend/**"
+      - "frontend/**"
       - "config/**"
       - "package*.json"
-      - "tsconfig.json"
+      - "tsconfig*.json"
+      - ".github/workflows/**"
 
 concurrency:
   group: pr-check-${{ github.event.pull_request.number }}
@@ -31,6 +33,12 @@ jobs:
 
       - name: 📦 Install dependencies
         run: npm ci
+
+      - name: 📦 Install backend dependencies
+        run: npm ci --prefix backend
+
+      - name: 📦 Install frontend dependencies
+        run: npm ci --prefix frontend
 
       - name: 🧪 Run comprehensive tests with coverage
         run: npm run test:coverage
