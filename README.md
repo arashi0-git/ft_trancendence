@@ -142,7 +142,7 @@ Create `.env` files in frontend and backend directories:
 
 **Frontend (.env)**:
 ```env
-VITE_API_BASE_URL=https://localhost/api
+VITE_API_BASE_URL=
 ```
 
 **Backend (.env)**:

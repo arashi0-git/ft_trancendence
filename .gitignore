@@ -18,7 +18,8 @@ build/
 !.env.example
 
 # Database
-database/
+/database/
+/backend/database/
 *.db
 *.sqlite
 *.sqlite3

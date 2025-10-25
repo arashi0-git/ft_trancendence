@@ -14,6 +14,10 @@ export class LoginService {
       loginForm.setOnShowRegister(() => {
         this.navigateToRegister();
       });
+
+      loginForm.setOnShowHome(() => {
+        this.navigateToHome();
+      });
     }
   }
 

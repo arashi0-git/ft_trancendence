@@ -183,7 +183,8 @@ export class TournamentRegistration {
           input.classList.add("border-red-500");
         });
       } else {
-        inputList[0].classList.remove("border-red-500");
+        const [singleInput] = inputList;
+        singleInput?.classList.remove("border-red-500");
       }
     });
 
@@ -231,13 +232,15 @@ export class TournamentRegistration {
     let matchId = 1;
 
     for (let i = 0; i < players.length; i += 2) {
-      if (i + 1 < players.length) {
+      const firstPlayer = players[i];
+      const secondPlayer = players[i + 1];
+      if (firstPlayer && secondPlayer) {
         const match: Match = {
           id: `match-${matchId++}`,
           tournamentId: this.tournament.id,
           round: 1,
-          player1Id: players[i].id,
-          player2Id: players[i + 1].id,
+          player1Id: firstPlayer.id,
+          player2Id: secondPlayer.id,
           status: "pending" as const,
         };
         this.tournament.matches.push(match);

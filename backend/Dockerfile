@@ -12,7 +12,11 @@ ENV npm_config_build_from_source=true
 COPY backend/package*.json ./
 
 # 依存関係のインストール
-RUN npm install && npm cache clean --force
+# RUN npm install && npm cache clean --force
+RUN npm ci \
+ && rm -rf node_modules/.cache/esbuild \
+ && npm rebuild esbuild
+
 # アプリ本体
 COPY backend/ .
 

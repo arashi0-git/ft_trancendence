@@ -1,0 +1,12 @@
+{
+  "extends": "./backend/tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "types": ["jest", "node"],
+    "module": "ESNext",
+    "moduleResolution": "node"
+  },
+  "include": ["backend/src/**/*.ts", "frontend/src/**/*.ts"],
+  "exclude": ["backend/node_modules", "backend/dist", "frontend/node_modules", "frontend/dist"]
+}

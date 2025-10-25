@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { UserProfile } from "../types/user";
+import { UserWithoutPassword } from "../models/User";
 
 const JWT_SECRET = process.env.JWT_SECRET || "";
 if (!JWT_SECRET) {
@@ -20,13 +20,13 @@ export class AuthUtils {
     return bcrypt.compare(password, hash);
   }
 
-  static generateToken(user: UserProfile & { token_version?: number }): string {
+  static generateToken(user: UserWithoutPassword): string {
     return jwt.sign(
       {
         id: user.id,
         username: user.username,
         email: user.email,
-        tokenVersion: user.token_version || 0,
+        tokenVersion: user.token_version ?? 0,
       },
       JWT_SECRET,
       { expiresIn: "24h" },

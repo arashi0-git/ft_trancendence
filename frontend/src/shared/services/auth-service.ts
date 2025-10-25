@@ -1,12 +1,16 @@
-import {
-  User,
+import type {
+  PublicUser,
   CreateUserRequest,
   LoginRequest,
   AuthResponse,
 } from "../types/user";
 
+declare const __API_BASE_URL__: string | undefined;
+
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+  (typeof __API_BASE_URL__ !== "undefined" && __API_BASE_URL__) ||
+  process.env.API_BASE_URL ||
+  "http://localhost:3000/api";
 
 export class AuthService {
   private static getAuthHeaders(): HeadersInit {
@@ -71,7 +75,7 @@ export class AuthService {
     }
   }
 
-  static async getCurrentUser(): Promise<User> {
+  static async getCurrentUser(): Promise<PublicUser> {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/me`, {
         method: "GET",
@@ -87,7 +91,7 @@ export class AuthService {
         throw new Error(data.error || "Failed to get user info");
       }
 
-      return data.user as User;
+      return data.user as PublicUser;
     } catch (error) {
       console.error("Get user error:", error);
       throw error;
@@ -96,26 +100,19 @@ export class AuthService {
 
   static async logout(): Promise<void> {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+      await fetch(`${API_BASE_URL}/auth/logout`, {
         method: "POST",
         headers: this.getAuthHeaders(),
       });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(
-          data.error || `Logout failed with status ${response.status}`,
-        );
-      }
+      // We don't need to check the response. The token will be cleared regardless.
     } catch (error) {
       console.error("Logout error:", error);
-      // ローカルトークンは削除するが、エラーは再スロー
+      // We can log the error, but we don't need to re-throw it.
+      // The primary goal of logout on the client is to clear the token.
+    } finally {
+      // This block will always execute, ensuring the token is removed.
       localStorage.removeItem("auth_token");
-      throw error;
     }
-
-    // 成功時のみここに到達
-    localStorage.removeItem("auth_token");
   }
 
   static isAuthenticated(): boolean {
