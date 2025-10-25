@@ -7,8 +7,9 @@ export default {
     '^.+\\.ts$': 'ts-jest',
   },
   collectCoverageFrom: [
-    '../src/**/*.ts',
-    '!../src/**/*.d.ts',
+    '../backend/src/**/*.ts',
+    '../frontend/src/**/*.ts',
+    '!../**/*.d.ts',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
