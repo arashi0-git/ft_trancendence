@@ -646,7 +646,7 @@ export class TournamentService {
       '"': "&quot;",
       "'": "&#39;",
     };
-    return String(text).replace(/[&<>"']/g, (ch) => map[ch]);
+    return String(text).replace(/[&<>"']/g, (ch) => map[ch] ?? ch);
   }
 
   private addEventListenerWithTracking(

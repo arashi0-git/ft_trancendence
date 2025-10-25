@@ -80,11 +80,13 @@ export class TournamentDataService {
     }
 
     for (let i = 0; i < players.length; i += 2) {
-      if (i + 1 < players.length) {
+      const first = players[i];
+      const second = players[i + 1];
+      if (first && second) {
         const match: TournamentMatch = {
           id: `round-1-match-${i / 2 + 1}`,
-          player1Id: players[i].id,
-          player2Id: players[i + 1].id,
+          player1Id: first.id,
+          player2Id: second.id,
           status: "pending",
           round: 1,
         };
@@ -201,11 +203,13 @@ export class TournamentDataService {
     let matchCounter = 1;
 
     for (let i = 0; i < winners.length; i += 2) {
-      if (i + 1 < winners.length) {
+      const player1Id = winners[i];
+      const player2Id = winners[i + 1];
+      if (player1Id && player2Id) {
         const nextMatch: TournamentMatch = {
           id: `round-${this.currentTournament.currentRound}-match-${matchCounter}`,
-          player1Id: winners[i],
-          player2Id: winners[i + 1],
+          player1Id,
+          player2Id,
           status: "pending",
           round: this.currentTournament.currentRound,
         };

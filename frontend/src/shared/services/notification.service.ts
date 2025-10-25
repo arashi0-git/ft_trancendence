@@ -155,7 +155,7 @@ export class NotificationService {
       '"': "&quot;",
       "'": "&#39;",
     };
-    return text.replace(/[&<>"']/g, (char) => map[char]);
+    return text.replace(/[&<>"']/g, (char) => map[char] ?? char);
   }
 
   // 便利メソッド

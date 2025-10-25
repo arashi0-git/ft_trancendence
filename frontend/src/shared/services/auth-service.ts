@@ -5,8 +5,12 @@ import type {
   AuthResponse,
 } from "../types/user";
 
+declare const __API_BASE_URL__: string | undefined;
+
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+  (typeof __API_BASE_URL__ !== "undefined" && __API_BASE_URL__) ||
+  process.env.API_BASE_URL ||
+  "http://localhost:3000/api";
 
 export class AuthService {
   private static getAuthHeaders(): HeadersInit {
