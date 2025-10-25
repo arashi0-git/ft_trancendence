@@ -1,5 +1,5 @@
 import { AuthService } from "../services/auth-service";
-import { LoginRequest, User } from "../types/user";
+import type { LoginRequest, PublicUser } from "../types/user";
 
 export class LoginForm {
   private container: HTMLElement;
@@ -138,7 +138,7 @@ export class LoginForm {
     }
   }
 
-  private onLoginSuccess(user: User): void {
+  private onLoginSuccess(user: PublicUser): void {
     console.log("User logged in:", user);
     alert(`Welcome back, ${user?.username || "User"}!`);
   }
@@ -151,7 +151,7 @@ export class LoginForm {
     console.log("Navigate home from login");
   }
 
-  public setOnLoginSuccess(callback: (user: User) => void): void {
+  public setOnLoginSuccess(callback: (user: PublicUser) => void): void {
     this.onLoginSuccess = callback;
   }
 

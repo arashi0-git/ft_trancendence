@@ -33,7 +33,7 @@ export function toPublicUser(user: UserWithoutPassword): PublicUser {
 
 export class UserModel {
   static async create(params: CreateUserParams): Promise<UserRecord> {
-    db.run(
+    await db.run(
       `INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)`,
       [params.username, params.email, params.passwordHash],
     );

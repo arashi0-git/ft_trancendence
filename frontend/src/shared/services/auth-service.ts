@@ -1,5 +1,5 @@
-import {
-  User,
+import type {
+  PublicUser,
   CreateUserRequest,
   LoginRequest,
   AuthResponse,
@@ -71,7 +71,7 @@ export class AuthService {
     }
   }
 
-  static async getCurrentUser(): Promise<User> {
+  static async getCurrentUser(): Promise<PublicUser> {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/me`, {
         method: "GET",
@@ -87,7 +87,7 @@ export class AuthService {
         throw new Error(data.error || "Failed to get user info");
       }
 
-      return data.user as User;
+      return data.user as PublicUser;
     } catch (error) {
       console.error("Get user error:", error);
       throw error;

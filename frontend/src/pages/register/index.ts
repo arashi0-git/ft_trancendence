@@ -32,7 +32,7 @@ export class RegisterPage extends SpacePageBase {
   }
 
   private attachEventListeners(): void {
-    this.backToHomeEl = this.container.querySelector("#back-to-home");
+    this.backToHomeEl = this.container.querySelector<HTMLButtonElement>("#back-to-home");
     this.backToHomeEl?.addEventListener("click", this.onBackToHomeClick);
   }
 

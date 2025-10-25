@@ -1,11 +1,11 @@
 import { AuthService } from "../services/auth-service";
-import { CreateUserRequest, User } from "../types/user";
+import type { CreateUserRequest, PublicUser } from "../types/user";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export class RegisterForm {
   private abortController: AbortController;
-  private onRegisterSuccess: (user: User) => void = () => {};
+  private onRegisterSuccess: (user: PublicUser) => void = () => {};
   private onShowLogin: () => void = () => {};
   private onShowHome: () => void = () => {};
 
@@ -75,21 +75,21 @@ export class RegisterForm {
               class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Create account
-              <button
+            </button>
+            <button
               type="button"
               id="show-login"
               class="w-full bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-700"
-              >
+            >
               Already have an account? Sign in
-              </button>
-              </button>
-              <button
-                type="button"
-                id="register-show-home"
-                class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
-              >
-                Back to Home
-              </button>
+            </button>
+            <button
+              type="button"
+              id="register-show-home"
+              class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+            >
+              Back to Home
+            </button>
           </div>
         </form>
       </div>
@@ -219,7 +219,7 @@ export class RegisterForm {
     this.container.innerHTML = "";
   }
 
-  setOnRegisterSuccess(callback: (user: User) => void): void {
+  setOnRegisterSuccess(callback: (user: PublicUser) => void): void {
     this.onRegisterSuccess = callback;
   }
 
