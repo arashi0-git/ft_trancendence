@@ -173,8 +173,11 @@ export class PongGame {
       this.gameState.gameStatus === "paused"
     ) {
       this.gameState.gameStatus = "playing";
-      this.eventListeners.onGameStateChange?.forEach((callback) => {
-        callback(this.getReadonlyGameState());
+      const listeners = this.eventListeners.onGameStateChange;
+      (listeners || []).forEach((callback) => {
+        if (callback) {
+          callback(this.getReadonlyGameState());
+        }
       });
       this.gameLoop();
     }
@@ -187,8 +190,11 @@ export class PongGame {
         cancelAnimationFrame(this.animationId);
         this.animationId = null;
       }
-      this.eventListeners.onGameStateChange?.forEach((callback) => {
-        callback(this.getReadonlyGameState());
+      const listeners = this.eventListeners.onGameStateChange;
+      (listeners || []).forEach((callback) => {
+        if (callback) {
+          callback(this.getReadonlyGameState());
+        }
       });
     }
   }
@@ -204,8 +210,11 @@ export class PongGame {
     }
     this.resetKeyState();
     this.initializeGame();
-    this.eventListeners.onGameStateChange?.forEach((callback) => {
-      callback(this.getReadonlyGameState());
+    const listeners = this.eventListeners.onGameStateChange;
+    (listeners || []).forEach((callback) => {
+      if (callback) {
+        callback(this.getReadonlyGameState());
+      }
     });
     this.render();
   }
@@ -328,16 +337,22 @@ export class PongGame {
     if (ball.x < 0) {
       this.gameState.score.player2++;
       this.resetBall();
-      this.eventListeners.onScoreUpdate?.forEach((callback) => {
-        callback(this.gameState.score);
+      const listeners = this.eventListeners.onScoreUpdate;
+      (listeners || []).forEach((callback) => {
+        if (callback) {
+          callback(this.gameState.score);
+        }
       });
     }
 
     if (ball.x > this.config.canvasWidth) {
       this.gameState.score.player1++;
       this.resetBall();
-      this.eventListeners.onScoreUpdate?.forEach((callback) => {
-        callback(this.gameState.score);
+      const listeners = this.eventListeners.onScoreUpdate;
+      (listeners || []).forEach((callback) => {
+        if (callback) {
+          callback(this.gameState.score);
+        }
       });
     }
 
@@ -377,11 +392,22 @@ export class PongGame {
       this.animationId = null;
     }
     this.resetKeyState();
-    this.eventListeners.onGameStateChange?.forEach((callback) => {
-      callback(this.getReadonlyGameState());
+    const listenersState = this.eventListeners.onGameStateChange;
+    (listenersState || []).forEach((callback) => {
+      if (callback) {
+        callback(this.getReadonlyGameState());
+      }
     });
-    this.eventListeners.onGameEnd?.forEach((callback) => {
-      callback(winner);
+    const gameEndData = {
+      winner: winner,
+      score1: this.gameState.score.player1,
+      score2: this.gameState.score.player2,
+    };
+    const listenersEnd = this.eventListeners.onGameEnd;
+    (listenersEnd || []).forEach((callback) => {
+      if (callback) {
+        callback(gameEndData);
+      }
     });
   }
 
