@@ -19,6 +19,7 @@ build/
 
 # Database
 /database/
+/backend/database/
 *.db
 *.sqlite
 *.sqlite3
