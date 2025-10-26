@@ -429,17 +429,19 @@ export class PongGame3D {
     event: E,
     callback: GameEvents[E],
   ): void {
-    if (!this.eventListeners[event]) {
-      this.eventListeners[event] = [];
+    if (callback) {
+      if (!this.eventListeners[event]) {
+        this.eventListeners[event] = [];
+      }
+      this.eventListeners[event]?.push(callback);
     }
-    this.eventListeners[event]?.push(callback);
   }
 
   public off<E extends keyof GameEvents>(
     event: E,
     callback: GameEvents[E],
   ): void {
-    if (!this.eventListeners[event]) {
+    if (!this.eventListeners[event] || !callback) {
       return;
     }
     const index = this.eventListeners[event]?.indexOf(callback) ?? -1;
@@ -489,7 +491,7 @@ export class PongGame3D {
   }
 
   public getReadonlyGameState(): Readonly<GameState> {
-    return this.deepFreeze(this.deepClone(this.gameState));
+    return this.deepFreeze(this.gameState);
   }
 
   public getCanvasSize(): { width: number; height: number } {

@@ -418,7 +418,6 @@ export class TournamentService {
       },
     });
 
-    // ゲームコントロールボタンの設定 (zbytek funkce zůstává stejný)
     const startBtn = document.getElementById(
       "start-tournament-game",
     ) as HTMLButtonElement;
@@ -467,25 +466,18 @@ export class TournamentService {
       console.log("[Tournament] Completing match...");
       const winnerId = winner === 1 ? match.player1Id : match.player2Id;
       this.tournamentData.completeMatch(matchId, winnerId, score);
-
       const winnerPlayer = this.tournamentData.getPlayer(winnerId);
       const winnerAlias = winnerPlayer?.alias || "Player";
-
-      // ===================================
-      // OPRAVA: Místo notifikace a setTimeout
-      // zobrazíme modál
-      // ===================================
       const modalTitle = winner === 1 ? "Player 1 Wins!" : "Player 2 Wins!";
       const modalMessage = `${winnerAlias} wins the match ${score.player1} - ${score.player2}!`;
 
       this.showGameOverModal(modalTitle, modalMessage, () => {
-        // Tato funkce se spustí, když uživatel klikne na "Continue"
         console.log(
           "[Tournament] Continue button clicked. Checking tournament state...",
         );
         if (this.tournamentData.isTournamentComplete()) {
           console.log("[Tournament] Navigating to results.");
-          this.notificationService.success("Tournament completed! 🏆"); // Může zůstat pro celkový závěr
+          this.notificationService.success("Tournament completed! 🏆");
           this.navigateToResults();
         } else if (this.tournamentData.canAdvanceToNextRound()) {
           console.log("[Tournament] Advancing to next round.");
@@ -497,7 +489,7 @@ export class TournamentService {
             const roundName = tournament
               ? this.getRoundName(currentRound || 1, tournament.players.length)
               : `Round ${currentRound}`;
-            this.notificationService.info(`${roundName} begins! 🥊`); // Informace o novém kole
+            this.notificationService.info(`${roundName} begins! 🥊`);
           }
           this.navigateToBracket();
         } else {
@@ -766,19 +758,16 @@ export class TournamentService {
     if (modal && modalTitle && modalMessage && continueBtn) {
       modalTitle.textContent = title;
       modalMessage.textContent = message;
-      modal.classList.remove("hidden"); // Zobraz modál
+      modal.classList.remove("hidden");
 
-      // Vyčistíme staré event listenery, pokud nějaké jsou
       this.clearEventListenersForId("game-over-continue-btn", "click");
 
-      // Přidáme nový listener pro tlačítko Continue
       this.attachEventListenerSafely("game-over-continue-btn", "click", () => {
-        this.hideGameOverModal(); // Skryj modál po kliknutí
-        onContinue(); // Spusť akci po kliknutí
+        this.hideGameOverModal();
+        onContinue();
       });
     } else {
       console.error("Game Over modal elements not found.");
-      // Záložní řešení, pokud modál selže
       this.notificationService.success(`${title}: ${message}`);
       onContinue();
     }
@@ -787,19 +776,18 @@ export class TournamentService {
   private hideGameOverModal(): void {
     const modal = document.getElementById("game-over-modal");
     if (modal) {
-      modal.classList.add("hidden"); // Skryj modál
-      this.clearEventListenersForId("game-over-continue-btn", "click"); // Vyčisti listener
+      modal.classList.add("hidden");
+      this.clearEventListenersForId("game-over-continue-btn", "click");
     }
   }
 
-  // Pomocná metoda pro čištění specifických listenerů
   private clearEventListenersForId(elementId: string, eventType: string): void {
     this.eventListeners = this.eventListeners.filter((listener) => {
       if (listener.element.id === elementId && listener.event === eventType) {
         listener.element.removeEventListener(listener.event, listener.handler);
-        return false; // Odebereme z pole
+        return false;
       }
-      return true; // Ponecháme ostatní
+      return true;
     });
   }
 }

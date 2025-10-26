@@ -464,17 +464,19 @@ export class PongGame {
     event: E,
     callback: GameEvents[E],
   ): void {
-    if (!this.eventListeners[event]) {
-      this.eventListeners[event] = [];
+    if (callback) {
+      if (!this.eventListeners[event]) {
+        this.eventListeners[event] = [];
+      }
+      this.eventListeners[event]?.push(callback);
     }
-    this.eventListeners[event]?.push(callback);
   }
 
   public off<E extends keyof GameEvents>(
     event: E,
     callback: GameEvents[E],
   ): void {
-    if (!this.eventListeners[event]) {
+    if (!this.eventListeners[event] || !callback) {
       return;
     }
     const index = this.eventListeners[event]?.indexOf(callback) ?? -1;
@@ -509,8 +511,12 @@ export class PongGame {
     return this.deepClone(this.gameState);
   }
 
+  public getReadonlyGameState(): Readonly<GameState> {
+    return this.deepFreeze(this.gameState);
+  }
+
   private deepFreeze<T>(obj: T): Readonly<T> {
-    if (obj === null || typeof obj !== "object") return obj as Readonly<T>;
+        if (obj === null || typeof obj !== "object") return obj as Readonly<T>;
     if (Array.isArray(obj))
       return Object.freeze(
         obj.map((v) => this.deepFreeze(v)),
@@ -521,16 +527,5 @@ export class PongGame {
         out[k] = this.deepFreeze((obj as any)[k]);
     }
     return Object.freeze(out);
-  }
-
-  public getReadonlyGameState(): Readonly<GameState> {
-    return this.deepFreeze(this.deepClone(this.gameState));
-  }
-
-  public getCanvasSize(): { width: number; height: number } {
-    return {
-      width: this.config.canvasWidth,
-      height: this.config.canvasHeight,
-    };
   }
 }

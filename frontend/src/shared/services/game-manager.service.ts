@@ -33,11 +33,11 @@ export class GameManagerService {
 
       // イベントハンドラーの設定
       if (config.onGameEnd) {
-        this.pongGame.on("onGameEnd", config.onGameEnd);
+        this.pongGame.on("onGameEnd", config.onGameEnd as (data: any) => void);
       }
 
       if (config.onScoreUpdate) {
-        this.pongGame.on("onScoreUpdate", config.onScoreUpdate);
+        this.pongGame.on("onScoreUpdate", config.onScoreUpdate as (score: { player1: number; player2: number }) => void);
       }
 
       this.pongGame.resetGame();
