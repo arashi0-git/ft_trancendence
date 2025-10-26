@@ -1,29 +1,37 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 
-export default defineConfig({
-  root: ".",
-  build: {
-    outDir: "dist",
-    emptyOutDir: true,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          // Babylon.js and related libraries into a separate chunk
-          if (id.includes("@babylonjs")) {
-            return "babylon";
-          }
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  return {
+    root: ".",
+    define: {
+      __API_BASE_URL__: JSON.stringify(
+        env.VITE_API_BASE_URL || "http://localhost:3000/api",
+      ),
+    },
+    build: {
+      outDir: "dist",
+      emptyOutDir: true,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            // Babylon.js and related libraries into a separate chunk
+            if (id.includes("@babylonjs")) {
+              return "babylon";
+            }
+          },
         },
       },
     },
-  },
-  server: {
-    port: 5173,
-    host: "0.0.0.0",
-    proxy: {
-      "/api": {
-        target: "http://localhost:3000",
-        changeOrigin: true,
+    server: {
+      port: 5173,
+      host: "0.0.0.0",
+      proxy: {
+        "/api": {
+          target: "http://localhost:3000",
+          changeOrigin: true,
+        },
       },
     },
-  },
+  };
 });

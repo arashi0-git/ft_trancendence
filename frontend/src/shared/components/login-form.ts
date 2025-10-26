@@ -1,5 +1,5 @@
 import { AuthService } from "../services/auth-service";
-import { LoginRequest, User } from "../types/user";
+import type { LoginRequest, PublicUser } from "../types/user";
 
 export class LoginForm {
   private container: HTMLElement;
@@ -46,11 +46,18 @@ export class LoginForm {
                             Login
                         </button>
                         <button 
+                        type="button" 
+                        id="show-register"
+                        class="w-full bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-700"
+                        >
+                        Don't have an account? Register
+                        </button>
+                        <button 
                             type="button" 
-                            id="show-register"
+                            id="show-home"
                             class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
                         >
-                            Don't have an account? Register
+                            Back to Home
                         </button>
                     </div>
                 </form>
@@ -63,8 +70,9 @@ export class LoginForm {
   private attachEventListeners(): void {
     const form = document.getElementById("login-form");
     const showRegisterBtn = document.getElementById("show-register");
+    const showHomeBtn = document.getElementById("show-home");
 
-    if (!form || !showRegisterBtn) {
+    if (!form || !showRegisterBtn || !showHomeBtn) {
       console.error("Required form elements not found");
       return;
     }
@@ -74,6 +82,9 @@ export class LoginForm {
     );
     (showRegisterBtn as HTMLButtonElement).addEventListener("click", () =>
       this.onShowRegister(),
+    );
+    (showHomeBtn as HTMLButtonElement).addEventListener("click", () =>
+      this.onShowHome(),
     );
   }
 
@@ -127,7 +138,7 @@ export class LoginForm {
     }
   }
 
-  private onLoginSuccess(user: User): void {
+  private onLoginSuccess(user: PublicUser): void {
     console.log("User logged in:", user);
     alert(`Welcome back, ${user?.username || "User"}!`);
   }
@@ -136,11 +147,19 @@ export class LoginForm {
     console.log("Show register form");
   }
 
-  public setOnLoginSuccess(callback: (user: User) => void): void {
+  private onShowHome(): void {
+    console.log("Navigate home from login");
+  }
+
+  public setOnLoginSuccess(callback: (user: PublicUser) => void): void {
     this.onLoginSuccess = callback;
   }
 
   public setOnShowRegister(callback: () => void): void {
     this.onShowRegister = callback;
+  }
+
+  public setOnShowHome(callback: () => void): void {
+    this.onShowHome = callback;
   }
 }

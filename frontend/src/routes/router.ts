@@ -68,7 +68,7 @@ export class Router {
     routePath: string,
     actualPath: string,
   ): { params: Record<string, string>; query?: URLSearchParams } | null {
-    const [cleanActualPath, queryString] = actualPath.split("?");
+    const [cleanActualPath = "", queryString] = actualPath.split("?");
     const query = queryString ? new URLSearchParams(queryString) : undefined;
 
     if (routePath === cleanActualPath) {
@@ -87,6 +87,10 @@ export class Router {
     for (let i = 0; i < routeParts.length; i++) {
       const routePart = routeParts[i];
       const actualPart = actualParts[i];
+
+      if (!routePart || !actualPart) {
+        return null;
+      }
 
       if (routePart.startsWith(":")) {
         const paramName = routePart.slice(1);
