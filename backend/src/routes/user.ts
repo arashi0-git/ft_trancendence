@@ -174,8 +174,8 @@ export async function userRoutes(fastify: FastifyInstance) {
           const resolvedPath = path.resolve(baseDir, relativePath);
 
           if (
-            resolvedPath.startsWith(baseDir + path.sep) ||
-            resolvedPath === baseDir
+            resolvedPath.startsWith(baseDir + path.sep) &&
+            resolvedPath !== baseDir
           ) {
             fs.promises.unlink(resolvedPath).catch((unlinkError) => {
               if (unlinkError && unlinkError.code !== "ENOENT") {
