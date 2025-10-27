@@ -7,7 +7,6 @@ import fs from "fs";
 import crypto from "crypto";
 import "@fastify/multipart";
 import sharp from "sharp";
-import { fileTypeFromBuffer } from "file-type";
 
 const AVATAR_UPLOAD_DIR = path.join(process.cwd(), "uploads", "avatars");
 const ALLOWED_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp"]);
@@ -108,6 +107,7 @@ export async function userRoutes(fastify: FastifyInstance) {
 
         let detectedExtension: string | undefined;
         try {
+          const { fileTypeFromBuffer } = await import("file-type");
           const fileType = await fileTypeFromBuffer(originalBuffer);
           detectedExtension = fileType?.ext;
         } catch (detectionError) {
