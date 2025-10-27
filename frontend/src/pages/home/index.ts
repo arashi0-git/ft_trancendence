@@ -36,19 +36,11 @@ export class HomePage extends SpacePageBase {
               <div class="text-sm opacity-90">2-8 Players - Bracket style competition</div>
             </div>
           </button>
-<<<<<<< HEAD
           
           <button id="ai-mode-btn" class="w-full bg-blue-800 hover:bg-blue-900 text-white py-3 px-4 rounded border border-blue-800 shadow-lg">
             <div class="text-center">
               <div class="font-semibold text-lg">🤖 AI Mode</div>
               <div class="text-sm opacity-90">1 Player vs Computer - Test your skills</div>
-=======
-
-          <button id="custom-play-btn" class="w-full bg-pink-500 hover:bg-pink-600 text-white py-3 px-4 rounded">
-            <div class="text-center">
-              <div class="font-semibold text-lg">⚙️ Custom Game</div>
-              <div class="text-sm opacity-90">Change game map, color, etc.</div>
->>>>>>> 7d39a1e (customization page added)
             </div>
           </button>
         </div>
@@ -103,12 +95,6 @@ export class HomePage extends SpacePageBase {
         } catch (error) {
           console.error("AI Mode navigation error:", error);
         }
-      });
-
-    document
-      .getElementById("custom-play-btn")
-      ?.addEventListener("click", () => {
-        this.service.navigateToCustomGame();
       });
 
     document.getElementById("login-btn")?.addEventListener("click", () => {

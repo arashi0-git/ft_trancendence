@@ -589,7 +589,6 @@ export class TournamentService {
   }
 
   private navigate(path: string): void {
-    this.cleanup();
     router.navigate(path);
   }
 

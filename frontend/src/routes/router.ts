@@ -88,10 +88,9 @@ export class Router {
       const routePart = routeParts[i];
       const actualPart = actualParts[i];
 
-      if (!routePart || !actualPart) {
+      if (routePart === undefined || actualPart === undefined) {
         return null;
       }
-
       if (routePart.startsWith(":")) {
         const paramName = routePart.slice(1);
         params[paramName] = actualPart;

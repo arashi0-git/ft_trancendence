@@ -23,10 +23,6 @@ export class HomeService {
     this.navigate("/register");
   }
 
-  navigateToCustomGame(): void {
-    this.navigate("/custom-game");
-  }
-
   private navigate(path: string): void {
     router.navigate(path);
   }
