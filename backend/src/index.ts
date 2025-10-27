@@ -2,11 +2,13 @@ import "dotenv/config";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import staticFiles from "@fastify/static";
+import multipart from "@fastify/multipart";
 import path from "path";
 import fs from "fs";
 import https from "https";
 import { initializeDatabase } from "./database/init";
 import { authRoutes } from "./routes/auth";
+import { userRoutes } from "./routes/user";
 
 const httpsOptions =
   process.env.NODE_ENV === "production"
@@ -31,6 +33,27 @@ async function registerPlugins() {
   await fastify.register(cors, {
     origin: true,
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PATCH", "OPTIONS"],
+  });
+
+  await fastify.register(multipart, {
+    limits: {
+      fileSize: 2 * 1024 * 1024, // 2MB
+      files: 1,
+    },
+  });
+
+  const uploadsDir = path.join(process.cwd(), "uploads");
+  const avatarsDir = path.join(uploadsDir, "avatars");
+  if (!fs.existsSync(avatarsDir)) {
+    fs.mkdirSync(avatarsDir, { recursive: true });
+  }
+
+  await fastify.register(staticFiles, {
+    root: avatarsDir,
+    prefix: "/uploads/avatars/",
+    decorateReply: false,
   });
 
   // 静的ファイル配信（フロントエンド用）
@@ -43,6 +66,7 @@ async function registerPlugins() {
 // ルートの設定
 async function setupRoutes() {
   await fastify.register(authRoutes, { prefix: "/api/auth" });
+  await fastify.register(userRoutes, { prefix: "/api/users" });
   // ヘルスチェック
   fastify.get("/api/health", async (request, reply) => {
     return { status: "ok", timestamp: new Date().toISOString() };
@@ -55,6 +79,7 @@ async function setupRoutes() {
       version: "1.0.0",
       endpoints: {
         health: "/api/health",
+        updateProfile: "/api/users/me",
       },
     };
   });

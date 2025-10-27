@@ -18,3 +18,14 @@ export interface AuthResponse {
   user: PublicUser;
   token: string;
 }
+
+export interface UpdateUserProfileRequest {
+  username?: string;
+  email?: string;
+  profileImageUrl?: string | null;
+}
+
+export interface UpdateUserSettingsRequest extends UpdateUserProfileRequest {
+  currentPassword?: string;
+  newPassword?: string;
+}
