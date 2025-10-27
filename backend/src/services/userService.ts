@@ -163,19 +163,9 @@ export class UserService {
           throw new Error("Profile image URL must be 2048 characters or fewer");
         }
 
-        const isAbsoluteUrl = /^https?:\/\//i.test(trimmedValue);
-        const isUploadPath = trimmedValue.startsWith("/uploads/avatars/");
-
-        if (isAbsoluteUrl) {
-          try {
-            // eslint-disable-next-line no-new
-            new URL(trimmedValue);
-          } catch {
-            throw new Error("Profile image URL must be a valid URL");
-          }
-        } else if (!isUploadPath) {
+        if (!trimmedValue.startsWith("/uploads/avatars/")) {
           throw new Error(
-            "Profile image URL must be a valid URL or an uploaded avatar path",
+            "Profile image URL must reference an uploaded avatar path",
           );
         }
 
