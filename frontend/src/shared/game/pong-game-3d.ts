@@ -182,8 +182,11 @@ export class PongGame3D {
       this.gameState.gameStatus === "paused"
     ) {
       this.gameState.gameStatus = "playing";
-      this.eventListeners.onGameStateChange?.forEach((callback) => {
-        callback(this.getReadonlyGameState());
+      const listeners = this.eventListeners.onGameStateChange;
+      (listeners || []).forEach((callback) => {
+        if (callback) {
+          callback(this.getReadonlyGameState());
+        }
       });
       this.gameLoop();
     }
@@ -306,21 +309,32 @@ export class PongGame3D {
 
   private checkScore(): void {
     const ball = this.gameState.ball;
+    let scored = false;
 
     if (ball.x + ball.radius < 0) {
       this.gameState.score.player2++;
-      this.resetBall();
-      this.eventListeners.onScoreUpdate?.forEach((callback) => {
-        callback(this.gameState.score);
+      scored = true;
+
+      const listeners = this.eventListeners.onScoreUpdate;
+      (listeners || []).forEach((callback) => {
+        if (callback) {
+          callback(this.gameState.score);
+        }
+      });
+    } else if (ball.x - ball.radius > this.config.canvasWidth) {
+      this.gameState.score.player1++;
+      scored = true;
+
+      const listeners = this.eventListeners.onScoreUpdate;
+      (listeners || []).forEach((callback) => {
+        if (callback) {
+          callback(this.gameState.score);
+        }
       });
     }
 
-    if (ball.x - ball.radius > this.config.canvasWidth) {
-      this.gameState.score.player1++;
+    if (scored) {
       this.resetBall();
-      this.eventListeners.onScoreUpdate?.forEach((callback) => {
-        callback(this.gameState.score);
-      });
     }
 
     if (this.gameState.score.player1 >= this.config.maxScore) {
@@ -347,11 +361,25 @@ export class PongGame3D {
       this.animationId = null;
     }
     this.keyState = {};
-    this.eventListeners.onGameStateChange?.forEach((callback) => {
-      callback(this.getReadonlyGameState());
+
+    const listenersState = this.eventListeners.onGameStateChange;
+    (listenersState || []).forEach((callback) => {
+      if (callback) {
+        callback(this.getReadonlyGameState());
+      }
     });
-    this.eventListeners.onGameEnd?.forEach((callback) => {
-      callback(winner);
+
+    const gameEndData = {
+      winner: winner,
+      score1: this.gameState.score.player1,
+      score2: this.gameState.score.player2,
+    };
+
+    const listenersEnd = this.eventListeners.onGameEnd;
+    (listenersEnd || []).forEach((callback) => {
+      if (callback) {
+        callback(gameEndData);
+      }
     });
   }
 
@@ -362,8 +390,11 @@ export class PongGame3D {
         cancelAnimationFrame(this.animationId);
         this.animationId = null;
       }
-      this.eventListeners.onGameStateChange?.forEach((callback) => {
-        callback(this.getReadonlyGameState());
+      const listeners = this.eventListeners.onGameStateChange;
+      (listeners || []).forEach((callback) => {
+        if (callback) {
+          callback(this.getReadonlyGameState());
+        }
       });
     }
   }
@@ -376,8 +407,11 @@ export class PongGame3D {
     this.keyState = {};
     this.initializeGame();
     this.renderer.updateGameObjects(this.gameState);
-    this.eventListeners.onGameStateChange?.forEach((callback) => {
-      callback(this.getReadonlyGameState());
+    const listeners = this.eventListeners.onGameStateChange;
+    (listeners || []).forEach((callback) => {
+      if (callback) {
+        callback(this.getReadonlyGameState());
+      }
     });
   }
 
@@ -395,17 +429,19 @@ export class PongGame3D {
     event: E,
     callback: GameEvents[E],
   ): void {
-    if (!this.eventListeners[event]) {
-      this.eventListeners[event] = [];
+    if (callback) {
+      if (!this.eventListeners[event]) {
+        this.eventListeners[event] = [];
+      }
+      this.eventListeners[event]?.push(callback);
     }
-    this.eventListeners[event]?.push(callback);
   }
 
   public off<E extends keyof GameEvents>(
     event: E,
     callback: GameEvents[E],
   ): void {
-    if (!this.eventListeners[event]) {
+    if (!this.eventListeners[event] || !callback) {
       return;
     }
     const index = this.eventListeners[event]?.indexOf(callback) ?? -1;
@@ -455,7 +491,7 @@ export class PongGame3D {
   }
 
   public getReadonlyGameState(): Readonly<GameState> {
-    return this.deepFreeze(this.deepClone(this.gameState));
+    return this.deepFreeze(this.gameState);
   }
 
   public getCanvasSize(): { width: number; height: number } {

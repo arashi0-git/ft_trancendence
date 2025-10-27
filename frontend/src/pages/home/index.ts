@@ -23,21 +23,21 @@ export class HomePage extends SpacePageBase {
         <p class="text-center text-gray-300 mb-6">Choose how you want to play Pong!</p>
         
         <div class="space-y-4 mb-6">
-          <button id="quick-play-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded border border-blue-400 shadow-lg">
+          <button id="quick-play-btn" class="w-full bg-blue-400 hover:bg-blue-500 text-white py-3 px-4 rounded border border-blue-400 shadow-lg">
             <div class="text-center">
               <div class="font-semibold text-lg">🎮 Quick Play</div>
               <div class="text-sm opacity-90">2 Players - Start playing immediately</div>
             </div>
           </button>
           
-          <button id="tournament-play-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 rounded border border-purple-400 shadow-lg">
+          <button id="tournament-play-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded border border-blue-600 shadow-lg">
             <div class="text-center">
               <div class="font-semibold text-lg">🏆 Tournament</div>
               <div class="text-sm opacity-90">2-8 Players - Bracket style competition</div>
             </div>
           </button>
           
-          <button id="ai-mode-btn" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded border border-green-400 shadow-lg">
+          <button id="ai-mode-btn" class="w-full bg-blue-800 hover:bg-blue-900 text-white py-3 px-4 rounded border border-blue-800 shadow-lg">
             <div class="text-center">
               <div class="font-semibold text-lg">🤖 AI Mode</div>
               <div class="text-sm opacity-90">1 Player vs Computer - Test your skills</div>

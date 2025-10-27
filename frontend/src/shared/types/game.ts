@@ -60,7 +60,11 @@ export interface KeyState {
 
 export interface GameEvents {
   onScoreUpdate: (score: Score) => void;
-  onGameEnd: (winner: number) => void;
+  onGameEnd?: (data: {
+    winner: number;
+    score1: number;
+    score2: number;
+  }) => void;
   onGameStateChange: (state: GameState) => void;
 }
 

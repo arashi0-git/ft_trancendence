@@ -31,9 +31,6 @@ export class TournamentService {
     handler: EventListener;
   }> = [];
 
-  // 定数
-  private readonly MATCH_END_DELAY_MS = 2000;
-
   constructor() {
     this.gameManager = new GameManagerService();
     this.tournamentData = TournamentDataService.getInstance();
@@ -398,16 +395,29 @@ export class TournamentService {
   }
 
   private initializeMatchGame(matchId: string): void {
-    // 既存のゲームインスタンスをクリーンアップ
-    this.gameManager.cleanup();
+    console.log(
+      `%c[Tournament] Initializing Match: ${matchId}`,
+      "color: blue; font-weight: bold;",
+    );
 
+    this.gameManager.cleanup();
     this.gameManager.initializeGame({
       mode: "tournament",
       canvasId: "tournament-pong-canvas",
-      onGameEnd: (winner: number) => this.handleMatchEnd(matchId, winner),
+      onGameEnd: (data: { winner: number; score1: number; score2: number }) => {
+        console.log(
+          `%c[Tournament] Match Ended: ${matchId}`,
+          "color: green; font-weight: bold;",
+          "Data:",
+          data,
+        );
+        this.handleMatchEnd(matchId, data.winner, {
+          player1: data.score1,
+          player2: data.score2,
+        });
+      },
     });
 
-    // ゲームコントロールボタンの設定
     const startBtn = document.getElementById(
       "start-tournament-game",
     ) as HTMLButtonElement;
@@ -434,58 +444,83 @@ export class TournamentService {
     });
   }
 
-  private handleMatchEnd(matchId: string, winner: number): void {
-    const match = this.tournamentData.getMatch(matchId);
-    if (!match) return;
-
-    const gameState = this.gameManager.getGameState();
-    const score = gameState ? gameState.score : { player1: 0, player2: 0 };
-
-    const winnerId = winner === 1 ? match.player1Id : match.player2Id;
-    this.tournamentData.completeMatch(matchId, winnerId, score);
-
-    const winnerPlayer = this.tournamentData.getPlayer(winnerId);
-    this.notificationService.success(
-      `${winnerPlayer?.alias || "Player"} wins the match!`,
+  private handleMatchEnd(
+    matchId: string,
+    winner: number,
+    score: { player1: number; player2: number },
+  ): void {
+    console.log(
+      `%c[Tournament] Handling Match End: ${matchId}`,
+      "color: green; font-weight: bold;",
     );
 
-    // ゲーム終了時にボタンの状態をリセット
-    const startBtn = document.getElementById(
-      "start-tournament-game",
-    ) as HTMLButtonElement;
-    const pauseBtn = document.getElementById(
-      "pause-tournament-game",
-    ) as HTMLButtonElement;
-    if (startBtn && pauseBtn) {
-      startBtn.disabled = false;
-      pauseBtn.disabled = true;
-    }
-
-    // トーナメント進行チェック
-    setTimeout(() => {
-      if (this.tournamentData.isTournamentComplete()) {
-        // トーナメント完了
-        this.notificationService.success("Tournament completed! 🏆");
-        this.navigateToResults();
-      } else if (this.tournamentData.canAdvanceToNextRound()) {
-        // 次のラウンドを生成
-        const success = this.tournamentData.generateNextRound();
-        if (success) {
-          const currentRound =
-            this.tournamentData.getCurrentTournament()?.currentRound;
-          const tournament = this.tournamentData.getCurrentTournament();
-          const roundName = tournament
-            ? this.getRoundName(currentRound || 1, tournament.players.length)
-            : `Round ${currentRound}`;
-
-          this.notificationService.info(`${roundName} begins! 🥊`);
-        }
-        this.navigateToBracket();
-      } else {
-        // 現在のラウンドが未完了
-        this.navigateToBracket();
+    try {
+      const match = this.tournamentData.getMatch(matchId);
+      if (!match) {
+        console.error(
+          `[Tournament] CRITICAL: Match ${matchId} not found in handleMatchEnd.`,
+        );
+        return;
       }
-    }, this.MATCH_END_DELAY_MS);
+
+      console.log("[Tournament] Completing match...");
+      const winnerId = winner === 1 ? match.player1Id : match.player2Id;
+      this.tournamentData.completeMatch(matchId, winnerId, score);
+      const winnerPlayer = this.tournamentData.getPlayer(winnerId);
+      const winnerAlias = winnerPlayer?.alias || "Player";
+      const modalTitle = winner === 1 ? "Player 1 Wins!" : "Player 2 Wins!";
+      const modalMessage = `${winnerAlias} wins the match ${score.player1} - ${score.player2}!`;
+
+      this.showGameOverModal(modalTitle, modalMessage, () => {
+        console.log(
+          "[Tournament] Continue button clicked. Checking tournament state...",
+        );
+        if (this.tournamentData.isTournamentComplete()) {
+          console.log("[Tournament] Navigating to results.");
+          this.notificationService.success("Tournament completed! 🏆");
+          this.navigateToResults();
+        } else if (this.tournamentData.canAdvanceToNextRound()) {
+          console.log("[Tournament] Advancing to next round.");
+          const success = this.tournamentData.generateNextRound();
+          if (success) {
+            const currentRound =
+              this.tournamentData.getCurrentTournament()?.currentRound;
+            const tournament = this.tournamentData.getCurrentTournament();
+            const roundName = tournament
+              ? this.getRoundName(currentRound || 1, tournament.players.length)
+              : `Round ${currentRound}`;
+            this.notificationService.info(`${roundName} begins! 🥊`);
+          }
+          this.navigateToBracket();
+        } else {
+          console.log(
+            "[Tournament] Current round not finished. Navigating to bracket.",
+          );
+          this.navigateToBracket();
+        }
+      });
+
+      const startBtn = document.getElementById(
+        "start-tournament-game",
+      ) as HTMLButtonElement;
+      const pauseBtn = document.getElementById(
+        "pause-tournament-game",
+      ) as HTMLButtonElement;
+      if (startBtn && pauseBtn) {
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+      }
+    } catch (error) {
+      console.error(
+        "%c[Tournament] FATAL ERROR in handleMatchEnd:",
+        "color: red; font-size: 20px;",
+        error,
+      );
+      this.notificationService.error(
+        "A critical error occurred while saving the match.",
+      );
+      this.navigateToBracket();
+    }
   }
 
   private renderResultsView(container: HTMLElement): void {
@@ -554,7 +589,6 @@ export class TournamentService {
   }
 
   private navigate(path: string): void {
-    this.cleanup();
     router.navigate(path);
   }
 
@@ -707,5 +741,52 @@ export class TournamentService {
   cleanup(): void {
     this.clearEventListeners();
     this.gameManager.cleanup();
+    this.hideGameOverModal();
+  }
+
+  private showGameOverModal(
+    title: string,
+    message: string,
+    onContinue: () => void,
+  ): void {
+    const modal = document.getElementById("game-over-modal");
+    const modalTitle = document.getElementById("game-over-title");
+    const modalMessage = document.getElementById("game-over-message");
+    const continueBtn = document.getElementById("game-over-continue-btn");
+
+    if (modal && modalTitle && modalMessage && continueBtn) {
+      modalTitle.textContent = title;
+      modalMessage.textContent = message;
+      modal.classList.remove("hidden");
+
+      this.clearEventListenersForId("game-over-continue-btn", "click");
+
+      this.attachEventListenerSafely("game-over-continue-btn", "click", () => {
+        this.hideGameOverModal();
+        onContinue();
+      });
+    } else {
+      console.error("Game Over modal elements not found.");
+      this.notificationService.success(`${title}: ${message}`);
+      onContinue();
+    }
+  }
+
+  private hideGameOverModal(): void {
+    const modal = document.getElementById("game-over-modal");
+    if (modal) {
+      modal.classList.add("hidden");
+      this.clearEventListenersForId("game-over-continue-btn", "click");
+    }
+  }
+
+  private clearEventListenersForId(elementId: string, eventType: string): void {
+    this.eventListeners = this.eventListeners.filter((listener) => {
+      if (listener.element.id === elementId && listener.event === eventType) {
+        listener.element.removeEventListener(listener.event, listener.handler);
+        return false;
+      }
+      return true;
+    });
   }
 }
