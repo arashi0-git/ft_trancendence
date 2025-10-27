@@ -5,7 +5,11 @@ export type GameMode = "quick-play" | "tournament" | "ai-mode";
 export interface GameConfig {
   mode: GameMode;
   canvasId: string;
-  onGameEnd?: (data: any) => void;
+  onGameEnd?: (data: {
+    winner: number;
+    score1: number;
+    score2: number;
+  }) => void;
   onScoreUpdate?: (score: { player1: number; player2: number }) => void;
 }
 
@@ -33,11 +37,24 @@ export class GameManagerService {
 
       // イベントハンドラーの設定
       if (config.onGameEnd) {
-        this.pongGame.on("onGameEnd", config.onGameEnd as (data: any) => void);
+        this.pongGame.on(
+          "onGameEnd",
+          config.onGameEnd as (data: {
+            winner: number;
+            score1: number;
+            score2: number;
+          }) => void,
+        );
       }
 
       if (config.onScoreUpdate) {
-        this.pongGame.on("onScoreUpdate", config.onScoreUpdate as (score: { player1: number; player2: number }) => void);
+        this.pongGame.on(
+          "onScoreUpdate",
+          config.onScoreUpdate as (score: {
+            player1: number;
+            player2: number;
+          }) => void,
+        );
       }
 
       this.pongGame.resetGame();
