@@ -30,11 +30,48 @@ const fastify = Fastify({
 // プラグインの登録
 async function registerPlugins() {
   // CORS設定
+  const trustedOriginsEnv =
+    process.env.CORS_ORIGINS || process.env.TRUSTED_ORIGINS || "";
+  const trustedOrigins = trustedOriginsEnv
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
+
+  const isProduction = process.env.NODE_ENV === "production";
+
+  if (isProduction && trustedOrigins.length === 0) {
+    fastify.log.error(
+      "CORS_ORIGINS (or TRUSTED_ORIGINS) must be configured in production",
+    );
+    throw new Error("Missing CORS whitelist configuration");
+  }
+
   await fastify.register(cors, {
-    origin: true,
+    origin: (origin, cb) => {
+      // Allow server-to-server or same-origin requests without an Origin header
+      if (!origin) {
+        return cb(null, true);
+      }
+
+      if (trustedOrigins.length === 0) {
+        // Non-production with no whitelist
+        fastify.log.warn(
+          `CORS whitelist is empty; allowing origin ${origin} (non-production fallback)`,
+        );
+        return cb(null, true);
+      }
+
+      if (trustedOrigins.includes(origin)) {
+        return cb(null, origin);
+      }
+
+      fastify.log.warn(`Blocked CORS origin: ${origin}`);
+      return cb(new Error("CORS origin not allowed"), false);
+    },
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
     methods: ["GET", "POST", "PATCH", "OPTIONS"],
+    maxAge: 60 * 60 * 24, // 24 hours
   });
 
   await fastify.register(multipart, {

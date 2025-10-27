@@ -4,17 +4,14 @@ import { UserService } from "../services/userService";
 import { UpdateUserSettingsRequest } from "../types/user";
 import path from "path";
 import fs from "fs";
-import { pipeline } from "stream/promises";
 import crypto from "crypto";
 import "@fastify/multipart";
+import sharp from "sharp";
+import { fileTypeFromBuffer } from "file-type";
 
 const AVATAR_UPLOAD_DIR = path.join(process.cwd(), "uploads", "avatars");
-const ALLOWED_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
-const EXTENSION_MAP: Record<string, string> = {
-  "image/png": "png",
-  "image/jpeg": "jpg",
-  "image/webp": "webp",
-};
+const ALLOWED_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp"]);
+const OUTPUT_FORMAT: "png" | "webp" = "webp";
 
 export async function userRoutes(fastify: FastifyInstance) {
   fastify.patch<{ Body: UpdateUserSettingsRequest }>(
@@ -38,15 +35,21 @@ export async function userRoutes(fastify: FastifyInstance) {
           error instanceof Error
             ? error.message
             : "Failed to update user settings";
-        const statusCode =
-          error instanceof Error &&
-          (message.includes("not authenticated") ||
-            message.includes("not found") ||
+        let statusCode = 500;
+
+        if (error instanceof Error) {
+          if (message.includes("not authenticated")) {
+            statusCode = 401;
+          } else if (message.includes("not found")) {
+            statusCode = 404;
+          } else if (
             message.includes("incorrect") ||
             message.includes("required") ||
-            message.includes("already"))
-            ? 400
-            : 500;
+            message.includes("already")
+          ) {
+            statusCode = 400;
+          }
+        }
 
         return reply.status(statusCode).send({ error: message });
       }
@@ -62,17 +65,15 @@ export async function userRoutes(fastify: FastifyInstance) {
           return reply.status(401).send({ error: "User not authenticated" });
         }
 
-        const file = await request.file();
+        const file = await request.file({ limits: { files: 1 } });
 
         if (!file) {
           return reply.status(400).send({ error: "Avatar file is required" });
         }
 
-        if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
+        if (file.fieldname !== "avatar") {
           file.file.resume();
-          return reply
-            .status(400)
-            .send({ error: "Only PNG, JPEG, or WebP images are allowed" });
+          return reply.status(400).send({ error: "Invalid avatar field name" });
         }
 
         const user = await UserService.getUserById(request.user.id);
@@ -83,15 +84,67 @@ export async function userRoutes(fastify: FastifyInstance) {
 
         await fs.promises.mkdir(AVATAR_UPLOAD_DIR, { recursive: true });
 
-        const extension = EXTENSION_MAP[file.mimetype] ?? "png";
+        const chunks: Buffer[] = [];
+        try {
+          for await (const chunk of file.file) {
+            if (typeof chunk === "string") {
+              chunks.push(Buffer.from(chunk));
+            } else {
+              chunks.push(chunk as Buffer);
+            }
+          }
+        } catch (streamError) {
+          fastify.log.error(streamError);
+          return reply
+            .status(500)
+            .send({ error: "Failed to read avatar stream" });
+        }
+
+        const originalBuffer = Buffer.concat(chunks);
+
+        if (originalBuffer.length === 0) {
+          return reply.status(400).send({ error: "Avatar file is empty" });
+        }
+
+        let detectedExtension: string | undefined;
+        try {
+          const fileType = await fileTypeFromBuffer(originalBuffer);
+          detectedExtension = fileType?.ext;
+        } catch (detectionError) {
+          fastify.log.error(detectionError);
+          return reply
+            .status(400)
+            .send({ error: "Could not determine avatar file type" });
+        }
+
+        if (!detectedExtension || !ALLOWED_EXTENSIONS.has(detectedExtension)) {
+          return reply
+            .status(400)
+            .send({ error: "Only PNG, JPEG, or WebP images are allowed" });
+        }
+
+        let sanitizedBuffer: Buffer;
+        try {
+          sanitizedBuffer = await sharp(originalBuffer)
+            .rotate()
+            .toFormat(
+              OUTPUT_FORMAT,
+              OUTPUT_FORMAT === "webp" ? { quality: 90 } : undefined,
+            )
+            .toBuffer();
+        } catch (transformError) {
+          fastify.log.error(transformError);
+          return reply.status(500).send({ error: "Failed to process avatar" });
+        }
+
         const uniqueSuffix = crypto.randomBytes(6).toString("hex");
-        const fileName = `user-${request.user.id}-${Date.now()}-${uniqueSuffix}.${extension}`;
+        const fileName = `user-${request.user.id}-${Date.now()}-${uniqueSuffix}.${OUTPUT_FORMAT}`;
         const filePath = path.join(AVATAR_UPLOAD_DIR, fileName);
 
         try {
-          await pipeline(file.file, fs.createWriteStream(filePath));
-        } catch (error) {
-          fastify.log.error(error);
+          await fs.promises.writeFile(filePath, sanitizedBuffer);
+        } catch (writeError) {
+          fastify.log.error(writeError);
           return reply.status(500).send({ error: "Failed to save avatar" });
         }
 
