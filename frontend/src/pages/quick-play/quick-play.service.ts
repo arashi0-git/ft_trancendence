@@ -7,7 +7,7 @@ export class QuickPlayService extends BaseGameService {
     this.gameManager.initializeGame({
       mode: "quick-play",
       canvasId,
-      onGameEnd: (winner: number) => this.handleGameEnd(winner),
+      onGameEnd: (data: any) => this.handleGameEnd(data),
     });
   }
 
@@ -15,6 +15,9 @@ export class QuickPlayService extends BaseGameService {
     this.addControlListener("start-game", "click", () => this.startGame());
     this.addControlListener("pause-game", "click", () => this.pauseGame());
     this.addControlListener("reset-game", "click", () => this.resetGame());
+    this.addControlListener("reset-game-modal-btn", "click", () =>
+      this.resetGame(),
+    );
   }
 
   protected onGameStart(): void {
@@ -26,7 +29,14 @@ export class QuickPlayService extends BaseGameService {
   }
 
   protected onGameReset(): void {
-    // Quick-play specific logic if needed
+    const modal = document.getElementById("game-over-modal");
+    modal?.classList.add("hidden");
+
+    const startBtn = this.getStartButton();
+    const pauseBtn = this.getPauseButton();
+
+    startBtn?.classList.remove("hidden");
+    pauseBtn?.classList.remove("hidden");
   }
 
   protected getStartButton(): HTMLButtonElement | null {
@@ -39,8 +49,22 @@ export class QuickPlayService extends BaseGameService {
     return element instanceof HTMLButtonElement ? element : null;
   }
 
-  private handleGameEnd(winner: number): void {
-    this.notificationService.success(`Player ${winner} wins! 🎉`);
+  private handleGameEnd(data: any): void {
+    const modal = document.getElementById("game-over-modal");
+    const winnerNameEl = document.getElementById("winner-name");
+    const finalScoreEl = document.getElementById("final-score");
+    const startBtn = this.getStartButton();
+    const pauseBtn = this.getPauseButton();
+
+    if (modal && winnerNameEl && finalScoreEl) {
+      winnerNameEl.textContent = `Player ${data.winner}`;
+      finalScoreEl.textContent = `${data.score1} - ${data.score2}`;
+      startBtn?.classList.add("hidden");
+      pauseBtn?.classList.add("hidden");
+      modal.classList.remove("hidden");
+    } else {
+      this.notificationService.success(`Player ${data.winner} wins! 🎉`);
+    }
     this.updateButtonStates(false);
   }
 

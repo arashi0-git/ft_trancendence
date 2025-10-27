@@ -8,8 +8,7 @@ export class AiModeService extends BaseAiGameService {
       this.gameManager.initializeGame({
         mode: "ai-mode",
         canvasId,
-        onGameEnd: (winner: number) => this.handleGameEnd(winner),
-        onScoreUpdate: (score) => this.handleScoreUpdate(score),
+        onGameEnd: (data: any) => this.handleGameEnd(data),
       });
 
       if (this.aiPlayer) {
@@ -33,8 +32,10 @@ export class AiModeService extends BaseAiGameService {
         this.changeDifficulty(value as AiDifficulty);
       }
     });
+    this.addControlListener("reset-game-modal-btn", "click", () =>
+      this.resetGame(),
+    );
   }
-
   attachNavigationControls(): void {
     this.addControlListener("back-to-home", "click", () =>
       this.navigateToHome(),
@@ -42,25 +43,43 @@ export class AiModeService extends BaseAiGameService {
   }
 
   protected getStartButton(): HTMLButtonElement | null {
-    return document.getElementById("start-ai-game") as HTMLButtonElement;
+    const element = document.getElementById("start-ai-game");
+    return element instanceof HTMLButtonElement ? element : null;
   }
 
   protected getPauseButton(): HTMLButtonElement | null {
-    return document.getElementById("pause-ai-game") as HTMLButtonElement;
+    const element = document.getElementById("pause-ai-game");
+    return element instanceof HTMLButtonElement ? element : null;
   }
 
-  private handleGameEnd(winner: number): void {
-    this.aiPlayer?.stop();
+  protected onGameReset(): void {
+    const modal = document.getElementById("game-over-modal");
+    modal?.classList.add("hidden");
 
-    const message =
-      winner === 1 ? "🎉 You won against the AI!" : "🤖 AI wins this round!";
+    const startBtn = this.getStartButton();
+    const pauseBtn = this.getPauseButton();
 
-    this.notificationService.success(message);
+    startBtn?.classList.remove("hidden");
+    pauseBtn?.classList.remove("hidden");
+  }
+
+  private handleGameEnd(data: any): void {
+    const modal = document.getElementById("game-over-modal");
+    const winnerNameEl = document.getElementById("winner-name");
+    const finalScoreEl = document.getElementById("final-score");
+    const startBtn = this.getStartButton();
+    const pauseBtn = this.getPauseButton();
+
+    if (modal && winnerNameEl && finalScoreEl) {
+      winnerNameEl.textContent = `Player ${data.winner}`;
+      finalScoreEl.textContent = `${data.score1} - ${data.score2}`;
+      startBtn?.classList.add("hidden");
+      pauseBtn?.classList.add("hidden");
+      modal.classList.remove("hidden");
+    } else {
+      this.notificationService.success(`Player ${data.winner} wins! 🎉`);
+    }
     this.updateButtonStates(false);
-  }
-
-  private handleScoreUpdate(score: { player1: number; player2: number }): void {
-    console.log(`Score: Player ${score.player1} - ${score.player2} AI`);
   }
 
   navigateToHome(): void {
