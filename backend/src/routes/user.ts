@@ -123,8 +123,25 @@ export async function userRoutes(fastify: FastifyInstance) {
             .send({ error: "Only PNG, JPEG, or WebP images are allowed" });
         }
 
+        const MAX_DIMENSION = 4096;
         let sanitizedBuffer: Buffer;
         try {
+          // Get image metadata first
+          const metadata = await sharp(originalBuffer).metadata();
+
+          // Validate image dimensions
+          if (
+            !metadata.width ||
+            !metadata.height ||
+            metadata.width > MAX_DIMENSION ||
+            metadata.height > MAX_DIMENSION
+          ) {
+            return reply.status(400).send({
+              error:
+                "Image dimensions are too large. Maximum allowed is 4096x4096 pixels",
+            });
+          }
+
           sanitizedBuffer = await sharp(originalBuffer)
             .rotate()
             .toFormat(
@@ -148,29 +165,37 @@ export async function userRoutes(fastify: FastifyInstance) {
           return reply.status(500).send({ error: "Failed to save avatar" });
         }
 
-        if (
-          user.profile_image_url &&
-          user.profile_image_url.startsWith("/uploads/avatars/")
-        ) {
-          const previousPath = path.join(
-            process.cwd(),
-            user.profile_image_url.replace(/^\/+/, ""),
-          );
+        if (user.profile_image_url) {
+          const baseDir = path.join(process.cwd(), "uploads", "avatars");
+          const normalizedInput = user.profile_image_url.replace(/^\/+/g, "");
+          const relativePath = normalizedInput.startsWith("uploads/avatars/")
+            ? normalizedInput.slice("uploads/avatars/".length)
+            : normalizedInput;
+          const resolvedPath = path.resolve(baseDir, relativePath);
 
-          fs.promises.unlink(previousPath).catch((unlinkError) => {
-            if (unlinkError && unlinkError.code !== "ENOENT") {
-              fastify.log.warn(
-                `Failed to delete previous avatar for user ${user.id}: ${String(unlinkError)}`,
-              );
-            }
-          });
+          if (
+            resolvedPath.startsWith(baseDir + path.sep) ||
+            resolvedPath === baseDir
+          ) {
+            fs.promises.unlink(resolvedPath).catch((unlinkError) => {
+              if (unlinkError && unlinkError.code !== "ENOENT") {
+                fastify.log.warn(
+                  `Failed to delete previous avatar for user ${user.id}: ${String(unlinkError)}`,
+                );
+              }
+            });
+          } else {
+            fastify.log.warn(
+              `Attempted path traversal detected for user ${user.id}: ${user.profile_image_url}`,
+            );
+          }
         }
 
         const relativeUrl = `/uploads/avatars/${fileName}`;
         let result;
         try {
           result = await UserService.updateUserSettings(request.user.id, {
-            profileImageUrl: relativeUrl,
+            profile_image_url: relativeUrl,
           });
         } catch (updateError) {
           fs.promises.unlink(filePath).catch(() => {});

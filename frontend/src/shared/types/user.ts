@@ -28,7 +28,7 @@ export interface AuthResponse {
 export interface UpdateUserSettingsPayload {
   username?: string;
   email?: string;
-  profileImageUrl?: string | null;
+  profile_image_url?: string | null;
   currentPassword?: string;
   newPassword?: string;
 }

@@ -151,8 +151,8 @@ export class UserService {
       profileUpdates.email = trimmedEmail;
     }
 
-    if (updates.profileImageUrl !== undefined) {
-      const value = updates.profileImageUrl;
+    if (updates.profile_image_url !== undefined) {
+      const value = updates.profile_image_url;
 
       if (value === null || value.trim().length === 0) {
         profileUpdates.profile_image_url = null;
@@ -254,8 +254,8 @@ export class UserService {
       profileUpdates.email = updates.email;
       profileUpdated = true;
     }
-    if (Object.prototype.hasOwnProperty.call(updates, "profileImageUrl")) {
-      profileUpdates.profileImageUrl = updates.profileImageUrl ?? null;
+    if (Object.prototype.hasOwnProperty.call(updates, "profile_image_url")) {
+      profileUpdates.profile_image_url = updates.profile_image_url ?? null;
       profileUpdated = true;
     }
 

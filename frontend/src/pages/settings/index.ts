@@ -14,7 +14,7 @@ export class UserSettingsPage extends SpacePageBase {
   private initialFormState: {
     username: string;
     email: string;
-    profileImageUrl: string;
+    profile_image_url: string;
   } | null = null;
   private selectedFile: File | null = null;
   private avatarPreviewUrl: string | null = null;
@@ -233,7 +233,7 @@ export class UserSettingsPage extends SpacePageBase {
     this.initialFormState = {
       username: user.username,
       email: user.email,
-      profileImageUrl: sanitizedProfileUrl,
+      profile_image_url: sanitizedProfileUrl,
     };
 
     this.updateAvatarPreview(sanitizedProfileUrl || null, user);
@@ -310,7 +310,7 @@ export class UserSettingsPage extends SpacePageBase {
     const initialState = this.initialFormState ?? {
       username: currentUser.username,
       email: currentUser.email,
-      profileImageUrl: currentUser.profile_image_url ?? "",
+      profile_image_url: currentUser.profile_image_url ?? "",
     };
     let hasChanges = false;
 
@@ -419,7 +419,7 @@ export class UserSettingsPage extends SpacePageBase {
       this.updateAvatarPreview(this.avatarPreviewUrl, user ?? undefined);
     } else {
       const fallbackUrl =
-        this.initialFormState?.profileImageUrl ||
+        this.initialFormState?.profile_image_url ||
         user?.profile_image_url ||
         null;
       this.updateAvatarPreview(fallbackUrl, user ?? undefined);

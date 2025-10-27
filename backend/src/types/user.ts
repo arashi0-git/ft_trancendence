@@ -22,7 +22,7 @@ export interface AuthResponse {
 export interface UpdateUserProfileRequest {
   username?: string;
   email?: string;
-  profileImageUrl?: string | null;
+  profile_image_url?: string | null;
 }
 
 export interface UpdateUserSettingsRequest extends UpdateUserProfileRequest {
