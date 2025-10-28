@@ -2,6 +2,7 @@ export interface PublicUser {
   id: number;
   username: string;
   email: string;
+  profile_image_url: string | null;
   created_at: string;
   updated_at: string;
   is_online: boolean;
@@ -22,6 +23,19 @@ export interface LoginRequest {
 export interface AuthResponse {
   user: PublicUser;
   token: string;
+}
+
+export interface UpdateUserSettingsPayload {
+  username?: string;
+  email?: string;
+  profile_image_url?: string | null;
+  currentPassword?: string;
+  newPassword?: string;
+}
+
+export interface UpdateUserSettingsResponse {
+  user: PublicUser;
+  token?: string;
 }
 
 export interface ApiError {

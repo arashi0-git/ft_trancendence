@@ -23,6 +23,10 @@ export class HomeService {
     this.navigate("/register");
   }
 
+  navigateToSettings(): void {
+    this.navigate("/settings");
+  }
+
   private navigate(path: string): void {
     router.navigate(path);
   }
@@ -51,6 +55,9 @@ export class HomeService {
     if (AuthService.isAuthenticated()) {
       return `
         <div class="space-y-2">
+          <button id="settings-btn" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded">
+            Account Settings
+          </button>
           <button id="logout-btn" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded">
             Logout
           </button>

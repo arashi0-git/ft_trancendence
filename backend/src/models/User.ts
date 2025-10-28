@@ -4,6 +4,7 @@ export interface UserRecord {
   id: number;
   username: string;
   email: string;
+  profile_image_url: string | null;
   password_hash: string;
   created_at: string;
   updated_at: string;
@@ -92,14 +93,20 @@ export class UserModel {
 
   static async updateProfile(
     id: number,
-    updates: Partial<Pick<UserRecord, "username" | "email">>,
+    updates: Partial<
+      Record<"username" | "email" | "profile_image_url", string | null>
+    >,
   ): Promise<void> {
-    const allowedKeys: Array<keyof typeof updates> = ["username", "email"];
+    const allowedKeys: Array<keyof typeof updates> = [
+      "username",
+      "email",
+      "profile_image_url",
+    ];
+
     const filteredEntries = Object.entries(updates).filter(
       ([key, value]) =>
         allowedKeys.includes(key as keyof typeof updates) &&
-        typeof value === "string" &&
-        value.trim().length > 0,
+        value !== undefined,
     );
 
     if (filteredEntries.length === 0) {
@@ -107,11 +114,29 @@ export class UserModel {
     }
 
     const setClause = filteredEntries.map(([key]) => `${key} = ?`).join(", ");
-    const values = filteredEntries.map(([, value]) => (value as string).trim());
+    const values = filteredEntries.map(([, value]) => {
+      if (value === null) {
+        return null;
+      }
+      if (typeof value === "string") {
+        return value.trim();
+      }
+      return value;
+    });
 
     await db.run(
       `UPDATE users SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
       [...values, id],
+    );
+  }
+
+  static async updatePasswordHash(
+    id: number,
+    passwordHash: string,
+  ): Promise<void> {
+    await db.run(
+      "UPDATE users SET password_hash = ?, token_version = token_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      [passwordHash, id],
     );
   }
 }

@@ -105,6 +105,10 @@ export class HomePage extends SpacePageBase {
       this.service.navigateToRegister();
     });
 
+    document.getElementById("settings-btn")?.addEventListener("click", () => {
+      this.service.navigateToSettings();
+    });
+
     document
       .getElementById("logout-btn")
       ?.addEventListener("click", async () => {

@@ -17,7 +17,7 @@ A modern Pong game platform with user authentication and tournament system.
 ## Prerequisites
 
 - Docker and Docker Compose
-- Node.js 18+ (for local development)
+- Node.js 20+ (for local development)
 
 ## Quick Start
 
@@ -360,7 +360,7 @@ JWT認証とトーナメントシステムを備えたモダンなPongゲーム�
 ## 前提条件
 
 - Docker と Docker Compose
-- Node.js 18+ (ローカル開発用)
+- Node.js 20+ (ローカル開発用)
 
 ## クイックスタート
 

@@ -3,6 +3,8 @@ import type {
   CreateUserRequest,
   LoginRequest,
   AuthResponse,
+  UpdateUserSettingsPayload,
+  UpdateUserSettingsResponse,
 } from "../types/user";
 
 declare const __API_BASE_URL__: string | undefined;
@@ -13,6 +15,41 @@ const API_BASE_URL =
   "http://localhost:3000/api";
 
 export class AuthService {
+  private static getApiOrigin(): string | null {
+    const trimmed = API_BASE_URL.trim();
+    if (trimmed.length === 0) return null;
+
+    try {
+      const parsed = new URL(trimmed);
+      return parsed.origin;
+    } catch (error) {
+      if (typeof window !== "undefined") {
+        try {
+          const parsedRelative = new URL(trimmed, window.location.origin);
+          return parsedRelative.origin;
+        } catch {
+          return window.location.origin;
+        }
+      }
+      return null;
+    }
+  }
+
+  static resolveAssetUrl(path: string): string {
+    if (!path) return path;
+    if (/^(https?:)?\/\//i.test(path) || path.startsWith("blob:")) {
+      return path;
+    }
+
+    const origin = this.getApiOrigin();
+    if (!origin) {
+      return path;
+    }
+
+    const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+    return `${origin}${normalizedPath}`;
+  }
+
   private static getAuthHeaders(): HeadersInit {
     const token = localStorage.getItem("auth_token");
     return {
@@ -121,5 +158,73 @@ export class AuthService {
 
   static getToken(): string | null {
     return localStorage.getItem("auth_token");
+  }
+
+  static async uploadAvatar(file: File): Promise<UpdateUserSettingsResponse> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      const response = await fetch(
+        `${API_BASE_URL.replace(/\/$/, "")}/users/me/avatar`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to upload avatar");
+      }
+
+      if (data.token) {
+        localStorage.setItem("auth_token", data.token);
+      }
+
+      return data as UpdateUserSettingsResponse;
+    } catch (error) {
+      console.error("Upload avatar error:", error);
+      throw error;
+    }
+  }
+
+  static async updateSettings(
+    payload: UpdateUserSettingsPayload,
+  ): Promise<UpdateUserSettingsResponse> {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL.replace(/\/$/, "")}/users/me`,
+        {
+          method: "PATCH",
+          headers: this.getAuthHeaders(),
+          body: JSON.stringify(payload),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update settings");
+      }
+
+      if (data.token) {
+        localStorage.setItem("auth_token", data.token);
+      }
+
+      return data as UpdateUserSettingsResponse;
+    } catch (error) {
+      console.error("Update settings error:", error);
+      throw error;
+    }
   }
 }

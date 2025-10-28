@@ -9,6 +9,9 @@ yarn-error.log*
 dist/
 build/
 
+# Uploaded assets
+uploads/
+
 # Environment variables (but keep examples)
 .env
 .env.local
