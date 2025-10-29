@@ -1,4 +1,4 @@
-import fs from "fs";
+import { promises as fsPromises } from "fs";
 import path from "path";
 import { FollowModel } from "../models/Follow";
 import { UserModel, UserWithoutPassword, stripPassword } from "../models/User";
@@ -6,7 +6,9 @@ import { UserModel, UserWithoutPassword, stripPassword } from "../models/User";
 export class FollowService {
   static async listFollowing(userId: number): Promise<UserWithoutPassword[]> {
     const users = await FollowModel.getFollowingUsers(userId);
-    return users.map((user) => this.sanitizeProfileImage(stripPassword(user)));
+    return Promise.all(
+      users.map((user) => this.sanitizeProfileImage(stripPassword(user))),
+    );
   }
 
   static async followByUsername(
@@ -45,7 +47,7 @@ export class FollowService {
       throw error;
     }
 
-    return this.sanitizeProfileImage(stripPassword(targetUser));
+    return await this.sanitizeProfileImage(stripPassword(targetUser));
   }
 
   static async unfollow(
@@ -74,13 +76,32 @@ export class FollowService {
     };
   }
 
-  private static sanitizeProfileImage(
+  private static async sanitizeProfileImage(
     user: UserWithoutPassword,
-  ): UserWithoutPassword {
+  ): Promise<UserWithoutPassword> {
     if (user.profile_image_url) {
       const normalizedPath = user.profile_image_url.replace(/^\/+/, "");
-      const filePath = path.join(process.cwd(), normalizedPath);
-      if (!fs.existsSync(filePath)) {
+      const uploadsDir = path.resolve(process.cwd(), "uploads", "avatars");
+      const filePath = path.resolve(process.cwd(), normalizedPath);
+      const uploadsDirWithSep = uploadsDir.endsWith(path.sep)
+        ? uploadsDir
+        : `${uploadsDir}${path.sep}`;
+
+      const isWithinUploadsDir = filePath.startsWith(uploadsDirWithSep);
+
+      if (!isWithinUploadsDir) {
+        console.warn(
+          `sanitizeProfileImage: attempted access outside uploads directory (${filePath})`,
+        );
+        return {
+          ...user,
+          profile_image_url: null,
+        };
+      }
+
+      try {
+        await fsPromises.access(filePath);
+      } catch {
         return {
           ...user,
           profile_image_url: null,
