@@ -26,14 +26,14 @@ export class HomePage extends SpacePageBase {
           <button id="quick-play-btn" class="w-full bg-blue-400 hover:bg-blue-500 text-white py-3 px-4 rounded border border-blue-400 shadow-lg">
             <div class="text-center">
               <div class="font-semibold text-lg">🎮 Quick Play</div>
-              <div class="text-sm opacity-90">2 Players - Start playing immediately</div>
+              <div class="text-sm opacity-90">2 or 4 Players </div>
             </div>
           </button>
           
           <button id="tournament-play-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded border border-blue-600 shadow-lg">
             <div class="text-center">
               <div class="font-semibold text-lg">🏆 Tournament</div>
-              <div class="text-sm opacity-90">2-8 Players - Bracket style competition</div>
+              <div class="text-sm opacity-90">2-4-8 Players</div>
             </div>
           </button>
           

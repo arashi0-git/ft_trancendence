@@ -86,27 +86,42 @@ export class TournamentService {
   }
 
   private renderSetupView(container: HTMLElement): void {
-    container.innerHTML = this.gameSetupUI.getTemplate({
-      showNameInput: true,
-      nameInputId: "tournament-name",
-      nameLabel: "Tournament Name",
-      namePlaceholder: "Enter tournament name",
-      nameDefaultValue: "Pong Tournament",
-      selectId: "player-count",
-      selectLabel: "Number of Players",
-      options: [
-        { value: "2", text: "2 Players" },
-        { value: "4", text: "4 Players" },
-        { value: "8", text: "8 Players" },
-      ],
-      buttonId: "create-tournament",
-      buttonText: "Create Tournament",
-    });
+  const setupFormHtml = this.gameSetupUI.getTemplate({
+  showNameInput: true,
+  nameInputId: "tournament-name",
+  nameLabel: "Tournament Name",
+  namePlaceholder: "Enter tournament name",
+  nameDefaultValue: "Pong Tournament",
+  selectId: "player-count",
+  selectLabel: "Number of Players", 
+  options: [
+    { value: "2", text: "2 Players" },
+    { value: "4", text: "4 Players" },
+    { value: "8", text: "8 Players" },
+  ],
+  buttonId: "create-tournament",
+  buttonText: "Create Tournament", 
+  buttonClasses: "w-full bg-green-300 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg"
+});
+  const authButtonHtml = this.getAuthButtonTemplate();
+  const backButtonHtml = this.getBackButtonTemplate();
 
-    this.attachEventListenerSafely("create-tournament", "click", () =>
-      this.createTournament(),
-    );
-  }
+  container.innerHTML = `
+    <div class="max-w-xs mx-auto flex flex-col items-center space-y-3">
+      ${setupFormHtml}
+      <div class="w-full pt-2 flex justify-center space-x-2">
+         ${authButtonHtml}
+         ${backButtonHtml}
+      </div>
+
+    </div>
+  `;
+
+  this.attachEventListenerSafely("create-tournament", "click", () => this.createTournament());
+  this.attachEventListenerSafely("back-button", "click", () => this.handleBackNavigation());
+  this.attachEventListenerSafely("login-tournament-btn", "click", () => this.navigateToLogin(), false);
+  this.attachEventListenerSafely("logout-btn", "click", () => this.handleLogout(), false);
+}
 
   private createTournament(): void {
     const playerCountSelect = document.getElementById("player-count");
@@ -154,7 +169,7 @@ export class TournamentService {
       <div class="flex space-x-4">
         <button
           id="back-to-setup"
-          class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded border border-purple-400 shadow-lg"
+          class="flex-1 bg-purple-400 hover:bg-purple-600 text-white py-2 px-4 rounded border border-purple-400 shadow-lg"
         >
           Back to Setup
         </button>
@@ -315,7 +330,7 @@ export class TournamentService {
       </div>
       
       <div class="text-center">
-        <button id="new-tournament-btn" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded">
+        <button id="new-tournament-btn" class="bg-purple-400 hover:bg-purple-600 text-white px-6 py-2 rounded">
           New Tournament
         </button>
       </div>
@@ -530,7 +545,7 @@ export class TournamentService {
         </div>
         
         <div class="space-y-2">
-          <button id="new-tournament" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded">
+          <button id="new-tournament" class="bg-purple-400 hover:bg-purple-600 text-white px-6 py-2 rounded">
             Start New Tournament
           </button>
         </div>
@@ -638,14 +653,17 @@ export class TournamentService {
 
   getBackButtonTemplate(): string {
     const backText = this.currentStep === "setup" ? "Home" : "Back";
-    return `<button id="back-button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">${backText}</button>`;
+    const buttonClasses = "w-full bg-purple-400 hover:bg-purple-600 text-white py-2 px-4 rounded border border-purple-400 shadow-lg";
+    return `<button id="back-button" class="${buttonClasses}">${backText}</button>`;
   }
 
   getAuthButtonTemplate(): string {
+    const commonClasses = "w-full bg-orange-400 hover:bg-orange-500 text-white py-2 px-4 rounded border border-orange-400 shadow-lg";
     return AuthService.isAuthenticated()
-      ? `<button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Logout</button>`
-      : `<button id="login-tournament-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Login</button>`;
+      ? `<button id="logout-btn" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded border border-red-400 shadow-lg">Logout</button>`
+      : `<button id="login-tournament-btn" class="${commonClasses}">Login</button>`;
   }
+
 
   private getRoundName(currentRound: number, totalPlayers: number): string {
     const totalRounds = Math.log2(totalPlayers);

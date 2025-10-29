@@ -15,62 +15,22 @@ export class TournamentPage extends SpacePageBase {
     this.service.setCurrentPath(currentPath);
 
     this.container.innerHTML = this.getTemplate();
-    this.attachEventListeners();
     this.service.initializeCurrentView();
     this.initializeSpaceBackground();
   }
 
   private getTemplate(): string {
-    const authButton = this.service.getAuthButtonTemplate();
-    const backButton = this.service.getBackButtonTemplate();
     const title = this.service.getPageTitle();
 
     const content = `
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-white">${title}</h2>
-          <div class="space-x-2">
-            ${authButton}
-            ${backButton}
-          </div>
+        <div class="text-center mb-4">
+          <h2 class="text-2xl font-bold text-white inline-block">${title}</h2>
         </div>
-
-        <div id="tournament-content">
-            </div>
-
-        <div id="game-over-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-            <div class="bg-gray-800 p-8 rounded-lg shadow-xl text-center border-2 border-green-500 max-w-sm w-full">
-                <h3 id="game-over-title" class="text-3xl font-bold text-white mb-4"></h3>
-                <p id="game-over-message" class="text-xl text-gray-300 mb-6"></p>
-                <button id="game-over-continue-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
-                    Continue
-                </button>
-            </div>
-        </div>
+        <div id="tournament-content"></div>
+        <div id="game-over-modal" ...> ... </div>
     `;
 
     return this.getSpaceTemplate(content);
-  }
-
-  private attachEventListeners(): void {
-    document.getElementById("back-button")?.addEventListener("click", () => {
-      this.service.handleBackNavigation();
-    });
-
-    document
-      .getElementById("login-tournament-btn")
-      ?.addEventListener("click", () => {
-        this.service.navigateToLogin();
-      });
-
-    document
-      .getElementById("logout-btn")
-      ?.addEventListener("click", async () => {
-        try {
-          await this.service.handleLogout();
-        } catch (error) {
-          console.error("Logout handler error:", error);
-        }
-      });
   }
 
   destroy(): void {

@@ -17,6 +17,8 @@ export class BabylonRender {
   private camera: ArcRotateCamera;
   private paddle1Mesh!: Mesh;
   private paddle2Mesh!: Mesh;
+  private paddle3Mesh: Mesh | null = null;
+  private paddle4Mesh: Mesh | null = null;
   private ballMesh!: Mesh;
   private withBackground: boolean;
   private fieldMesh!: Mesh;
@@ -26,8 +28,10 @@ export class BabylonRender {
   private scoreTexture2!: DynamicTexture;
   private prevScore1 = -1;
   private prevScore2 = -1;
+  private playerCount: number;
 
-  constructor(engine: Engine, withBackground: boolean = false) {
+  constructor(engine: Engine, playerCount: number = 2, withBackground: boolean = false) {
+    this.playerCount = playerCount;
     this.withBackground = withBackground;
     this.scene = new Scene(engine);
 
@@ -65,59 +69,79 @@ export class BabylonRender {
     if (this.withBackground) {
       this.createSpaceBackground();
     }
-
-    this.createGameObjects();
   }
 
-  public createGameObjects() {
-    this.fieldMesh = MeshBuilder.CreateGround(
-      "field",
-      { width: 16, height: 8 },
-      this.scene,
-    );
+  public initializeScene(gameState: GameState): void {
+    // Vyčistíme staré objekty (pokud existují)
+    this.paddle1Mesh?.dispose();
+    this.paddle2Mesh?.dispose();
+    this.paddle3Mesh?.dispose();
+    this.paddle4Mesh?.dispose();
+    this.ballMesh?.dispose();
+    this.fieldMesh?.dispose();
+    this.scoreBoard1?.dispose();
+    this.scoreBoard2?.dispose();
+    // TODO: Smazat i čáry, pokud je potřeba
+
+    // Vytvoříme hřiště
+    this.fieldMesh = MeshBuilder.CreateGround("field", { width: 16, height: 8 }, this.scene);
     const fieldMaterial = new StandardMaterial("fieldMaterial", this.scene);
-    fieldMaterial.diffuseColor = new Color3(0.2, 0.3, 0.2); // 緑がかった色で見やすく
-    fieldMaterial.emissiveColor = new Color3(0.05, 0.1, 0.05); // 少し光らせる
+    fieldMaterial.diffuseColor = new Color3(0.2, 0.3, 0.2);
+    fieldMaterial.emissiveColor = new Color3(0.05, 0.1, 0.05);
     this.fieldMesh.material = fieldMaterial;
 
-    this.paddle1Mesh = MeshBuilder.CreateBox(
-      "paddle1",
-      { width: 0.2, height: 0.2, depth: 1.6 },
-      this.scene,
-    );
-    const paddle1Material = new StandardMaterial("paddle1Material", this.scene);
-    paddle1Material.diffuseColor = new Color3(1, 1, 1);
-    paddle1Material.emissiveColor = new Color3(0.3, 0.3, 0.3); // より明るく光らせる
-    this.paddle1Mesh.material = paddle1Material;
-    this.paddle1Mesh.position = new Vector3(-7, 0.1, 0);
+    // Vytvoříme pálky podle gameState
+    this.paddle1Mesh = this.createPaddleMesh("paddle1", gameState.player1.paddle.width, gameState.player1.paddle.height);
+    this.paddle2Mesh = this.createPaddleMesh("paddle2", gameState.player2.paddle.width, gameState.player2.paddle.height);
 
-    this.paddle2Mesh = MeshBuilder.CreateBox(
-      "paddle2",
-      { width: 0.2, height: 0.2, depth: 1.6 },
-      this.scene,
-    );
-    const paddle2Material = new StandardMaterial("paddle2Material", this.scene);
-    paddle2Material.diffuseColor = new Color3(1, 1, 1);
-    paddle2Material.emissiveColor = new Color3(0.3, 0.3, 0.3); // より明るく光らせる
-    this.paddle2Mesh.material = paddle2Material;
-    this.paddle2Mesh.position = new Vector3(7, 0.1, 0);
+    if (this.playerCount === 4 && gameState.player3 && gameState.player4) {
+      this.paddle3Mesh = this.createPaddleMesh("paddle3", gameState.player3.paddle.width, gameState.player3.paddle.height);
+      this.paddle4Mesh = this.createPaddleMesh("paddle4", gameState.player4.paddle.width, gameState.player4.paddle.height);
+    } else {
+        this.paddle3Mesh = null;
+        this.paddle4Mesh = null;
+    }
 
-    this.ballMesh = MeshBuilder.CreateSphere(
-      "ball",
-      { diameter: 0.3 },
-      this.scene,
-    );
+
+    // Vytvoříme míček
+    this.ballMesh = MeshBuilder.CreateSphere("ball", { diameter: 0.3 }, this.scene);
     const ballMaterial = new StandardMaterial("ballMaterial", this.scene);
     ballMaterial.diffuseColor = new Color3(1, 1, 1);
-    ballMaterial.emissiveColor = new Color3(0.4, 0.4, 0.4); // ボールを特に明るく
+    ballMaterial.emissiveColor = new Color3(0.4, 0.4, 0.4);
     this.ballMesh.material = ballMaterial;
-    this.ballMesh.position = new Vector3(0, 0.15, 0);
+    this.ballMesh.position = new Vector3(0, 0.15, 0); // Výchozí pozice
 
-    // スコアボード作成
+    // Vytvoříme scoreboardy a čáru
     this.createScoreBoards();
-
-    // 中央線作成
     this.createCenterLine();
+
+    // Resetujeme uložené skóre pro update
+    this.prevScore1 = -1;
+    this.prevScore2 = -1;
+
+    // Aktualizujeme pozice poprvé
+    this.updateGameObjects(gameState);
+  }
+
+  // Pomocná metoda pro vytvoření Meshe pálky
+  private createPaddleMesh(name: string, width: number, height: number): Mesh {
+      // Přepočet 2D rozměrů na 3D rozměry rendereru
+      const meshWidth = 0.2; // Pevná šířka v 3D
+      const meshDepth = (height / 400) * 8; // Přepočet výšky na hloubku v 3D (8 je výška hřiště)
+      const meshHeight = 0.2; // Pevná výška nad zemí
+
+      const paddleMesh = MeshBuilder.CreateBox(name, {
+           width: meshWidth,
+           height: meshHeight,
+           depth: meshDepth
+       }, this.scene);
+
+       const paddleMaterial = new StandardMaterial(name + "Material", this.scene);
+       paddleMaterial.diffuseColor = Color3.White();
+       paddleMaterial.emissiveColor = new Color3(0.3, 0.3, 0.3);
+       paddleMesh.material = paddleMaterial;
+       paddleMesh.position.y = meshHeight / 2; // Lehce nad zemí
+       return paddleMesh;
   }
 
   private createCenterLine() {
@@ -329,6 +353,15 @@ export class BabylonRender {
     this.paddle2Mesh.position.z =
       (200 - gameState.player2.paddle.y - gameState.player2.paddle.height / 2) *
       scaleY;
+
+    if (this.playerCount === 4 && this.paddle3Mesh && gameState.player3) {
+       this.paddle3Mesh.position.x = (gameState.player3.paddle.x - 400) * scaleX;
+       this.paddle3Mesh.position.z = (200 - (gameState.player3.paddle.y + gameState.player3.paddle.height / 2)) * scaleY;
+    }
+     if (this.playerCount === 4 && this.paddle4Mesh && gameState.player4) {
+       this.paddle4Mesh.position.x = (gameState.player4.paddle.x - 400) * scaleX;
+       this.paddle4Mesh.position.z = (200 - (gameState.player4.paddle.y + gameState.player4.paddle.height / 2)) * scaleY;
+    }
 
     // ボール位置更新
     this.ballMesh.position.x = (gameState.ball.x - 400) * scaleX;

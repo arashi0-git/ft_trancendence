@@ -41,8 +41,10 @@ export class QuickPlayPage extends SpacePageBase {
         </div>
         
         <div class="text-center text-sm text-gray-300">
-          <p><strong class="text-white">Player 1:</strong> W/S (Up/Down), A/D (Left/Right)</p>
+          <p><strong class="text-white">Player 1:</strong> W/S (Up/Down),</p>
           <p><strong class="text-white">Player 2:</strong> X/C (Up/Down)</p>
+          <p><strong class="text-white">Player 3:</strong> R/F (Up/Down)</p>
+          <p><strong class="text-white">Player 4:</strong> I/K (Up/Down)</p>
         </div>
 
         <div id="game-over-modal" class="hidden absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-75 z-50">
@@ -73,22 +75,25 @@ export class QuickPlayPage extends SpacePageBase {
       selectLabel: "Number of Players",
       options: [
         { value: "2", text: "2 Players" },
-        { value: "3", text: "3 Players (Coming Soon)", disabled: true },
-        { value: "4", text: "4 Players (Coming Soon)", disabled: true },
+        { value: "4", text: "4 Players " },
       ],
       buttonId: "start-quick-play-btn",
       buttonText: "Start Game",
     });
 
     const finalHtml = `
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-2xl font-bold text-white">Quick Play - Select Mode</h2>
-        <div class="space-x-2">
-          <button id="back-to-home" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">Home</button>
+      <div class="max-w-sm mx-auto flex flex-col items-center space-y-3"> // Reduced space-y
+
+        <div class="text-center mb-2"> 
+            <h2 class="text-2xl font-bold text-white">Quick Play</h2>
+            <p class="text-lg text-gray-300">Select Mode</p>
         </div>
-      </div>
-      <div class="text-center">
-        ${selectionContent}
+
+        <div class="w-full px-4">
+           ${selectionContent}
+        </div>
+        <button id="back-to-home" class="bg-purple-400 hover:bg-purple-600 text-white px-4 py-2 rounded border border-purple-400 mt-2">Home</button> // Reduced mt-4 to mt-2
+
       </div>
     `;
     this.container.innerHTML = this.getSpaceTemplate(finalHtml);

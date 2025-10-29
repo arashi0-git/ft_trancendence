@@ -4,9 +4,11 @@ import { router } from "../../routes/router";
 
 export class QuickPlayService extends BaseGameService {
   initializeGame(canvasId: string, playerCount: number): void {
+    console.log("QuickPlayService received playerCount:", playerCount, typeof playerCount); //smazat
     this.gameManager.initializeGame({
       mode: "quick-play",
-      canvasId,
+      canvasId: canvasId,
+      playerCount: playerCount,
       onGameEnd: (data: any) => this.handleGameEnd(data),
     });
   }
@@ -54,14 +56,16 @@ export class QuickPlayService extends BaseGameService {
     const winnerNameEl = document.getElementById("winner-name");
     const finalScoreEl = document.getElementById("final-score");
     const startBtn = this.getStartButton();
-    const pauseBtn = this.getPauseButton();    
+    const pauseBtn = this.getPauseButton();
 
     if (modal && winnerNameEl && finalScoreEl) {
       winnerNameEl.textContent = `Player ${data.winner}`;
       finalScoreEl.textContent = `${data.score1} - ${data.score2}`;
       modal.classList.remove("hidden");
-      if (startBtn) startBtn.style.display = 'none';
-      if (pauseBtn) pauseBtn.style.display = 'none';
+  
+      startBtn?.classList.add("hidden");
+      pauseBtn?.classList.add("hidden");
+
     } else {
       this.notificationService.success(`Player ${data.winner} wins! 🎉`);
     }

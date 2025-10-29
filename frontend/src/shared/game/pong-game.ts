@@ -294,42 +294,122 @@ export class PongGame {
   }
 
   private checkCollisions(): void {
-    const ball = this.gameState.ball;
-    const paddle1 = this.gameState.player1.paddle;
-    const paddle2 = this.gameState.player2.paddle;
+  const ball = this.gameState.ball;
+  const p1 = this.gameState.player1.paddle;
+  const p2 = this.gameState.player2.paddle;
+  const p3 = this.playerCount === 4 ? this.gameState.player3?.paddle : null;
+  const p4 = this.playerCount === 4 ? this.gameState.player4?.paddle : null;
 
-    if (
-      ball.x - ball.radius <= paddle1.x + paddle1.width &&
-      ball.x + ball.radius >= paddle1.x &&
-      ball.y + ball.radius >= paddle1.y &&
-      ball.y - ball.radius <= paddle1.y + paddle1.height &&
-      ball.velocityX < 0
-    ) {
-      ball.velocityX = -ball.velocityX;
-      ball.x = paddle1.x + paddle1.width + ball.radius;
+  const ballRadius = ball.radius;
+  // Odstraníme ballLeft/Right odsud, budeme je počítat až při kontrole
 
-      const paddleCenter = paddle1.y + paddle1.height / 2;
-      const hitPos = (ball.y - paddleCenter) / (paddle1.height / 2);
-      ball.speed = this.config.ballSpeed;
-      this.setBallDirection(1, hitPos);
+  const ballTop = ball.y - ballRadius;
+  const ballBottom = ball.y + ballRadius;
+
+  // --- Kolize s levou stranou (P1 a P3) ---
+  if (ball.velocityX < 0) { // Míček letí doleva
+
+    // ---> KONTROLA P3 NEJDŘÍV <---
+     if (p3) {
+    const p3Right = p3.x + p3.width;
+    const p3Top = p3.y;
+    const p3Bottom = p3.y + p3.height;
+    const ballLeft = ball.x - ballRadius;
+    const ballRight = ball.x + ballRadius;
+    // console.log(...);
+    if (ballLeft <= p3Right && ballRight >= p3.x && ballBottom >= p3Top && ballTop <= p3Bottom) {
+       console.log("%cP3 COLLISION DETECTED!", "color: orange; font-weight: bold;");
+       if (ball.x > p3.x + p3.width / 2) { // Zásah PRAVÉ (vnitřní) strany -> odraz doprava
+         console.log("--> P3 Hit INNER side"); // <-- PŘIDEJ LOG
+         ball.velocityX = Math.abs(ball.velocityX);
+         ball.x = p3Right + ballRadius;
+         const hitPos = (ball.y - (p3Top + p3.height / 2)) / (p3.height / 2);
+         this.setBallDirection(1, hitPos);
+       } else { // Zásah LEVÉ (zadní) strany -> odraz DOLEVA
+          console.log("--> P3 Hit OUTER side"); // <-- PŘIDEJ LOG
+          ball.velocityX = -Math.abs(ball.velocityX) * 0.8;
+          ball.x = p3.x - ballRadius;
+          ball.velocityY += (Math.random() - 0.5) * ball.speed * 0.2;
+       }
+       console.log(`--> P3 After Collision: ballX=${ball.x.toFixed(1)}, velocityX=${ball.velocityX.toFixed(1)}`); // <-- PŘIDEJ LOG
+       return; // Kolize vyřešena
     }
+}// Konec kontroly P3
 
-    if (
-      ball.x + ball.radius >= paddle2.x &&
-      ball.x - ball.radius <= paddle2.x + paddle2.width &&
-      ball.y + ball.radius >= paddle2.y &&
-      ball.y - ball.radius <= paddle2.y + paddle2.height &&
-      ball.velocityX > 0
-    ) {
-      ball.velocityX = -ball.velocityX;
-      ball.x = paddle2.x - ball.radius;
+    // ---> KONTROLA P1 AŽ DRUHÁ <---
+    const p1Right = p1.x + p1.width;
+    const p1Top = p1.y;
+    const p1Bottom = p1.y + p1.height;
+    const ballLeftP1 = ball.x - ballRadius; // Spočítáme aktuální ballLeft
+    const ballRightP1 = ball.x + ballRadius;// Spočítáme aktuální ballRight
+    if (ballLeftP1 <= p1Right && ballRightP1 >= p1.x && ballBottom >= p1Top && ballTop <= p1Bottom) {
+      const paddleCenterX = p1.x + p1.width / 2;
+      console.log(`P1 Collision! ball.x=${ball.x.toFixed(1)}, paddleCenterX=${paddleCenterX.toFixed(1)}`);
+      if (ball.x > paddleCenterX) {
+        console.log("-> Hit INNER side (right)");
+        ball.velocityX = Math.abs(ball.velocityX);
+        ball.x = p1Right + ballRadius;
+        const hitPos = (ball.y - (p1Top + p1.height / 2)) / (p1.height / 2);
+        this.setBallDirection(1, hitPos);
+      } else {
+        console.log("-> Hit OUTER side (left)");
+        ball.velocityX = -Math.abs(ball.velocityX) * 0.8;
+        ball.x = p1.x - ballRadius;
+        ball.velocityY += (Math.random() - 0.5) * ball.speed * 0.2;
+      }
+      return;
+    } // Konec kontroly P1
 
-      const paddleCenter = paddle2.y + paddle2.height / 2;
-      const hitPos = (ball.y - paddleCenter) / (paddle2.height / 2);
-      ball.speed = this.config.ballSpeed;
-      this.setBallDirection(-1, hitPos);
-    }
-  }
+  } // Konec bloku if (ball.velocityX < 0)
+
+  // --- Kolize s pravou stranou (P2 a P4) ---
+  else if (ball.velocityX > 0) { // Míček letí doprava
+
+     // ---> KONTROLA P4 NEJDŘÍV <---
+     if (p4) {
+        const p4Left = p4.x;
+        const p4Top = p4.y;
+        const p4Bottom = p4.y + p4.height;
+        const ballLeftP4 = ball.x - ballRadius; // Spočítáme aktuální ballLeft
+        const ballRightP4 = ball.x + ballRadius;// Spočítáme aktuální ballRight
+         if (ballRightP4 >= p4Left && ballLeftP4 <= p4.x + p4.width && ballBottom >= p4Top && ballTop <= p4Bottom) {
+            console.log("%cP4 COLLISION DETECTED!", "color: cyan; font-weight: bold;");
+            if (ball.x < p4.x + p4.width / 2) { // Zásah LEVÉ (vnitřní) strany -> odraz doleva
+               ball.velocityX = -Math.abs(ball.velocityX);
+               ball.x = p4Left - ballRadius;
+               const hitPos = (ball.y - (p4Top + p4.height / 2)) / (p4.height / 2);
+               this.setBallDirection(-1, hitPos);
+            } else { // Zásah PRAVÉ (zadní) strany -> odraz DOPRAVA
+               ball.velocityX = Math.abs(ball.velocityX) * 0.8;
+               ball.x = p4.x + p4.width + ballRadius;
+               ball.velocityY += (Math.random() - 0.5) * ball.speed * 0.2;
+            }
+            return;
+         }
+     } // Konec kontroly P4
+
+    // ---> KONTROLA P2 AŽ DRUHÁ <---
+    const p2Left = p2.x;
+    const p2Top = p2.y;
+    const p2Bottom = p2.y + p2.height;
+    const ballLeftP2 = ball.x - ballRadius; // Spočítáme aktuální ballLeft
+    const ballRightP2 = ball.x + ballRadius;// Spočítáme aktuální ballRight
+    if (ballRightP2 >= p2Left && ballLeftP2 <= p2.x + p2.width && ballBottom >= p2Top && ballTop <= p2Bottom) {
+       if (ball.x < p2.x + p2.width / 2) {
+          ball.velocityX = -Math.abs(ball.velocityX);
+          ball.x = p2Left - ballRadius;
+          const hitPos = (ball.y - (p2Top + p2.height / 2)) / (p2.height / 2);
+          this.setBallDirection(-1, hitPos);
+       } else {
+          ball.velocityX = Math.abs(ball.velocityX) * 0.8;
+          ball.x = p2.x + p2.width + ballRadius;
+          ball.velocityY += (Math.random() - 0.5) * ball.speed * 0.2;
+       }
+       return;
+    } // Konec kontroly P2
+
+  } // Konec bloku else if (ball.velocityX > 0)
+} // Konec metody
 
   private checkScore(): void {
     const ball = this.gameState.ball;
