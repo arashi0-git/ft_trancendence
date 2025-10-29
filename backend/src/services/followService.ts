@@ -1,7 +1,7 @@
 import { promises as fsPromises } from "fs";
 import path from "path";
-import { FollowModel } from "../models/Follow";
-import { UserModel, UserWithoutPassword, stripPassword } from "../models/User";
+import { FollowModel } from "../models/follow";
+import { UserModel, UserWithoutPassword, stripPassword } from "../models/user";
 
 export class FollowService {
   static async listFollowing(userId: number): Promise<UserWithoutPassword[]> {

@@ -1,5 +1,5 @@
 import { db } from "../database/connection";
-import type { UserRecord } from "./User";
+import type { UserRecord } from "./user";
 
 export class FollowModel {
   static async followUser(

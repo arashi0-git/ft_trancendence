@@ -3,7 +3,7 @@ import {
   UserWithoutPassword,
   stripPassword,
   toPublicUser,
-} from "../models/User";
+} from "../models/user";
 import {
   CreateUserRequest,
   UserProfile,

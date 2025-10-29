@@ -15,7 +15,7 @@ declare const __API_BASE_URL__: string | undefined;
 const API_BASE_URL =
   (typeof __API_BASE_URL__ !== "undefined" && __API_BASE_URL__) ||
   process.env.API_BASE_URL ||
-  "http://localhost:3000/api";
+  "/api";
 
 export class AuthService {
   private static getApiOrigin(): string | null {

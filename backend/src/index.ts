@@ -92,12 +92,6 @@ async function registerPlugins() {
     prefix: "/uploads/avatars/",
     decorateReply: false,
   });
-
-  // 静的ファイル配信（フロントエンド用）
-  await fastify.register(staticFiles, {
-    root: path.join(__dirname, "../../frontend/dist"),
-    prefix: "/",
-  });
 }
 
 // ルートの設定

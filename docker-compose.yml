@@ -5,8 +5,8 @@ services:
       dockerfile: frontend/Dockerfile
     container_name: ft_transcendence_frontend
     ports:
-      - "443:443" # HTTPS必須
-      - "80:80" # HTTPからHTTPSにリダイレクト用
+      - "8443:443" # HTTPS必須
+      - "8080:80" # HTTPからHTTPSにリダイレクト用
     volumes:
       - ./ssl:/etc/nginx/ssl # SSL証明書をNginxの正しいパスにマウント
     environment:

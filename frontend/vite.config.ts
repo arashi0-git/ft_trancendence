@@ -5,9 +5,7 @@ export default defineConfig(({ mode }) => {
   return {
     root: ".",
     define: {
-      __API_BASE_URL__: JSON.stringify(
-        env.VITE_API_BASE_URL || "http://localhost:3000/api",
-      ),
+      __API_BASE_URL__: JSON.stringify(env.VITE_API_BASE_URL || "/api"),
     },
     build: {
       outDir: "dist",
