@@ -5,6 +5,7 @@ export type GameMode = "quick-play" | "tournament" | "ai-mode";
 export interface GameConfig {
   mode: GameMode;
   canvasId: string;
+  playerCount?: number;
   onGameEnd?: (data: {
     winner: number;
     score1: number;
@@ -28,7 +29,7 @@ export class GameManagerService {
       }
 
       this.currentConfig = config;
-      this.pongGame = new PongGame3D(canvas);
+      this.pongGame = new PongGame3D(canvas, {});
 
       // AIモードの設定
       if (config.mode === "ai-mode") {

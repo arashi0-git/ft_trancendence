@@ -1,30 +1,30 @@
 import { QuickPlayService } from "./quick-play.service";
 import { SpacePageBase } from "../../shared/components/space-page-base";
+import { GameSetupUI } from "../../shared/components/game-setup-ui";
 
 export class QuickPlayPage extends SpacePageBase {
   private service: QuickPlayService;
+  private gameSetupUI: GameSetupUI;
 
   constructor(container: HTMLElement) {
     super(container);
     this.service = new QuickPlayService();
+    this.gameSetupUI = new GameSetupUI();
   }
 
   render(): void {
     this.container.innerHTML = this.getTemplate();
-    this.attachEventListeners();
-    this.service.initializeGame("pong-canvas");
+    this.renderSelectionView();
     this.initializeSpaceBackground();
   }
 
-  private getTemplate(): string {
-    const authButton = this.service.getAuthButtonTemplate();
-
-    const content = `
+  private renderGameView(playerCount: number): void {
+    const gameContent = `
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-white">Quick Play - Pong</h2>
           <div class="space-x-2">
-            ${authButton}
-            <button id="back-to-home" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">Home</button>
+            ${this.service.getAuthButtonTemplate()}
+            <button id="back-to-selection" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded border border-gray-400">Back to Selection</button>
           </div>
         </div>
 
@@ -42,7 +42,7 @@ export class QuickPlayPage extends SpacePageBase {
         
         <div class="text-center text-sm text-gray-300">
           <p><strong class="text-white">Player 1:</strong> W/S (Up/Down), A/D (Left/Right)</p>
-          <p><strong class="text-white">Player 2:</strong> ↑/↓ (Up/Down), ←/→ (Left/Right)</p>
+          <p><strong class="text-white">Player 2:</strong> X/C (Up/Down)</p>
         </div>
 
         <div id="game-over-modal" class="hidden absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-75 z-50">
@@ -58,12 +58,60 @@ export class QuickPlayPage extends SpacePageBase {
             <button id="reset-game-modal-btn" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded">
               Reset Game
             </button>
-          </div>
-        
+          </div>  
         </div>
     `;
+    this.container.innerHTML = this.getSpaceTemplate(gameContent);
+    this.attachGameEventListeners();
+    this.service.initializeGame("pong-canvas", playerCount);
+  }
 
-    return this.getSpaceTemplate(content);
+  private renderSelectionView(): void {
+    const selectionContent = this.gameSetupUI.getTemplate({
+      showNameInput: false,
+      selectId: "player-count-select",
+      selectLabel: "Number of Players",
+      options: [
+        { value: "2", text: "2 Players" },
+        { value: "3", text: "3 Players (Coming Soon)", disabled: true },
+        { value: "4", text: "4 Players (Coming Soon)", disabled: true },
+      ],
+      buttonId: "start-quick-play-btn",
+      buttonText: "Start Game",
+    });
+
+    const finalHtml = `
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold text-white">Quick Play - Select Mode</h2>
+        <div class="space-x-2">
+          <button id="back-to-home" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">Home</button>
+        </div>
+      </div>
+      <div class="text-center">
+        ${selectionContent}
+      </div>
+    `;
+    this.container.innerHTML = this.getSpaceTemplate(finalHtml);
+    this.attachSelectionEventListeners();
+  }
+
+  private getTemplate(): string {
+    // This will just be the base template now, content is dynamic
+    return this.getSpaceTemplate('<div id="quick-play-content"></div>');
+  }
+
+  private attachSelectionEventListeners(): void {
+    document.getElementById("back-to-home")?.addEventListener("click", () => {
+      this.service.navigateToHome();
+    });
+
+    document.getElementById("start-quick-play-btn")?.addEventListener("click", () => {
+      const select = document.getElementById("player-count-select") as HTMLSelectElement;
+      if (select) {
+        const playerCount = parseInt(select.value, 10);
+        this.renderGameView(playerCount);
+      }
+    });
   }
 
   private attachEventListeners(): void {
@@ -89,6 +137,13 @@ export class QuickPlayPage extends SpacePageBase {
 
     // ゲームコントロール
     this.service.attachGameControls();
+  }
+  
+  private attachGameEventListeners(): void {
+    document.getElementById("back-to-selection")?.addEventListener("click", () => {
+      this.renderSelectionView();
+    });
+    this.attachEventListeners(); // Attaches auth and game controls
   }
 
   destroy(): void {

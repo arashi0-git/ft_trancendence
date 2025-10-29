@@ -23,7 +23,7 @@ export class PongGame3D {
   private isAiMode: boolean = false;
   private animationId: number | null = null;
 
-  constructor(canvas: HTMLCanvasElement, config?: Partial<GameConfig>) {
+  constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.engine = new Engine(canvas, true);
 
@@ -36,7 +36,6 @@ export class PongGame3D {
       ballRadius: 8,
       ballSpeed: 11,
       maxScore: 5,
-      ...config,
     };
 
     this.canvas.width = this.config.canvasWidth;

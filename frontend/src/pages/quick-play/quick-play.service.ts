@@ -3,7 +3,7 @@ import { AuthService } from "../../shared/services/auth-service";
 import { router } from "../../routes/router";
 
 export class QuickPlayService extends BaseGameService {
-  initializeGame(canvasId: string): void {
+  initializeGame(canvasId: string, playerCount: number): void {
     this.gameManager.initializeGame({
       mode: "quick-play",
       canvasId,
@@ -54,14 +54,14 @@ export class QuickPlayService extends BaseGameService {
     const winnerNameEl = document.getElementById("winner-name");
     const finalScoreEl = document.getElementById("final-score");
     const startBtn = this.getStartButton();
-    const pauseBtn = this.getPauseButton();
+    const pauseBtn = this.getPauseButton();    
 
     if (modal && winnerNameEl && finalScoreEl) {
       winnerNameEl.textContent = `Player ${data.winner}`;
       finalScoreEl.textContent = `${data.score1} - ${data.score2}`;
-      startBtn?.classList.add("hidden");
-      pauseBtn?.classList.add("hidden");
       modal.classList.remove("hidden");
+      if (startBtn) startBtn.style.display = 'none';
+      if (pauseBtn) pauseBtn.style.display = 'none';
     } else {
       this.notificationService.success(`Player ${data.winner} wins! 🎉`);
     }
