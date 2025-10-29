@@ -20,6 +20,7 @@ export class PongGame {
     Record<keyof GameEvents, Array<(...args: any[]) => void>>
   > = {};
   private isAiMode: boolean = false;
+  private boundHandleResize: () => void;
   private readonly GAME_KEYS = [
     "ArrowUp",
     "ArrowDown",
@@ -38,10 +39,14 @@ export class PongGame {
       throw new Error("Failed to get 2D rendering context");
     }
     this.ctx = ctx;
+    this.boundHandleResize = this.handleResize.bind(this);
+
+    // レスポンシブサイズを計算
+    const { width, height } = this.calculateResponsiveSize();
 
     this.config = {
-      canvasWidth: 800,
-      canvasHeight: 400,
+      canvasWidth: width,
+      canvasHeight: height,
       paddleWidth: 10,
       paddleHeight: 80,
       paddleSpeed: 5,
@@ -56,6 +61,9 @@ export class PongGame {
 
     this.initializeGame();
     this.setupEventListeners();
+
+    // ウィンドウリサイズ時の処理
+    window.addEventListener("resize", this.boundHandleResize);
   }
 
   public setAiMode(isAiMode: boolean): void {
@@ -159,12 +167,80 @@ export class PongGame {
     document.addEventListener("keyup", this.keyupHandler);
   }
 
+  private calculateResponsiveSize(): { width: number; height: number } {
+    const maxWidth = Math.min(window.innerWidth - 120, 900); // 最大900px、余白120px
+    const maxHeight = Math.min(window.innerHeight - 400, 500); // 最大500px、UI用に400px確保
+
+    // アスペクト比を維持 (2:1)
+    const aspectRatio = 2;
+    let width = maxWidth;
+    let height = width / aspectRatio;
+
+    if (height > maxHeight) {
+      height = maxHeight;
+      width = height * aspectRatio;
+    }
+
+    // 最小サイズを確保
+    width = Math.max(width, 500);
+    height = Math.max(height, 250);
+
+    return { width: Math.floor(width), height: Math.floor(height) };
+  }
+
+  private handleResize(): void {
+    const { width, height } = this.calculateResponsiveSize();
+
+    this.config.canvasWidth = width;
+    this.config.canvasHeight = height;
+    this.canvas.width = width;
+    this.canvas.height = height;
+
+    // ゲーム状態を新しいサイズに合わせて調整
+    this.adjustGameStateToNewSize();
+
+    // 再描画
+    if (this.gameState.gameStatus !== "playing") {
+      this.render();
+    }
+  }
+
+  private adjustGameStateToNewSize(): void {
+    if (!this.gameState) return;
+
+    // プレイヤーの位置を新しいサイズに合わせて調整
+    const p1 = this.gameState.player1.paddle;
+    const p2 = this.gameState.player2.paddle;
+
+    // Player1の位置調整
+    p1.y = Math.min(p1.y, this.config.canvasHeight - this.config.paddleHeight);
+    p1.maxX = this.config.canvasWidth / 2 - 50;
+
+    // Player2の位置調整
+    p2.x = this.config.canvasWidth - 30;
+    p2.y = Math.min(p2.y, this.config.canvasHeight - this.config.paddleHeight);
+    p2.minX = this.config.canvasWidth / 2 + 50;
+    p2.maxX = this.config.canvasWidth - 20;
+
+    // ボールの位置調整
+    const ball = this.gameState.ball;
+    ball.x = Math.min(
+      Math.max(ball.x, ball.radius),
+      this.config.canvasWidth - ball.radius,
+    );
+    ball.y = Math.min(
+      Math.max(ball.y, ball.radius),
+      this.config.canvasHeight - ball.radius,
+    );
+  }
+
   public destroy(): void {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
     }
     document.removeEventListener("keydown", this.keydownHandler);
     document.removeEventListener("keyup", this.keyupHandler);
+    window.removeEventListener("resize", this.boundHandleResize);
   }
 
   public startGame(): void {
@@ -516,7 +592,7 @@ export class PongGame {
   }
 
   private deepFreeze<T>(obj: T): Readonly<T> {
-        if (obj === null || typeof obj !== "object") return obj as Readonly<T>;
+    if (obj === null || typeof obj !== "object") return obj as Readonly<T>;
     if (Array.isArray(obj))
       return Object.freeze(
         obj.map((v) => this.deepFreeze(v)),
