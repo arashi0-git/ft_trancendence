@@ -83,11 +83,8 @@ export class FollowService {
       const normalizedPath = user.profile_image_url.replace(/^\/+/, "");
       const uploadsDir = path.resolve(process.cwd(), "uploads", "avatars");
       const filePath = path.resolve(process.cwd(), normalizedPath);
-      const uploadsDirWithSep = uploadsDir.endsWith(path.sep)
-        ? uploadsDir
-        : `${uploadsDir}${path.sep}`;
-
-      const isWithinUploadsDir = filePath.startsWith(uploadsDirWithSep);
+      const isWithinUploadsDir =
+        filePath === uploadsDir || filePath.startsWith(uploadsDir + path.sep);
 
       if (!isWithinUploadsDir) {
         console.warn(
