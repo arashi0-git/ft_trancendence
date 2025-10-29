@@ -34,7 +34,7 @@ export abstract class SpacePageBase {
 
   protected getSpaceTemplate(content: string): string {
     return `
-      <div class="bg-transparent p-6 rounded-lg border border-cyan-400 border-opacity-50 shadow-2xl">
+      <div class="bg-transparent p-4">
         ${content}
       </div>
     `;

@@ -20,29 +20,28 @@ export class QuickPlayPage extends SpacePageBase {
     const authButton = this.service.getAuthButtonTemplate();
 
     const content = `
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-white">Quick Play - Pong</h2>
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-xl font-bold text-white">Quick Play - Pong</h2>
           <div class="space-x-2">
             ${authButton}
-            <button id="back-to-home" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">Home</button>
+            <button id="back-to-home" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 text-sm rounded border border-purple-400">Home</button>
           </div>
         </div>
 
-        <div class="mb-4 text-center">
-          <div class="space-x-4">
-            <button id="start-game" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded border border-green-400 shadow-lg">Start Game</button>
-            <button id="pause-game" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded border border-yellow-400 shadow-lg" disabled>Pause</button>
-            <button id="reset-game" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded border border-blue-400 shadow-lg">Reset</button>
+        <div class="mb-3 text-center">
+          <div class="space-x-3">
+            <button id="start-game" class="bg-green-600 hover:bg-green-700 text-white px-4 py-1 text-sm rounded border border-green-400 shadow-lg">Start Game</button>
+            <button id="pause-game" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-1 text-sm rounded border border-yellow-400 shadow-lg" disabled>Pause</button>
+            <button id="reset-game" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 text-sm rounded border border-blue-400 shadow-lg">Reset</button>
           </div>
         </div>
         
-        <div class="flex justify-center mb-4">
-          <canvas id="pong-canvas" class="border-2 border-gray-300 bg-black"></canvas>
+        <div class="flex justify-center mb-3">
+          <canvas id="pong-canvas" class="border-2 border-gray-300 bg-black max-w-full h-auto"></canvas>
         </div>
         
-        <div class="text-center text-sm text-gray-300">
-          <p><strong class="text-white">Player 1:</strong> W/S (Up/Down), A/D (Left/Right)</p>
-          <p><strong class="text-white">Player 2:</strong> ↑/↓ (Up/Down), ←/→ (Left/Right)</p>
+        <div class="text-center text-xs text-gray-300">
+          <p><strong class="text-white">Player 1:</strong> W/S (Up/Down), A/D (Left/Right) | <strong class="text-white">Player 2:</strong> ↑/↓ (Up/Down), ←/→ (Left/Right)</p>
         </div>
 
         <div id="game-over-modal" class="hidden absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-75 z-50">
