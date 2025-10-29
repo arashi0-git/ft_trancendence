@@ -84,7 +84,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       const token = AuthUtils.generateToken(user);
 
       const response: AuthResponse = {
-        user,
+        user: UserService.toPublicUser(user),
         token,
       };
 
