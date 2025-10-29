@@ -7,6 +7,7 @@ import type {
   UpdateUserSettingsResponse,
   FollowingListResponse,
   FollowUserResponse,
+  FollowedUserSummary,
 } from "../types/user";
 
 declare const __API_BASE_URL__: string | undefined;
@@ -207,7 +208,7 @@ export class AuthService {
     }
   }
 
-  static async getFollowing(): Promise<PublicUser[]> {
+  static async getFollowing(): Promise<FollowedUserSummary[]> {
     try {
       const response = await fetch(
         `${API_BASE_URL.replace(/\/$/, "")}/users/me/following`,
@@ -230,7 +231,7 @@ export class AuthService {
     }
   }
 
-  static async followUser(username: string): Promise<PublicUser> {
+  static async followUser(username: string): Promise<FollowedUserSummary> {
     try {
       const response = await fetch(
         `${API_BASE_URL.replace(/\/$/, "")}/users/me/following`,

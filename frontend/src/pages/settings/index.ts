@@ -5,6 +5,7 @@ import { AuthService } from "../../shared/services/auth-service";
 import type {
   PublicUser,
   UpdateUserSettingsPayload,
+  FollowedUserSummary,
 } from "../../shared/types/user";
 import { router } from "../../routes/router";
 
@@ -360,7 +361,7 @@ export class UserSettingsPage extends SpacePageBase {
     container.appendChild(fragment);
   }
 
-  private createFollowingListItem(user: PublicUser): HTMLElement {
+  private createFollowingListItem(user: FollowedUserSummary): HTMLElement {
     const item = document.createElement("div");
     item.className =
       "flex items-center justify-between gap-4 bg-gray-900/60 border border-cyan-500/20 rounded-lg px-4 py-3";
@@ -401,10 +402,6 @@ export class UserSettingsPage extends SpacePageBase {
     usernameLine.className = "text-sm font-semibold text-white truncate";
     usernameLine.textContent = user.username;
 
-    const emailLine = document.createElement("p");
-    emailLine.className = "text-xs text-gray-400 truncate";
-    emailLine.textContent = user.email;
-
     const statusLine = document.createElement("div");
     statusLine.className = "flex items-center gap-2 mt-1 text-xs text-gray-400";
 
@@ -419,7 +416,7 @@ export class UserSettingsPage extends SpacePageBase {
     statusLine.appendChild(statusIndicator);
     statusLine.appendChild(statusText);
 
-    info.append(usernameLine, emailLine, statusLine);
+    info.append(usernameLine, statusLine);
 
     left.append(avatarWrapper, info);
 
@@ -505,8 +502,15 @@ export class UserSettingsPage extends SpacePageBase {
     }
   }
 
-  private derivePlaceholderInitial(user?: PublicUser): string {
-    const source = user?.username || user?.email || user?.id?.toString() || "";
+  private derivePlaceholderInitial(user?: {
+    username?: string | null;
+    email?: string | null;
+    id?: number | null;
+  }): string {
+    const source =
+      typeof user?.username === "string" && user.username.trim().length > 0
+        ? user.username
+        : user?.email || user?.id?.toString() || "";
     const initial = source.trim().charAt(0);
     return initial ? initial.toUpperCase() : "👤";
   }

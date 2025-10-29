@@ -38,12 +38,17 @@ export interface UpdateUserSettingsResponse {
   token?: string;
 }
 
+export type FollowedUserSummary = Pick<
+  PublicUser,
+  "id" | "username" | "profile_image_url" | "is_online" | "last_login"
+>;
+
 export interface FollowingListResponse {
-  following: PublicUser[];
+  following: FollowedUserSummary[];
 }
 
 export interface FollowUserResponse {
-  user: PublicUser;
+  user: FollowedUserSummary;
 }
 
 export interface ApiError {

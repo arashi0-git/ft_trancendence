@@ -3,18 +3,19 @@ import { NotificationService } from "../../shared/services/notification.service"
 import type {
   PublicUser,
   UpdateUserSettingsPayload,
+  FollowedUserSummary,
 } from "../../shared/types/user";
 import { router } from "../../routes/router";
 
 export class UserSettingsService {
   private currentUser: PublicUser | null = null;
-  private following: PublicUser[] = [];
+  private following: FollowedUserSummary[] = [];
 
   getUser(): PublicUser | null {
     return this.currentUser;
   }
 
-  getFollowing(): PublicUser[] {
+  getFollowing(): FollowedUserSummary[] {
     return this.following;
   }
 
@@ -54,7 +55,7 @@ export class UserSettingsService {
     }
   }
 
-  async loadFollowing(): Promise<PublicUser[]> {
+  async loadFollowing(): Promise<FollowedUserSummary[]> {
     try {
       const list = await AuthService.getFollowing();
       this.following = [...list].sort((a, b) =>
@@ -69,7 +70,7 @@ export class UserSettingsService {
     }
   }
 
-  async addFollowing(username: string): Promise<PublicUser> {
+  async addFollowing(username: string): Promise<FollowedUserSummary> {
     try {
       const user = await AuthService.followUser(username);
       const existingIndex = this.following.findIndex((f) => f.id === user.id);

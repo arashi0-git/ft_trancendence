@@ -1,12 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { FollowModel } from "../models/Follow";
-import {
-  UserModel,
-  UserWithoutPassword,
-  stripPassword,
-  toPublicUser,
-} from "../models/User";
+import { UserModel, UserWithoutPassword, stripPassword } from "../models/User";
 
 export class FollowService {
   static async listFollowing(userId: number): Promise<UserWithoutPassword[]> {
@@ -44,10 +39,7 @@ export class FollowService {
     try {
       await FollowModel.followUser(followerId, targetUser.id);
     } catch (error: any) {
-      if (
-        typeof error.message === "string" &&
-        error.message.includes("UNIQUE constraint failed")
-      ) {
+      if (error.code === "SQLITE_CONSTRAINT" || error.errno === 19) {
         throw new Error("You already follow this user");
       }
       throw error;
@@ -68,12 +60,18 @@ export class FollowService {
     await FollowModel.unfollowUser(followerId, followingId);
   }
 
-  static toPublicUsers(users: UserWithoutPassword[]) {
-    return users.map(toPublicUser);
+  static toFollowSummaries(users: UserWithoutPassword[]) {
+    return users.map((user) => this.toFollowSummary(user));
   }
 
-  static toPublicUser(user: UserWithoutPassword) {
-    return toPublicUser(user);
+  static toFollowSummary(user: UserWithoutPassword) {
+    return {
+      id: user.id,
+      username: user.username,
+      profile_image_url: user.profile_image_url,
+      is_online: user.is_online,
+      last_login: user.last_login,
+    };
   }
 
   private static sanitizeProfileImage(

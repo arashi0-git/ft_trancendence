@@ -233,7 +233,7 @@ export async function userRoutes(fastify: FastifyInstance) {
 
         const following = await FollowService.listFollowing(request.user.id);
         return reply.send({
-          following: FollowService.toPublicUsers(following),
+          following: FollowService.toFollowSummaries(following),
         });
       } catch (error) {
         fastify.log.error(error);
@@ -259,7 +259,7 @@ export async function userRoutes(fastify: FastifyInstance) {
         );
 
         return reply.send({
-          user: FollowService.toPublicUser(followedUser),
+          user: FollowService.toFollowSummary(followedUser),
         });
       } catch (error) {
         fastify.log.error(error);
