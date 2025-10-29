@@ -20,6 +20,7 @@ export class PongGame {
     Record<keyof GameEvents, Array<(...args: any[]) => void>>
   > = {};
   private isAiMode: boolean = false;
+  private boundHandleResize: () => void;
   private readonly GAME_KEYS = [
     "ArrowUp",
     "ArrowDown",
@@ -38,6 +39,7 @@ export class PongGame {
       throw new Error("Failed to get 2D rendering context");
     }
     this.ctx = ctx;
+    this.boundHandleResize = this.handleResize.bind(this);
 
     // レスポンシブサイズを計算
     const { width, height } = this.calculateResponsiveSize();
@@ -61,7 +63,7 @@ export class PongGame {
     this.setupEventListeners();
 
     // ウィンドウリサイズ時の処理
-    window.addEventListener("resize", this.handleResize.bind(this));
+    window.addEventListener("resize", this.boundHandleResize);
   }
 
   public setAiMode(isAiMode: boolean): void {
@@ -238,7 +240,7 @@ export class PongGame {
     }
     document.removeEventListener("keydown", this.keydownHandler);
     document.removeEventListener("keyup", this.keyupHandler);
-    window.removeEventListener("resize", this.handleResize.bind(this));
+    window.removeEventListener("resize", this.boundHandleResize);
   }
 
   public startGame(): void {

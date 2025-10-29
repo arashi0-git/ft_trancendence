@@ -22,10 +22,12 @@ export class PongGame3D {
   > = {};
   private isAiMode: boolean = false;
   private animationId: number | null = null;
+  private boundHandleResize: () => void;
 
   constructor(canvas: HTMLCanvasElement, config?: Partial<GameConfig>) {
     this.canvas = canvas;
     this.engine = new Engine(canvas, true);
+    this.boundHandleResize = this.handleResize.bind(this);
 
     // レスポンシブサイズを計算
     const { width, height } = this.calculateResponsiveSize();
@@ -46,7 +48,7 @@ export class PongGame3D {
     this.canvas.height = this.config.canvasHeight;
 
     // ウィンドウリサイズ時の処理
-    window.addEventListener("resize", this.handleResize.bind(this));
+    window.addEventListener("resize", this.boundHandleResize);
 
     this.renderer = new BabylonRender(this.engine);
     this.initializeGame();
@@ -453,6 +455,9 @@ export class PongGame3D {
     // ゲーム状態を新しいサイズに合わせて調整
     this.adjustGameStateToNewSize();
 
+    // 3Dオブジェクトを更新
+    this.renderer.updateGameObjects(this.gameState);
+
     // エンジンのリサイズ
     this.engine.resize();
   }
@@ -492,7 +497,7 @@ export class PongGame3D {
     }
     document.removeEventListener("keydown", this.keydownHandler);
     document.removeEventListener("keyup", this.keyupHandler);
-    window.removeEventListener("resize", this.handleResize.bind(this));
+    window.removeEventListener("resize", this.boundHandleResize);
     this.engine.dispose();
     this.renderer.dispose();
   }
