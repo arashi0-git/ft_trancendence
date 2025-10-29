@@ -92,8 +92,6 @@ async function registerPlugins() {
     prefix: "/uploads/avatars/",
     decorateReply: false,
   });
-
-  // 静的ファイル配信（フロントエンド用）
 }
 
 // ルートの設定

@@ -39,10 +39,12 @@ export async function authRoutes(fastify: FastifyInstance) {
           email,
           password,
         });
+        await UserService.updateUserOnlineStatus(user.id, true);
+        const updatedUser = await UserService.getUserById(user.id);
         const token = AuthUtils.generateToken(user);
 
         const response: AuthResponse = {
-          user,
+          user: UserService.toPublicUser(updatedUser ?? user),
           token,
         };
 

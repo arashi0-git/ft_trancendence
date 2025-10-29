@@ -1,4 +1,4 @@
-import { PublicUser } from "../models/User";
+import { PublicUser } from "../models/user";
 
 export interface CreateUserRequest {
   username: string;
