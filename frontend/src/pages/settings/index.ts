@@ -5,6 +5,7 @@ import { AuthService } from "../../shared/services/auth-service";
 import type {
   PublicUser,
   UpdateUserSettingsPayload,
+  FollowedUserSummary,
 } from "../../shared/types/user";
 import { router } from "../../routes/router";
 
@@ -18,9 +19,16 @@ export class UserSettingsPage extends SpacePageBase {
   } | null = null;
   private selectedFile: File | null = null;
   private avatarPreviewUrl: string | null = null;
+  private followingLoaded = false;
   private boundHandleSubmit = this.handleFormSubmit.bind(this);
   private boundHandleAvatarChange = this.handleAvatarFileChange.bind(this);
   private boundHandleBackClick = this.handleBackClick.bind(this);
+  private followControls: HTMLElement | null = null;
+  private followInput: HTMLInputElement | null = null;
+  private followingListContainer: HTMLElement | null = null;
+  private boundHandleFollowClick = this.handleFollowClick.bind(this);
+  private boundHandleFollowKeydown = this.handleFollowKeydown.bind(this);
+  private boundHandleFollowingClick = this.handleFollowingClick.bind(this);
 
   constructor(container: HTMLElement) {
     super(container);
@@ -42,9 +50,22 @@ export class UserSettingsPage extends SpacePageBase {
     this.form = this.container.querySelector(
       "#user-settings-form",
     ) as HTMLFormElement | null;
+    this.followControls = this.container.querySelector(
+      "#follow-form",
+    ) as HTMLElement | null;
+    this.followInput = this.container.querySelector(
+      "#follow-username",
+    ) as HTMLInputElement | null;
+    this.followingListContainer = this.container.querySelector(
+      "#following-list-container",
+    ) as HTMLElement | null;
+
+    this.followingLoaded = false;
+    this.renderFollowingLoading();
 
     this.bindEventListeners();
     void this.loadUserData();
+    void this.loadFollowing();
   }
 
   destroy(): void {
@@ -56,10 +77,27 @@ export class UserSettingsPage extends SpacePageBase {
       .getElementById("back-to-home-btn")
       ?.removeEventListener("click", this.boundHandleBackClick);
 
+    this.followControls?.removeEventListener(
+      "click",
+      this.boundHandleFollowClick,
+    );
+    this.followInput?.removeEventListener(
+      "keydown",
+      this.boundHandleFollowKeydown,
+    );
+    this.followingListContainer?.removeEventListener(
+      "click",
+      this.boundHandleFollowingClick,
+    );
+
     this.revokePreviewUrl();
     this.selectedFile = null;
     this.avatarPreviewUrl = null;
     this.initialFormState = null;
+    this.followingLoaded = false;
+    this.followControls = null;
+    this.followInput = null;
+    this.followingListContainer = null;
     this.cleanupSpaceBackground();
   }
 
@@ -124,6 +162,38 @@ export class UserSettingsPage extends SpacePageBase {
                 />
               </div>
             </div>
+          </section>
+
+          <section class="space-y-4 border-t border-gray-700 pt-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <h3 class="text-lg font-semibold text-cyan-200">Friends</h3>
+                <p class="text-xs text-gray-400">Follow players by username to keep them handy.</p>
+              </div>
+            </div>
+
+            <div id="follow-form" class="flex flex-col sm:flex-row gap-3">
+              <input
+                id="follow-username"
+                name="followUsername"
+                type="text"
+                placeholder="Enter a username to follow"
+                autocomplete="off"
+                class="flex-1 bg-gray-900/70 border border-cyan-500/30 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              />
+              <button
+                type="button"
+                data-follow-action="submit"
+                class="px-4 py-2 rounded bg-cyan-500 hover:bg-cyan-600 text-white font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                Add Friend
+              </button>
+            </div>
+
+            <div
+              id="following-list-container"
+              class="space-y-2 bg-gray-900/40 border border-cyan-500/20 rounded-lg p-4"
+            ></div>
           </section>
 
           <section class="space-y-4 border-t border-gray-700 pt-4">
@@ -197,6 +267,28 @@ export class UserSettingsPage extends SpacePageBase {
     }
   }
 
+  private async loadFollowing(): Promise<void> {
+    if (!AuthService.isAuthenticated()) {
+      return;
+    }
+
+    this.renderFollowingLoading();
+
+    try {
+      await this.service.loadFollowing();
+      this.followingLoaded = true;
+      this.renderFollowingList();
+    } catch (error) {
+      this.followingLoaded = false;
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to load your friends list.";
+      this.renderFollowingError(message);
+      NotificationService.getInstance().warning(message);
+    }
+  }
+
   private bindEventListeners(): void {
     this.form?.addEventListener("submit", this.boundHandleSubmit);
     document
@@ -205,16 +297,152 @@ export class UserSettingsPage extends SpacePageBase {
     document
       .getElementById("back-to-home-btn")
       ?.addEventListener("click", this.boundHandleBackClick);
+    this.followControls?.addEventListener("click", this.boundHandleFollowClick);
+    this.followInput?.addEventListener(
+      "keydown",
+      this.boundHandleFollowKeydown,
+    );
+    this.followingListContainer?.addEventListener(
+      "click",
+      this.boundHandleFollowingClick,
+    );
+  }
+
+  private renderFollowingLoading(): void {
+    const container = this.followingListContainer;
+    if (!container) {
+      return;
+    }
+
+    container.innerHTML = "";
+    const loading = document.createElement("p");
+    loading.className = "text-sm text-gray-400";
+    loading.textContent = "Loading friends...";
+    container.appendChild(loading);
+  }
+
+  private renderFollowingError(message: string): void {
+    const container = this.followingListContainer;
+    if (!container) {
+      return;
+    }
+
+    container.innerHTML = "";
+    const errorMessage = document.createElement("p");
+    errorMessage.className = "text-sm text-red-300";
+    errorMessage.textContent = message;
+    container.appendChild(errorMessage);
+  }
+
+  private renderFollowingList(): void {
+    const container = this.followingListContainer;
+    if (!container) {
+      return;
+    }
+
+    const following = this.service.getFollowing();
+    container.innerHTML = "";
+
+    if (!following || following.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "text-sm text-gray-400";
+      empty.textContent = this.followingLoaded
+        ? "You are not following anyone yet. Try adding a username above."
+        : "Add players to see them here.";
+      container.appendChild(empty);
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    for (const user of following) {
+      fragment.appendChild(this.createFollowingListItem(user));
+    }
+
+    container.appendChild(fragment);
+  }
+
+  private createFollowingListItem(user: FollowedUserSummary): HTMLElement {
+    const item = document.createElement("div");
+    item.className =
+      "flex items-center justify-between gap-4 bg-gray-900/60 border border-cyan-500/20 rounded-lg px-4 py-3";
+
+    const left = document.createElement("div");
+    left.className = "flex items-center gap-3 min-w-0";
+
+    const avatarWrapper = document.createElement("div");
+    avatarWrapper.className =
+      "w-10 h-10 rounded-full bg-gray-800 border border-cyan-500/40 flex items-center justify-center overflow-hidden";
+
+    if (user.profile_image_url) {
+      const fallback = document.createElement("span");
+      fallback.className = "text-sm font-semibold text-cyan-200";
+      fallback.textContent = this.derivePlaceholderInitial(user);
+
+      const img = document.createElement("img");
+      img.src = AuthService.resolveAssetUrl(user.profile_image_url);
+      img.alt = `${user.username}'s avatar`;
+      img.className = "w-full h-full object-cover";
+      img.decoding = "async";
+      img.onerror = () => {
+        avatarWrapper.innerHTML = "";
+        avatarWrapper.appendChild(fallback);
+      };
+      avatarWrapper.appendChild(img);
+    } else {
+      const placeholder = document.createElement("span");
+      placeholder.className = "text-sm font-semibold text-cyan-200";
+      placeholder.textContent = this.derivePlaceholderInitial(user);
+      avatarWrapper.appendChild(placeholder);
+    }
+
+    const info = document.createElement("div");
+    info.className = "min-w-0";
+
+    const usernameLine = document.createElement("p");
+    usernameLine.className = "text-sm font-semibold text-white truncate";
+    usernameLine.textContent = user.username;
+
+    const statusLine = document.createElement("div");
+    statusLine.className = "flex items-center gap-2 mt-1 text-xs text-gray-400";
+
+    const statusIndicator = document.createElement("span");
+    statusIndicator.className =
+      "h-2 w-2 rounded-full " +
+      (user.is_online ? "bg-emerald-400" : "bg-gray-500");
+
+    const statusText = document.createElement("span");
+    statusText.textContent = user.is_online ? "Online" : "Offline";
+
+    statusLine.appendChild(statusIndicator);
+    statusLine.appendChild(statusText);
+
+    info.append(usernameLine, statusLine);
+
+    left.append(avatarWrapper, info);
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className =
+      "text-xs font-semibold text-red-300 hover:text-red-200 border border-red-400/40 px-3 py-1.5 rounded transition disabled:opacity-60 disabled:cursor-not-allowed";
+    removeButton.dataset.followingAction = "remove";
+    removeButton.dataset.userId = String(user.id);
+    removeButton.textContent = "Remove";
+    removeButton.setAttribute(
+      "aria-label",
+      `Remove ${user.username} from friends list`,
+    );
+
+    item.append(left, removeButton);
+    return item;
   }
 
   private populateForm(user: PublicUser): void {
     const sanitizedProfileUrl = (user.profile_image_url ?? "").trim();
 
     const setInputValue = (id: string, value: string | null) => {
-      const element = document.getElementById(id) as
-        | HTMLInputElement
-        | HTMLTextAreaElement
-        | null;
+      const element = this.form?.querySelector<
+        HTMLInputElement | HTMLTextAreaElement
+      >(`#${id}`);
       if (!element) return;
       element.value = value ?? "";
     };
@@ -274,8 +502,15 @@ export class UserSettingsPage extends SpacePageBase {
     }
   }
 
-  private derivePlaceholderInitial(user?: PublicUser): string {
-    const source = user?.username || user?.email || user?.id?.toString() || "";
+  private derivePlaceholderInitial(user?: {
+    username?: string | null;
+    email?: string | null;
+    id?: number | null;
+  }): string {
+    const source =
+      typeof user?.username === "string" && user.username.trim().length > 0
+        ? user.username
+        : user?.email || user?.id?.toString() || "";
     const initial = source.trim().charAt(0);
     return initial ? initial.toUpperCase() : "👤";
   }
@@ -400,6 +635,143 @@ export class UserSettingsPage extends SpacePageBase {
     }
   }
 
+  private handleFollowClick(event: Event): void {
+    const target = event.target as HTMLElement | null;
+    if (!target) {
+      return;
+    }
+
+    const submitButton = target.closest<HTMLButtonElement>(
+      '[data-follow-action="submit"]',
+    );
+
+    if (!submitButton) {
+      return;
+    }
+
+    event.preventDefault();
+    void this.submitFollowRequest(submitButton);
+  }
+
+  private handleFollowKeydown(event: KeyboardEvent): void {
+    if (event.key !== "Enter" || event.isComposing) {
+      return;
+    }
+
+    if (!this.followInput) {
+      return;
+    }
+
+    event.preventDefault();
+    const submitButton = this.followControls?.querySelector(
+      '[data-follow-action="submit"]',
+    ) as HTMLButtonElement | null;
+
+    void this.submitFollowRequest(submitButton);
+  }
+
+  private async submitFollowRequest(
+    submitButton?: HTMLButtonElement | null,
+  ): Promise<void> {
+    if (!AuthService.isAuthenticated()) {
+      NotificationService.getInstance().info(
+        "Please log in to manage your friends list.",
+      );
+      router.navigate("/login");
+      return;
+    }
+
+    if (!this.followInput) {
+      return;
+    }
+
+    const username = this.followInput.value.trim();
+    if (username.length === 0) {
+      NotificationService.getInstance().info(
+        "Please enter a username to follow.",
+      );
+      return;
+    }
+
+    const originalLabel = submitButton?.textContent ?? null;
+
+    try {
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = "Adding...";
+      }
+
+      const user = await this.service.addFollowing(username);
+      this.followInput.value = "";
+      this.followInput?.focus();
+      this.followingLoaded = true;
+      this.renderFollowingList();
+      NotificationService.getInstance().success(
+        `You are now following ${user.username}!`,
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to follow that user.";
+      NotificationService.getInstance().error(message);
+    } finally {
+      if (submitButton) {
+        submitButton.disabled = false;
+        if (originalLabel !== null) {
+          submitButton.textContent = originalLabel;
+        }
+      }
+    }
+  }
+
+  private async handleFollowingClick(event: Event): Promise<void> {
+    const target = event.target as HTMLElement | null;
+    if (!target) {
+      return;
+    }
+
+    const button = target.closest<HTMLButtonElement>(
+      '[data-following-action="remove"]',
+    );
+    if (!button) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const dataUserId = button.dataset.userId;
+    if (!dataUserId) {
+      return;
+    }
+
+    const userId = Number(dataUserId);
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return;
+    }
+
+    const followedUser = this.service
+      .getFollowing()
+      .find((user) => user.id === userId);
+
+    const originalText = button.textContent ?? "";
+    button.disabled = true;
+    button.textContent = "Removing...";
+
+    try {
+      await this.service.removeFollowing(userId);
+      this.renderFollowingList();
+      const displayName = followedUser?.username ?? "that user";
+      NotificationService.getInstance().info(
+        `Removed ${displayName} from your friends list.`,
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to remove that user.";
+      NotificationService.getInstance().error(message);
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  }
+
   private handleAvatarFileChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     const user = this.service.getUser();
@@ -435,10 +807,9 @@ export class UserSettingsPage extends SpacePageBase {
   }
 
   private getInputValue(id: string): string {
-    const element = document.getElementById(id) as
-      | HTMLInputElement
-      | HTMLTextAreaElement
-      | null;
+    const element = this.form?.querySelector<
+      HTMLInputElement | HTMLTextAreaElement
+    >(`#${id}`);
     return element ? element.value.trim() : "";
   }
 }

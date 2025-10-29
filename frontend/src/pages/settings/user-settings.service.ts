@@ -3,14 +3,20 @@ import { NotificationService } from "../../shared/services/notification.service"
 import type {
   PublicUser,
   UpdateUserSettingsPayload,
+  FollowedUserSummary,
 } from "../../shared/types/user";
 import { router } from "../../routes/router";
 
 export class UserSettingsService {
   private currentUser: PublicUser | null = null;
+  private following: FollowedUserSummary[] = [];
 
   getUser(): PublicUser | null {
     return this.currentUser;
+  }
+
+  getFollowing(): FollowedUserSummary[] {
+    return this.following;
   }
 
   async loadCurrentUser(): Promise<PublicUser> {
@@ -45,6 +51,57 @@ export class UserSettingsService {
       return this.currentUser;
     } catch (error) {
       console.error("Failed to upload avatar:", error);
+      throw error;
+    }
+  }
+
+  async loadFollowing(): Promise<FollowedUserSummary[]> {
+    try {
+      const list = await AuthService.getFollowing();
+      this.following = [...list].sort((a, b) =>
+        a.username.localeCompare(b.username, undefined, {
+          sensitivity: "base",
+        }),
+      );
+      return this.following;
+    } catch (error) {
+      console.error("Failed to load following list:", error);
+      throw error;
+    }
+  }
+
+  async addFollowing(username: string): Promise<FollowedUserSummary> {
+    try {
+      const user = await AuthService.followUser(username);
+      const existingIndex = this.following.findIndex((f) => f.id === user.id);
+      if (existingIndex === -1) {
+        this.following = [...this.following, user].sort((a, b) =>
+          a.username.localeCompare(b.username, undefined, {
+            sensitivity: "base",
+          }),
+        );
+      } else {
+        const updated = [...this.following];
+        updated[existingIndex] = user;
+        this.following = updated.sort((a, b) =>
+          a.username.localeCompare(b.username, undefined, {
+            sensitivity: "base",
+          }),
+        );
+      }
+      return user;
+    } catch (error) {
+      console.error("Failed to follow user:", error);
+      throw error;
+    }
+  }
+
+  async removeFollowing(userId: number): Promise<void> {
+    try {
+      await AuthService.unfollowUser(userId);
+      this.following = this.following.filter((user) => user.id !== userId);
+    } catch (error) {
+      console.error("Failed to remove following:", error);
       throw error;
     }
   }
