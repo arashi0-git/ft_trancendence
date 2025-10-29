@@ -38,6 +38,14 @@ export interface UpdateUserSettingsResponse {
   token?: string;
 }
 
+export interface FollowingListResponse {
+  following: PublicUser[];
+}
+
+export interface FollowUserResponse {
+  user: PublicUser;
+}
+
 export interface ApiError {
   error: string;
 }

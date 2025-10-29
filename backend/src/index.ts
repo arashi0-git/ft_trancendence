@@ -70,7 +70,7 @@ async function registerPlugins() {
     },
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
-    methods: ["GET", "POST", "PATCH", "OPTIONS"],
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     maxAge: 60 * 60 * 24, // 24 hours
   });
 

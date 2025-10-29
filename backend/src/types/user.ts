@@ -29,3 +29,7 @@ export interface UpdateUserSettingsRequest extends UpdateUserProfileRequest {
   currentPassword?: string;
   newPassword?: string;
 }
+
+export interface FollowUserRequest {
+  username: string;
+}

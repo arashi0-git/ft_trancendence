@@ -1,7 +1,8 @@
 import { FastifyInstance } from "fastify";
 import { authenticateToken } from "../middleware/auth";
 import { UserService } from "../services/userService";
-import { UpdateUserSettingsRequest } from "../types/user";
+import { FollowService } from "../services/followService";
+import { FollowUserRequest, UpdateUserSettingsRequest } from "../types/user";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
@@ -217,6 +218,91 @@ export async function userRoutes(fastify: FastifyInstance) {
 
         fastify.log.error(error);
         return reply.status(500).send({ error: "Failed to upload avatar" });
+      }
+    },
+  );
+
+  fastify.get(
+    "/me/following",
+    { preHandler: authenticateToken },
+    async (request, reply) => {
+      try {
+        if (!request.user) {
+          return reply.status(401).send({ error: "User not authenticated" });
+        }
+
+        const following = await FollowService.listFollowing(request.user.id);
+        return reply.send({
+          following: FollowService.toPublicUsers(following),
+        });
+      } catch (error) {
+        fastify.log.error(error);
+        return reply
+          .status(500)
+          .send({ error: "Failed to load following list" });
+      }
+    },
+  );
+
+  fastify.post<{ Body: FollowUserRequest }>(
+    "/me/following",
+    { preHandler: authenticateToken },
+    async (request, reply) => {
+      try {
+        if (!request.user) {
+          return reply.status(401).send({ error: "User not authenticated" });
+        }
+
+        const followedUser = await FollowService.followByUsername(
+          request.user.id,
+          request.body?.username || "",
+        );
+
+        return reply.send({
+          user: FollowService.toPublicUser(followedUser),
+        });
+      } catch (error) {
+        fastify.log.error(error);
+        const message =
+          error instanceof Error ? error.message : "Failed to follow user";
+
+        let statusCode = 500;
+        if (message.includes("required")) {
+          statusCode = 400;
+        } else if (message.includes("cannot") || message.includes("already")) {
+          statusCode = 400;
+        } else if (message.includes("not found")) {
+          statusCode = 404;
+        }
+
+        return reply.status(statusCode).send({ error: message });
+      }
+    },
+  );
+
+  fastify.delete<{ Params: { userId: string } }>(
+    "/me/following/:userId",
+    { preHandler: authenticateToken },
+    async (request, reply) => {
+      try {
+        if (!request.user) {
+          return reply.status(401).send({ error: "User not authenticated" });
+        }
+
+        const userId = Number(request.params.userId);
+        if (!Number.isInteger(userId) || userId <= 0) {
+          return reply.status(400).send({ error: "Invalid user id" });
+        }
+
+        await FollowService.unfollow(request.user.id, userId);
+        return reply.send({ success: true });
+      } catch (error) {
+        fastify.log.error(error);
+        const message =
+          error instanceof Error ? error.message : "Failed to remove follow";
+
+        const statusCode = message.includes("not found") ? 404 : 500;
+        return reply.status(statusCode).send({ error: message });
       }
     },
   );
