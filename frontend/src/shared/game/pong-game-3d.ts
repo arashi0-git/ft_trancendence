@@ -50,7 +50,11 @@ export class PongGame3D {
     // ウィンドウリサイズ時の処理
     window.addEventListener("resize", this.boundHandleResize);
 
-    this.renderer = new BabylonRender(this.engine);
+    this.renderer = new BabylonRender(
+      this.engine,
+      this.config.canvasWidth,
+      this.config.canvasHeight,
+    );
     this.initializeGame();
     this.setupEventListeners();
 
