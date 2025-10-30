@@ -13,11 +13,6 @@ export type TournamentStep =
 
 /**
  * TournamentService - トーナメント機能の管理
- *
- * 重要: イベントリスナーの管理について
- * - 直接的な addEventListener の使用は禁止
- * - 必ず attachEventListenerSafely または addEventListenerWithTracking を使用
- * - これによりメモリリークを防止し、適切なクリーンアップを保証
  */
 export class TournamentService {
   private currentStep: TournamentStep = "setup";
@@ -56,11 +51,10 @@ export class TournamentService {
     }
   }
 
-  initializeCurrentView(): void {
+  async initializeCurrentView(): Promise<void> {
     const container = document.getElementById("tournament-content");
     if (!container) return;
 
-    // 新しいビューをレンダリングする前に既存のイベントリスナーをクリーンアップ
     this.clearEventListeners();
 
     switch (this.currentStep) {
@@ -68,7 +62,7 @@ export class TournamentService {
         this.renderSetupView(container);
         break;
       case "registration":
-        this.renderRegistrationView(container);
+        await this.renderRegistrationView(container);
         break;
       case "bracket":
         this.renderBracketView(container);
@@ -145,7 +139,7 @@ export class TournamentService {
     this.navigateToRegistration();
   }
 
-  private renderRegistrationView(container: HTMLElement): void {
+  private async renderRegistrationView(container: HTMLElement): Promise<void> {
     const tournament = this.tournamentData.getCurrentTournament();
     if (!tournament) {
       this.navigateToSetup();
@@ -179,39 +173,74 @@ export class TournamentService {
       </div>
     `;
 
-    this.generatePlayerInputs(tournament.playerCount);
+    await this.generatePlayerInputs(tournament.playerCount);
 
-    this.attachEventListenerSafely("back-to-setup", "click", () =>
-      this.navigateToSetup(),
-    );
+    this.attachEventListenerSafely("back-to-setup", "click", () => {
+      // セットアップ画面に戻る時はトーナメントデータをクリア
+      this.tournamentData.clearTournament();
+      this.navigateToSetup();
+    });
 
     this.attachEventListenerSafely("start-tournament", "click", () =>
       this.startTournament(),
     );
   }
 
-  private generatePlayerInputs(playerCount: number): void {
+  private async generatePlayerInputs(playerCount: number): Promise<void> {
     const playerInputsContainer = document.getElementById("player-inputs");
     if (!playerInputsContainer) return;
 
     playerInputsContainer.innerHTML = "";
 
+    // ログインユーザー情報を取得
+    let currentUser: { username: string } | null = null;
+
+    try {
+      if (AuthService.isAuthenticated()) {
+        const user = await AuthService.getCurrentUser();
+        currentUser = {
+          username: user.username,
+        };
+      }
+    } catch (error) {
+      console.warn("Failed to load current user for tournament:", error);
+    }
+
     for (let i = 1; i <= playerCount; i++) {
       const inputDiv = document.createElement("div");
+
+      const placeholder = currentUser
+        ? `Select ${currentUser.username} or enter custom alias`
+        : `Enter alias for Player ${i}`;
+
       inputDiv.innerHTML = `
-        <label class="block text-sm font-medium text-white mb-1">Player ${i} Alias</label>
+        <label class="block text-sm font-medium text-white mb-1">Player ${i}</label>
         <input
           type="text"
           id="player-${i}-alias"
-          placeholder="Enter alias for Player ${i}"
+          list="player-${i}-options"
+          placeholder="${this.escapeHtml(placeholder)}"
           maxlength="20"
           required
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         >
+        ${
+          currentUser
+            ? `
+        <datalist id="player-${i}-options">
+          <option value="${this.escapeHtml(currentUser.username)}">${this.escapeHtml(currentUser.username)} (You)</option>
+        </datalist>
+        `
+            : ""
+        }
       `;
+
       playerInputsContainer.appendChild(inputDiv);
 
-      const input = inputDiv.querySelector("input") as HTMLInputElement;
+      const input = inputDiv.querySelector(
+        `#player-${i}-alias`,
+      ) as HTMLInputElement;
+
       if (input) {
         this.addEventListenerWithTracking(input, "input", () =>
           this.validatePlayerInputs(),
@@ -219,7 +248,6 @@ export class TournamentService {
       }
     }
   }
-
   private validatePlayerInputs(): void {
     const startBtn = document.getElementById(
       "start-tournament",
@@ -252,22 +280,127 @@ export class TournamentService {
   }
 
   private startTournament(): void {
+    console.log("Starting tournament...");
     const tournament = this.tournamentData.getCurrentTournament();
-    if (!tournament) return;
+    if (!tournament) {
+      console.error("No tournament found");
+      return;
+    }
+
+    // 既存のプレイヤーとマッチをクリアして新しく開始
+    tournament.players = [];
+    tournament.matches = [];
+    tournament.currentRound = 1;
+    tournament.status = "setup";
 
     const inputs = document.querySelectorAll(
       "#player-inputs input",
     ) as NodeListOf<HTMLInputElement>;
 
-    // プレイヤーを追加
+    console.log("Found inputs:", inputs.length);
+
     inputs.forEach((input) => {
-      this.tournamentData.addPlayer(input.value.trim());
+      const alias = input.value.trim();
+      console.log("Adding player:", alias);
+      this.tournamentData.addPlayer(alias);
     });
 
-    // マッチを生成
-    this.tournamentData.generateMatches();
+    try {
+      console.log("Generating matches...");
+      this.tournamentData.generateMatches();
+      console.log("Matches generated, navigating to bracket...");
+      this.navigateToBracket();
+    } catch (error) {
+      console.error("Error generating matches:", error);
+      alert("Error starting tournament: " + (error as Error).message);
+    }
+  }
 
-    this.navigateToBracket();
+  // Navigation methods
+  navigateToSetup(): void {
+    this.navigate("/tournament");
+  }
+
+  navigateToRegistration(): void {
+    this.navigate("/tournament/registration");
+  }
+
+  navigateToBracket(): void {
+    this.navigate("/tournament/bracket");
+  }
+
+  private navigate(path: string): void {
+    router.navigate(path);
+  }
+
+  getPageTitle(): string {
+    switch (this.currentStep) {
+      case "setup":
+        return "Tournament Setup";
+      case "registration":
+        return "Player Registration";
+      case "bracket":
+        return "Tournament Bracket";
+      case "match":
+        return "Tournament Match";
+      case "results":
+        return "Tournament Results";
+      default:
+        return "Tournament Mode";
+    }
+  }
+
+  getBackButtonTemplate(): string {
+    const backText = this.currentStep === "setup" ? "Home" : "Back";
+    return `<button id="back-button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">${backText}</button>`;
+  }
+
+  private escapeHtml(text: string): string {
+    const map: Record<string, string> = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    };
+    return String(text).replace(/[&<>"']/g, (ch) => map[ch] ?? ch);
+  }
+
+  private addEventListenerWithTracking(
+    element: HTMLElement,
+    event: string,
+    handler: EventListener,
+  ): void {
+    element.addEventListener(event, handler);
+    this.eventListeners.push({ element, event, handler });
+  }
+
+  private attachEventListenerSafely(
+    elementId: string,
+    event: string,
+    handler: EventListener,
+    required: boolean = true,
+  ): void {
+    const element = document.getElementById(elementId);
+    if (!element) {
+      if (required) {
+        console.warn(`Required element with ID '${elementId}' not found`);
+      }
+      return;
+    }
+    this.addEventListenerWithTracking(element as HTMLElement, event, handler);
+  }
+
+  private clearEventListeners(): void {
+    this.eventListeners.forEach(({ element, event, handler }) => {
+      element.removeEventListener(event, handler);
+    });
+    this.eventListeners = [];
+  }
+
+  cleanup(): void {
+    this.clearEventListeners();
+    this.gameManager.cleanup();
   }
 
   private renderBracketView(container: HTMLElement): void {
@@ -394,23 +527,108 @@ export class TournamentService {
     this.initializeMatchGame(matchId);
   }
 
+  private renderResultsView(container: HTMLElement): void {
+    const tournament = this.tournamentData.getCurrentTournament();
+    const winner = this.tournamentData.getTournamentWinner();
+
+    if (!tournament || !winner) {
+      this.navigateToSetup();
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="text-center">
+        <h3 class="text-2xl font-bold mb-4 text-white">🏆 Tournament Complete!</h3>
+        <div class="bg-yellow-50 bg-opacity-10 p-6 rounded-lg mb-6 border border-yellow-400">
+          <h4 class="text-xl font-semibold text-yellow-300">Winner: ${this.escapeHtml(winner.alias)}</h4>
+          <p class="text-yellow-200">Wins: ${winner.wins} | Losses: ${winner.losses}</p>
+        </div>
+        
+        <div class="space-y-2">
+          <button id="new-tournament" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded">
+            Start New Tournament
+          </button>
+        </div>
+      </div>
+    `;
+
+    this.attachEventListenerSafely("new-tournament", "click", () => {
+      this.tournamentData.clearTournament();
+      this.navigateToSetup();
+    });
+  }
+
+  private getRoundName(currentRound: number, totalPlayers: number): string {
+    const totalRounds = Math.log2(totalPlayers);
+
+    if (currentRound === totalRounds) {
+      return "Final";
+    } else if (currentRound === totalRounds - 1) {
+      return "Semi-Final";
+    } else if (currentRound === totalRounds - 2) {
+      return "Quarter-Final";
+    } else {
+      return `Round ${currentRound}`;
+    }
+  }
+
+  private attachEventListenersToElements(
+    selector: string,
+    event: string,
+    handler: (element: HTMLElement) => void,
+  ): void {
+    const elements = document.querySelectorAll(selector);
+    elements.forEach((element) => {
+      const wrappedHandler = () => handler(element as HTMLElement);
+      this.addEventListenerWithTracking(
+        element as HTMLElement,
+        event,
+        wrappedHandler,
+      );
+    });
+  }
+
+  navigateToMatch(matchId: string): void {
+    this.navigate(`/tournament/match/${matchId}`);
+  }
+
+  navigateToResults(): void {
+    this.navigate("/tournament/results");
+  }
+
+  handleBackNavigation(): void {
+    switch (this.currentStep) {
+      case "registration":
+        this.navigateToSetup();
+        break;
+      case "bracket":
+        this.navigateToRegistration();
+        break;
+      case "match":
+        this.navigateToBracket();
+        break;
+      case "results":
+        this.navigateToBracket();
+        break;
+      default:
+        this.navigate("/");
+    }
+  }
+
+  private extractMatchIdFromPath(): string {
+    const parts = this.currentPath.split("/").filter(Boolean);
+    return parts[parts.length - 1] || "unknown";
+  }
+
   private initializeMatchGame(matchId: string): void {
-    console.log(
-      `%c[Tournament] Initializing Match: ${matchId}`,
-      "color: blue; font-weight: bold;",
-    );
+    console.log(`Initializing Match: ${matchId}`);
 
     this.gameManager.cleanup();
     this.gameManager.initializeGame({
       mode: "tournament",
       canvasId: "tournament-pong-canvas",
       onGameEnd: (data: { winner: number; score1: number; score2: number }) => {
-        console.log(
-          `%c[Tournament] Match Ended: ${matchId}`,
-          "color: green; font-weight: bold;",
-          "Data:",
-          data,
-        );
+        console.log(`Match Ended: ${matchId}`, data);
         this.handleMatchEnd(matchId, data.winner, {
           player1: data.score1,
           player2: data.score2,
@@ -449,38 +667,31 @@ export class TournamentService {
     winner: number,
     score: { player1: number; player2: number },
   ): void {
-    console.log(
-      `%c[Tournament] Handling Match End: ${matchId}`,
-      "color: green; font-weight: bold;",
-    );
+    console.log(`Handling Match End: ${matchId}`);
 
     try {
       const match = this.tournamentData.getMatch(matchId);
       if (!match) {
-        console.error(
-          `[Tournament] CRITICAL: Match ${matchId} not found in handleMatchEnd.`,
-        );
+        console.error(`Match ${matchId} not found`);
         return;
       }
 
-      console.log("[Tournament] Completing match...");
       const winnerId = winner === 1 ? match.player1Id : match.player2Id;
       this.tournamentData.completeMatch(matchId, winnerId, score);
+
       const winnerPlayer = this.tournamentData.getPlayer(winnerId);
       const winnerAlias = winnerPlayer?.alias || "Player";
       const modalTitle = winner === 1 ? "Player 1 Wins!" : "Player 2 Wins!";
       const modalMessage = `${winnerAlias} wins the match ${score.player1} - ${score.player2}!`;
 
       this.showGameOverModal(modalTitle, modalMessage, () => {
-        console.log(
-          "[Tournament] Continue button clicked. Checking tournament state...",
-        );
+        console.log("Continue button clicked. Checking tournament state...");
         if (this.tournamentData.isTournamentComplete()) {
-          console.log("[Tournament] Navigating to results.");
+          console.log("Tournament completed, navigating to results.");
           this.notificationService.success("Tournament completed! 🏆");
           this.navigateToResults();
         } else if (this.tournamentData.canAdvanceToNextRound()) {
-          console.log("[Tournament] Advancing to next round.");
+          console.log("Advancing to next round.");
           const success = this.tournamentData.generateNextRound();
           if (success) {
             const currentRound =
@@ -493,9 +704,7 @@ export class TournamentService {
           }
           this.navigateToBracket();
         } else {
-          console.log(
-            "[Tournament] Current round not finished. Navigating to bracket.",
-          );
+          console.log("Current round not finished. Navigating to bracket.");
           this.navigateToBracket();
         }
       });
@@ -511,216 +720,12 @@ export class TournamentService {
         pauseBtn.disabled = true;
       }
     } catch (error) {
-      console.error(
-        "%c[Tournament] FATAL ERROR in handleMatchEnd:",
-        "color: red; font-size: 20px;",
-        error,
-      );
+      console.error("Error in handleMatchEnd:", error);
       this.notificationService.error(
         "A critical error occurred while saving the match.",
       );
       this.navigateToBracket();
     }
-  }
-
-  private renderResultsView(container: HTMLElement): void {
-    const tournament = this.tournamentData.getCurrentTournament();
-    const winner = this.tournamentData.getTournamentWinner();
-
-    if (!tournament || !winner) {
-      this.navigateToSetup();
-      return;
-    }
-
-    container.innerHTML = `
-      <div class="text-center">
-        <h3 class="text-2xl font-bold mb-4">🏆 Tournament Complete!</h3>
-        <div class="bg-yellow-50 p-6 rounded-lg mb-6">
-          <h4 class="text-xl font-semibold text-yellow-800">Winner: ${this.escapeHtml(winner.alias)}</h4>
-          <p class="text-yellow-600">Wins: ${winner.wins} | Losses: ${winner.losses}</p>
-        </div>
-        
-        <div class="space-y-2">
-          <button id="new-tournament" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded">
-            Start New Tournament
-          </button>
-        </div>
-      </div>
-    `;
-
-    this.attachEventListenerSafely("new-tournament", "click", () => {
-      this.tournamentData.clearTournament();
-      this.navigateToSetup();
-    });
-  }
-
-  private extractMatchIdFromPath(): string {
-    const parts = this.currentPath.split("/").filter(Boolean);
-    return parts[parts.length - 1] || "unknown";
-  }
-
-  // ナビゲーションメソッド
-  navigateToSetup(): void {
-    this.navigate("/tournament");
-  }
-
-  navigateToRegistration(): void {
-    this.navigate("/tournament/registration");
-  }
-
-  navigateToBracket(): void {
-    this.navigate("/tournament/bracket");
-  }
-
-  navigateToMatch(matchId: string): void {
-    this.navigate(`/tournament/match/${matchId}`);
-  }
-
-  navigateToResults(): void {
-    this.navigate("/tournament/results");
-  }
-
-  navigateToHome(): void {
-    this.navigate("/");
-  }
-
-  navigateToLogin(): void {
-    this.navigate("/login");
-  }
-
-  private navigate(path: string): void {
-    router.navigate(path);
-  }
-
-  // 認証関連のメソッドは共通ヘッダーに移動したため削除
-
-  handleBackNavigation(): void {
-    switch (this.currentStep) {
-      case "registration":
-        this.navigateToSetup();
-        break;
-      case "bracket":
-        this.navigateToRegistration();
-        break;
-      case "match":
-        this.navigateToBracket();
-        break;
-      case "results":
-        this.navigateToBracket();
-        break;
-      default:
-        this.navigateToHome();
-    }
-  }
-
-  getPageTitle(): string {
-    switch (this.currentStep) {
-      case "setup":
-        return "Tournament Setup";
-      case "registration":
-        return "Player Registration";
-      case "bracket":
-        return "Tournament Bracket";
-      case "match":
-        return "Tournament Match";
-      case "results":
-        return "Tournament Results";
-      default:
-        return "Tournament Mode";
-    }
-  }
-
-  getBackButtonTemplate(): string {
-    const backText = this.currentStep === "setup" ? "Home" : "Back";
-    return `<button id="back-button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">${backText}</button>`;
-  }
-
-  // 認証関連のメソッドは共通ヘッダーに移動したため削除
-
-  private getRoundName(currentRound: number, totalPlayers: number): string {
-    const totalRounds = Math.log2(totalPlayers);
-
-    if (currentRound === totalRounds) {
-      return "Final";
-    } else if (currentRound === totalRounds - 1) {
-      return "Semi-Final";
-    } else if (currentRound === totalRounds - 2) {
-      return "Quarter-Final";
-    } else {
-      return `Round ${currentRound}`;
-    }
-  }
-
-  private escapeHtml(text: string): string {
-    const map: Record<string, string> = {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;",
-    };
-    return String(text).replace(/[&<>"']/g, (ch) => map[ch] ?? ch);
-  }
-
-  private addEventListenerWithTracking(
-    element: HTMLElement,
-    event: string,
-    handler: EventListener,
-  ): void {
-    element.addEventListener(event, handler);
-    this.eventListeners.push({ element, event, handler });
-  }
-
-  /**
-   * 安全なDOM要素取得とイベントリスナー追加のヘルパーメソッド
-   * 要素が存在しない場合は警告を出力し、存在する場合は自動的にトラッキングを行う
-   */
-  private attachEventListenerSafely(
-    elementId: string,
-    event: string,
-    handler: EventListener,
-    required: boolean = true,
-  ): void {
-    const element = document.getElementById(elementId);
-    if (!element) {
-      if (required) {
-        console.warn(`Required element with ID '${elementId}' not found`);
-      }
-      return;
-    }
-    this.addEventListenerWithTracking(element as HTMLElement, event, handler);
-  }
-
-  /**
-   * 複数要素への安全なイベントリスナー追加
-   */
-  private attachEventListenersToElements(
-    selector: string,
-    event: string,
-    handler: (element: HTMLElement) => void,
-  ): void {
-    const elements = document.querySelectorAll(selector);
-    elements.forEach((element) => {
-      const wrappedHandler = () => handler(element as HTMLElement);
-      this.addEventListenerWithTracking(
-        element as HTMLElement,
-        event,
-        wrappedHandler,
-      );
-    });
-  }
-
-  private clearEventListeners(): void {
-    this.eventListeners.forEach(({ element, event, handler }) => {
-      element.removeEventListener(event, handler);
-    });
-    this.eventListeners = [];
-  }
-
-  cleanup(): void {
-    this.clearEventListeners();
-    this.gameManager.cleanup();
-    this.hideGameOverModal();
   }
 
   private showGameOverModal(

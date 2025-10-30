@@ -9,7 +9,7 @@ export class TournamentPage extends SpacePageBase {
     this.service = new TournamentService();
   }
 
-  render(): void {
+  async render(): Promise<void> {
     // URLパスに基づいて適切な画面を表示
     const currentPath = window.location.pathname;
     this.service.setCurrentPath(currentPath);
@@ -17,7 +17,7 @@ export class TournamentPage extends SpacePageBase {
     this.container.innerHTML = this.getTemplate();
     this.initializeAppHeader();
     this.attachEventListeners();
-    this.service.initializeCurrentView();
+    await this.service.initializeCurrentView();
     this.initializeSpaceBackground();
   }
 
