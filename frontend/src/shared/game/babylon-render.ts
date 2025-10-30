@@ -20,6 +20,7 @@ export class BabylonRender {
   private ballMesh!: Mesh;
   private withBackground: boolean;
   private fieldMesh!: Mesh;
+  private centerLineSegments: Mesh[] = [];
   private scoreBoard1!: Mesh;
   private scoreBoard2!: Mesh;
   private scoreTexture1!: DynamicTexture;
@@ -83,6 +84,7 @@ export class BabylonRender {
     this.gameHeight = height;
     // フィールドサイズが変更されたので3Dオブジェクトを再作成
     this.recreateField();
+    this.recreateCenterLine();
   }
 
   private recreateField() {
@@ -105,6 +107,17 @@ export class BabylonRender {
     fieldMaterial.diffuseColor = new Color3(0.2, 0.3, 0.2);
     fieldMaterial.emissiveColor = new Color3(0.05, 0.1, 0.05);
     this.fieldMesh.material = fieldMaterial;
+  }
+
+  private recreateCenterLine() {
+    // 既存の中央線セグメントを削除
+    this.centerLineSegments.forEach((segment) => {
+      segment.dispose();
+    });
+    this.centerLineSegments = [];
+
+    // 新しいサイズで中央線を作成
+    this.createCenterLine();
   }
 
   public createGameObjects() {
@@ -204,6 +217,9 @@ export class BabylonRender {
         lineMaterial.diffuseColor = new Color3(1, 1, 1);
         lineMaterial.emissiveColor = new Color3(0.5, 0.5, 0.5); // より明るく光らせる
         lineSegment.material = lineMaterial;
+
+        // 作成したセグメントを配列に保存
+        this.centerLineSegments.push(lineSegment);
       }
     }
   }
@@ -405,6 +421,12 @@ export class BabylonRender {
   }
 
   public dispose() {
+    // 中央線セグメントを破棄
+    this.centerLineSegments.forEach((segment) => {
+      segment.dispose();
+    });
+    this.centerLineSegments = [];
+
     this.scene.dispose();
   }
 }
