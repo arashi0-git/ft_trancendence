@@ -78,11 +78,15 @@ export class AuthService {
         body: JSON.stringify(userData),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || "Registration failed");
+        const text = await response.text();
+        console.log("Error response text:", text);
+        throw new Error(
+          text || `Registration failed with status ${response.status}`,
+        );
       }
+
+      const data = await response.json();
 
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
