@@ -6,7 +6,7 @@ export class FollowModel {
     followerId: number,
     followingId: number,
   ): Promise<void> {
-    await db.run(
+    db.run(
       `INSERT INTO user_follows (follower_id, following_id)
        VALUES (?, ?)`,
       [followerId, followingId],

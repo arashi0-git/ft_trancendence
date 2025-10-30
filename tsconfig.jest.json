@@ -8,5 +8,10 @@
     "moduleResolution": "node"
   },
   "include": ["backend/src/**/*.ts", "frontend/src/**/*.ts"],
-  "exclude": ["backend/node_modules", "backend/dist", "frontend/node_modules", "frontend/dist"]
+  "exclude": [
+    "backend/node_modules",
+    "backend/dist",
+    "frontend/node_modules",
+    "frontend/dist"
+  ]
 }

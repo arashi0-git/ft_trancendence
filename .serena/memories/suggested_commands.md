@@ -1,6 +1,7 @@
 # Suggested Commands for ft_trancendence Development
 
 ## Development Commands
+
 ```bash
 # Start development server
 npm run dev
@@ -13,6 +14,7 @@ npm run typecheck
 ```
 
 ## Code Quality Commands
+
 ```bash
 # Run ESLint for code quality checks
 npm run lint
@@ -22,6 +24,7 @@ npm run lint:fix
 ```
 
 ## Testing Commands
+
 ```bash
 # Run tests
 npm run test
@@ -34,6 +37,7 @@ npm run test:watch
 ```
 
 ## System Commands (Darwin/macOS)
+
 ```bash
 # List files and directories
 ls -la
@@ -56,6 +60,7 @@ git pull
 ```
 
 ## Docker Commands (Required for project)
+
 ```bash
 # Build and run the application (single command requirement)
 docker-compose up --build
@@ -65,6 +70,7 @@ docker-compose down
 ```
 
 ## Package Management
+
 ```bash
 # Install dependencies
 npm install
@@ -83,6 +89,7 @@ npm update
 ```
 
 ## Quick Development Workflow
+
 1. `npm run dev` - Start development
 2. Make changes to files in `src/`
 3. `npm run lint` - Check code quality
