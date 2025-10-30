@@ -90,7 +90,7 @@ export class BabylonRender {
   private recreateField() {
     // 既存のフィールドを削除
     if (this.fieldMesh) {
-      this.fieldMesh.dispose();
+      this.fieldMesh.dispose(false, true);
     }
 
     // 新しいサイズでフィールドを作成
@@ -112,7 +112,7 @@ export class BabylonRender {
   private recreateCenterLine() {
     // 既存の中央線セグメントを削除
     this.centerLineSegments.forEach((segment) => {
-      segment.dispose();
+      segment.dispose(false, true);
     });
     this.centerLineSegments = [];
 
@@ -423,7 +423,7 @@ export class BabylonRender {
   public dispose() {
     // 中央線セグメントを破棄
     this.centerLineSegments.forEach((segment) => {
-      segment.dispose();
+      segment.dispose(false, true);
     });
     this.centerLineSegments = [];
 
