@@ -1,4 +1,9 @@
-import { CreateUserRequest, LoginRequest, AuthResponse, UserProfile } from "../types/user";
+import {
+  CreateUserRequest,
+  LoginRequest,
+  AuthResponse,
+  UserProfile,
+} from "../types/user";
 import { UserService } from "./userService";
 import { AuthUtils } from "../utils/auth";
 
@@ -8,13 +13,13 @@ export class AuthService {
       const userRecord = await UserService.createUser(userData);
       const token = AuthUtils.generateToken(userRecord);
       const user = UserService.toPublicUser(userRecord);
-      
+
       // Log successful registration for security audit
       console.info(`User registered successfully: ${user.id}`);
 
       return { user, token };
     } catch (error) {
-      console.error('Registration failed:', error);
+      console.error("Registration failed:", error);
       throw error;
     }
   }

@@ -11,19 +11,17 @@ export class QuickPlayPage extends SpacePageBase {
 
   render(): void {
     this.container.innerHTML = this.getTemplate();
+    this.initializeAppHeader();
     this.attachEventListeners();
     this.service.initializeGame("pong-canvas");
     this.initializeSpaceBackground();
   }
 
   private getTemplate(): string {
-    const authButton = this.service.getAuthButtonTemplate();
-
     const content = `
         <div class="flex justify-between items-center mb-3">
           <h2 class="text-xl font-bold text-white">Quick Play - Pong</h2>
           <div class="space-x-2">
-            ${authButton}
             <button id="back-to-home" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 text-sm rounded border border-purple-400">Home</button>
           </div>
         </div>
@@ -70,21 +68,7 @@ export class QuickPlayPage extends SpacePageBase {
       this.service.navigateToHome();
     });
 
-    document
-      .getElementById("login-quick-btn")
-      ?.addEventListener("click", () => {
-        this.service.navigateToLogin();
-      });
-
-    document
-      .getElementById("logout-btn")
-      ?.addEventListener("click", async () => {
-        try {
-          await this.service.handleLogout();
-        } catch (error) {
-          console.error("Logout handler error:", error);
-        }
-      });
+    // 認証関連のイベントリスナーは共通ヘッダーで処理されるため削除
 
     // ゲームコントロール
     this.service.attachGameControls();
@@ -93,5 +77,6 @@ export class QuickPlayPage extends SpacePageBase {
   destroy(): void {
     this.service.cleanup();
     this.cleanupSpaceBackground();
+    this.cleanupAppHeader();
   }
 }

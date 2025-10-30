@@ -13,6 +13,7 @@ export class RegisterPage extends SpacePageBase {
 
   render(): void {
     this.container.innerHTML = this.getTemplate();
+    this.initializeAppHeader();
     this.attachEventListeners();
     this.service.initializeRegisterForm();
     this.initializeSpaceBackground();
@@ -32,7 +33,8 @@ export class RegisterPage extends SpacePageBase {
   }
 
   private attachEventListeners(): void {
-    this.backToHomeEl = this.container.querySelector<HTMLButtonElement>("#back-to-home");
+    this.backToHomeEl =
+      this.container.querySelector<HTMLButtonElement>("#back-to-home");
     this.backToHomeEl?.addEventListener("click", this.onBackToHomeClick);
   }
 
@@ -41,5 +43,6 @@ export class RegisterPage extends SpacePageBase {
     this.backToHomeEl = null;
     this.service.destroy();
     this.cleanupSpaceBackground();
+    this.cleanupAppHeader();
   }
 }

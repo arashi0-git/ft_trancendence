@@ -1,9 +1,11 @@
 import { SpaceBackground } from "./space-background";
 import { UITransition, type UITransitionType } from "./ui-transition";
+import { AppHeader } from "./app-header";
 
 export abstract class SpacePageBase {
   protected spaceBackground: SpaceBackground | null = null;
   protected container: HTMLElement;
+  protected appHeader: AppHeader | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -34,10 +36,44 @@ export abstract class SpacePageBase {
 
   protected getSpaceTemplate(content: string): string {
     return `
+      <div id="app-header-container"></div>
       <div class="bg-transparent p-4">
-        ${content}
+        <div class="page-content">
+          ${content}
+        </div>
       </div>
     `;
+  }
+
+  protected initializeAppHeader(): void {
+    // DOM更新を待つために次のフレームで実行
+    requestAnimationFrame(() => {
+      // まずthis.containerから検索
+      let headerContainer: HTMLElement | null = this.container.querySelector(
+        "#app-header-container",
+      );
+
+      // 見つからない場合はdocument全体から検索
+      if (!headerContainer) {
+        headerContainer = document.getElementById("app-header-container");
+      }
+
+      if (headerContainer) {
+        this.appHeader = new AppHeader(headerContainer);
+        this.appHeader.render();
+      } else {
+        // さらに遅延して再試行
+        setTimeout(() => {
+          const retryContainer: HTMLElement | null =
+            this.container.querySelector("#app-header-container") ||
+            document.getElementById("app-header-container");
+          if (retryContainer) {
+            this.appHeader = new AppHeader(retryContainer);
+            this.appHeader.render();
+          }
+        }, 100);
+      }
+    });
   }
 
   protected async playTransitionAndNavigate(
@@ -45,14 +81,26 @@ export abstract class SpacePageBase {
     uiTransitionType: UITransitionType = "shootingStar",
     duration: number = 800,
   ): Promise<void> {
-    // UIアニメーションを優先して実行（滑らかさを重視）
+    // ヘッダーを除いたページコンテンツ部分のみにアニメーションを適用
     const uiElement = this.container.querySelector(
-      ".bg-transparent",
+      ".page-content",
     ) as HTMLElement;
 
     if (uiElement) {
       // UIアニメーションのみを実行
       await UITransition.playTransition(uiElement, uiTransitionType, duration);
+    } else {
+      // フォールバック: .bg-transparentを使用するが、ヘッダーは除外
+      const fallbackElement = this.container.querySelector(
+        ".bg-transparent",
+      ) as HTMLElement;
+      if (fallbackElement) {
+        await UITransition.playTransition(
+          fallbackElement,
+          uiTransitionType,
+          duration,
+        );
+      }
     }
 
     await navigationFn();
@@ -67,6 +115,13 @@ export abstract class SpacePageBase {
     const canvas = document.getElementById("space-background");
     if (canvas) {
       canvas.remove();
+    }
+  }
+
+  protected cleanupAppHeader(): void {
+    if (this.appHeader) {
+      this.appHeader.destroy();
+      this.appHeader = null;
     }
   }
 

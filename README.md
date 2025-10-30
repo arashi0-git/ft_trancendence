@@ -6,7 +6,6 @@ A modern Pong game platform with user authentication and tournament system.
 
 <img width="1470" height="795" alt="image" src="https://github.com/user-attachments/assets/ac7910c5-abaf-4e89-8e50-25c2d0225bd4" />
 
-
 ## Features
 
 - User authentication with JWT tokens
@@ -48,17 +47,20 @@ cp backend/.env.example backend/.env
 ### 3. Start the application
 
 **Option A: Using Make (Recommended)**
+
 ```bash
 # One command setup and start
 make all
 ```
 
 **Option B: Using Docker Compose**
+
 ```bash
 docker-compose up -d
 ```
 
 This will:
+
 - Generate self-signed SSL certificates for development
 - Build and start the frontend (Nginx + React/TypeScript)
 - Build and start the backend (Node.js + Fastify)
@@ -88,6 +90,7 @@ The application automatically generates self-signed SSL certificates for develop
 For production deployment, replace the self-signed certificates with valid SSL certificates:
 
 1. **Option 1: Replace certificate files**
+
    ```bash
    # Place your certificates in the ssl directory
    cp your-cert.pem ./ssl/cert.pem
@@ -95,6 +98,7 @@ For production deployment, replace the self-signed certificates with valid SSL c
    ```
 
 2. **Option 2: Use volume mounts**
+
    ```yaml
    # In docker-compose.yml or docker-compose.prod.yml
    services:
@@ -115,10 +119,10 @@ For production deployment, replace the self-signed certificates with valid SSL c
 
 - **Certificate file**: `cert.pem` (full certificate chain)
 - **Private key file**: `key.pem` (private key)
-- **Permissions**: 
+- **Permissions**:
   - Certificate: 644 (readable by all)
   - Private key: 600 (readable by owner only)
-- **Cross-platform support**: 
+- **Cross-platform support**:
   - macOS: Works with both system LibreSSL and Homebrew OpenSSL
   - Linux: Works with system OpenSSL (all distributions)
   - Docker: Uses Alpine Linux with OpenSSL for consistent behavior
@@ -141,11 +145,13 @@ npm run dev  # In both frontend and backend directories
 Create `.env` files in frontend and backend directories:
 
 **Frontend (.env)**:
+
 ```env
 VITE_API_BASE_URL=
 ```
 
 **Backend (.env)**:
+
 ```env
 NODE_ENV=development
 DATABASE_PATH=./database/transcendence.db
@@ -179,23 +185,25 @@ JWT_SECRET=your-jwt-secret-key
 ### Common Setup Issues
 
 1. **"Page not found" or connection refused**:
+
    ```bash
    # Make sure you ran the setup first
    ./setup.sh
-   
+
    # Check if all containers are running
    docker ps
-   
+
    # Check container logs
    docker-compose logs frontend
    docker-compose logs backend
    ```
 
 2. **Environment variables not found**:
+
    ```bash
    # Create missing .env files
    ./setup.sh
-   
+
    # Or manually:
    cp frontend/.env.example frontend/.env
    cp backend/.env.example backend/.env
@@ -210,6 +218,7 @@ JWT_SECRET=your-jwt-secret-key
 ### SSL Certificate Issues
 
 1. **Certificate not found error**:
+
    ```bash
    # Regenerate certificates
    docker-compose down
@@ -218,6 +227,7 @@ JWT_SECRET=your-jwt-secret-key
    ```
 
 2. **Permission denied errors**:
+
    ```bash
    # Fix certificate permissions
    chmod 644 ./ssl/cert.pem
@@ -230,33 +240,36 @@ JWT_SECRET=your-jwt-secret-key
    - Or add the certificate to your browser's trusted certificates
 
 4. **Platform-specific issues**:
-   
+
    **macOS**:
+
    ```bash
    # If using Homebrew OpenSSL
    brew install openssl
-   
+
    # Check OpenSSL version
    openssl version
-   
+
    # Generate certificates manually if needed
    ./scripts/generate-ssl.sh
    ```
-   
+
    **Linux**:
+
    ```bash
    # Install OpenSSL if not present
    # Ubuntu/Debian:
    sudo apt-get install openssl
-   
+
    # CentOS/RHEL/Fedora:
    sudo yum install openssl  # or dnf install openssl
-   
+
    # Check version
    openssl version
    ```
-   
+
    **Docker Environment**:
+
    ```bash
    # Force regenerate in Docker
    docker-compose run --rm ssl-cert sh -c "rm -f /certs/*.pem && /bin/sh"
@@ -265,10 +278,11 @@ JWT_SECRET=your-jwt-secret-key
 ### Database Issues
 
 1. **Database connection errors**:
+
    ```bash
    # Check database directory permissions
    ls -la ./database/
-   
+
    # Recreate database
    rm -f ./database/transcendence.db
    docker-compose restart backend
@@ -279,12 +293,14 @@ JWT_SECRET=your-jwt-secret-key
 The following issues have been identified and are tracked in GitHub Issues:
 
 ### Critical Issues
+
 - **[Issue #19](https://github.com/arashi0-git/ft_trancendence/issues/19)**: トーナメントで勝敗決定後、次の試合に進めない
   - Tournament progression fails after match completion
   - Next round generation not working properly
   - **Priority**: Critical
 
 ### High Priority Issues
+
 - **[Issue #21](https://github.com/arashi0-git/ft_trancendence/issues/21)**: パドルがボールをすり抜ける（当たり判定の問題）
   - Paddle collision detection issues
   - Ball passes through paddles during fast movement
@@ -301,18 +317,22 @@ The following issues have been identified and are tracked in GitHub Issues:
   - **Priority**: High
 
 ### Medium Priority Issues
+
 - **[Issue #17](https://github.com/arashi0-git/ft_trancendence/issues/17)**: トーナメント試合でのreset/pauseボタンの動作不良
   - Reset and pause buttons not functioning properly in tournament matches
   - Game control issues during tournament play
   - **Priority**: Medium
 
 ### Issue Status
+
 To view the latest status of all issues:
+
 ```bash
 gh issue list
 ```
 
 To view details of a specific issue:
+
 ```bash
 gh issue view <issue-number>
 ```
@@ -332,6 +352,7 @@ This project is part of the 42 School curriculum.
 ## Planned Modules
 
 ### Oliver's Modules
+
 1. AI-Algo: AI opponent
 2. Gameplay: MultiPlayer (more than 2 players)
 3. Gameplay: Game customization options
@@ -341,10 +362,11 @@ This project is part of the 42 School curriculum.
 7. Cybersecurity: Implement Two-Factor Authentication (2FA) and JWT
 
 ### スンジュン's Modules
+
 - Add another game with user history and matchmaking
 - Server modules are not planned
----
 
+---
 
 # ft_transcendence (日本語)
 
@@ -391,17 +413,20 @@ cp backend/.env.example backend/.env
 ### 3. アプリケーションを起動
 
 **オプションA: Make使用（推奨）**
+
 ```bash
 # ワンコマンドでセットアップと起動
 make all
 ```
 
 **オプションB: Docker Compose使用**
+
 ```bash
 docker-compose up -d
 ```
 
 これにより以下が実行されます：
+
 - 開発用の自己署名SSL証明書を生成
 - フロントエンド（Nginx + React/TypeScript）をビルドして起動
 - バックエンド（Node.js + Fastify）をビルドして起動
@@ -431,6 +456,7 @@ docker-compose up -d
 本番環境では、自己署名証明書を有効なSSL証明書に置き換えてください：
 
 1. **オプション1: 証明書ファイルを置き換え**
+
    ```bash
    # 証明書をsslディレクトリに配置
    cp your-cert.pem ./ssl/cert.pem
@@ -438,6 +464,7 @@ docker-compose up -d
    ```
 
 2. **オプション2: ボリュームマウントを使用**
+
    ```yaml
    # docker-compose.yml または docker-compose.prod.yml で
    services:
@@ -458,10 +485,10 @@ docker-compose up -d
 
 - **証明書ファイル**: `cert.pem`（完全な証明書チェーン）
 - **秘密鍵ファイル**: `key.pem`（秘密鍵）
-- **権限**: 
+- **権限**:
   - 証明書: 644（全員が読み取り可能）
   - 秘密鍵: 600（所有者のみ読み取り可能）
-- **クロスプラットフォーム対応**: 
+- **クロスプラットフォーム対応**:
   - macOS: システムのLibreSSLとHomebrew OpenSSLの両方で動作
   - Linux: システムのOpenSSL（全ディストリビューション）で動作
   - Docker: 一貫した動作のためAlpine LinuxとOpenSSLを使用
@@ -484,11 +511,13 @@ npm run dev  # frontendとbackendの両方のディレクトリで実行
 frontendとbackendディレクトリに `.env` ファイルを作成：
 
 **Frontend (.env)**:
+
 ```env
 VITE_API_BASE_URL=https://localhost/api
 ```
 
 **Backend (.env)**:
+
 ```env
 NODE_ENV=development
 DATABASE_PATH=./database/transcendence.db
@@ -522,23 +551,25 @@ JWT_SECRET=your-jwt-secret-key
 ### 一般的なセットアップの問題
 
 1. **「ページが見つかりません」または接続拒否**:
+
    ```bash
    # 最初にセットアップを実行したことを確認
    ./setup.sh
-   
+
    # 全てのコンテナが動作しているか確認
    docker ps
-   
+
    # コンテナのログを確認
    docker-compose logs frontend
    docker-compose logs backend
    ```
 
 2. **環境変数が見つからない**:
+
    ```bash
    # 不足している.envファイルを作成
    ./setup.sh
-   
+
    # または手動で:
    cp frontend/.env.example frontend/.env
    cp backend/.env.example backend/.env
@@ -553,6 +584,7 @@ JWT_SECRET=your-jwt-secret-key
 ### SSL証明書の問題
 
 1. **証明書が見つからないエラー**:
+
    ```bash
    # 証明書を再生成
    docker-compose down
@@ -561,6 +593,7 @@ JWT_SECRET=your-jwt-secret-key
    ```
 
 2. **権限拒否エラー**:
+
    ```bash
    # 証明書の権限を修正
    chmod 644 ./ssl/cert.pem
@@ -573,33 +606,36 @@ JWT_SECRET=your-jwt-secret-key
    - またはブラウザの信頼できる証明書に追加
 
 4. **プラットフォーム固有の問題**:
-   
+
    **macOS**:
+
    ```bash
    # Homebrew OpenSSLを使用している場合
    brew install openssl
-   
+
    # OpenSSLバージョンを確認
    openssl version
-   
+
    # 必要に応じて手動で証明書を生成
    ./scripts/generate-ssl.sh
    ```
-   
+
    **Linux**:
+
    ```bash
    # OpenSSLがインストールされていない場合
    # Ubuntu/Debian:
    sudo apt-get install openssl
-   
+
    # CentOS/RHEL/Fedora:
    sudo yum install openssl  # または dnf install openssl
-   
+
    # バージョンを確認
    openssl version
    ```
-   
+
    **Docker環境**:
+
    ```bash
    # Dockerで強制的に再生成
    docker-compose run --rm ssl-cert sh -c "rm -f /certs/*.pem && /bin/sh"
@@ -608,10 +644,11 @@ JWT_SECRET=your-jwt-secret-key
 ### データベースの問題
 
 1. **データベース接続エラー**:
+
    ```bash
    # データベースディレクトリの権限を確認
    ls -la ./database/
-   
+
    # データベースを再作成
    rm -f ./database/transcendence.db
    docker-compose restart backend
@@ -622,12 +659,14 @@ JWT_SECRET=your-jwt-secret-key
 以下の問題が確認されており、GitHub Issuesで追跡されています：
 
 ### 重要な問題
+
 - **[Issue #19](https://github.com/arashi0-git/ft_trancendence/issues/19)**: トーナメントで勝敗決定後、次の試合に進めない
   - 試合完了後のトーナメント進行が失敗
   - 次のラウンド生成が正常に動作しない
   - **優先度**: 重要
 
 ### 高優先度の問題
+
 - **[Issue #21](https://github.com/arashi0-git/ft_trancendence/issues/21)**: パドルがボールをすり抜ける（当たり判定の問題）
   - パドルの衝突検出の問題
   - 高速移動時にボールがパドルを通り抜ける
@@ -644,18 +683,22 @@ JWT_SECRET=your-jwt-secret-key
   - **優先度**: 高
 
 ### 中優先度の問題
+
 - **[Issue #17](https://github.com/arashi0-git/ft_trancendence/issues/17)**: トーナメント試合でのreset/pauseボタンの動作不良
   - トーナメント試合でリセットと一時停止ボタンが正常に機能しない
   - トーナメントプレイ中のゲームコントロールの問題
   - **優先度**: 中
 
 ### 問題のステータス
+
 全ての問題の最新ステータスを確認するには：
+
 ```bash
 gh issue list
 ```
 
 特定の問題の詳細を確認するには：
+
 ```bash
 gh issue view <issue-number>
 ```
@@ -675,6 +718,7 @@ gh issue view <issue-number>
 ## 予定されているモジュール
 
 ### Oliverのモジュール
+
 1. AI-Algo: AI対戦相手
 2. Gameplay: マルチプレイヤー（2人以上のプレイヤー）
 3. Gameplay: ゲームカスタマイゼーションオプション
@@ -684,5 +728,6 @@ gh issue view <issue-number>
 7. Cybersecurity: 二要素認証（2FA）とJWTの実装
 
 ### スンジュンのモジュール
+
 - ユーザー履歴とマッチメイキング機能を持つ別のゲームの追加
 - サーバーモジュールは予定されていません
