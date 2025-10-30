@@ -49,9 +49,9 @@ export abstract class SpacePageBase {
     // DOM更新を待つために次のフレームで実行
     requestAnimationFrame(() => {
       // まずthis.containerから検索
-      let headerContainer = this.container.querySelector(
+      let headerContainer: HTMLElement | null = this.container.querySelector(
         "#app-header-container",
-      ) as HTMLElement;
+      );
 
       // 見つからない場合はdocument全体から検索
       if (!headerContainer) {
@@ -64,10 +64,8 @@ export abstract class SpacePageBase {
       } else {
         // さらに遅延して再試行
         setTimeout(() => {
-          const retryContainer =
-            (this.container.querySelector(
-              "#app-header-container",
-            ) as HTMLElement) ||
+          const retryContainer: HTMLElement | null =
+            this.container.querySelector("#app-header-container") ||
             document.getElementById("app-header-container");
           if (retryContainer) {
             this.appHeader = new AppHeader(retryContainer);
@@ -76,12 +74,6 @@ export abstract class SpacePageBase {
         }, 100);
       }
     });
-  }
-
-  protected updateHeaderAuthState(): void {
-    if (this.appHeader) {
-      this.appHeader.updateAuthState();
-    }
   }
 
   protected async playTransitionAndNavigate(
