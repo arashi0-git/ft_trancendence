@@ -64,7 +64,7 @@ export class AiModePage extends SpacePageBase implements PageComponent {
     `;
 
     this.container.innerHTML = this.getSpaceTemplate(content);
-
+    this.initializeAppHeader();
     this.initialize();
     this.initializeSpaceBackground();
   }
@@ -91,5 +91,6 @@ export class AiModePage extends SpacePageBase implements PageComponent {
   destroy(): void {
     this.aiModeService.cleanup();
     this.cleanupSpaceBackground();
+    this.cleanupAppHeader();
   }
 }

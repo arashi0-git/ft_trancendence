@@ -592,24 +592,7 @@ export class TournamentService {
     router.navigate(path);
   }
 
-  async handleLogout(): Promise<void> {
-    try {
-      await AuthService.logout();
-      this.notificationService.success("ログアウトしました");
-      this.navigateToHome();
-    } catch (error) {
-      console.error("ログアウトに失敗しました:", error);
-
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "ログアウト処理でエラーが発生しました";
-      this.notificationService.error(`ログアウトエラー: ${errorMessage}`);
-
-      // エラーが発生してもホームに戻る（ローカルトークンは既に削除済み）
-      this.navigateToHome();
-    }
-  }
+  // 認証関連のメソッドは共通ヘッダーに移動したため削除
 
   handleBackNavigation(): void {
     switch (this.currentStep) {
@@ -652,11 +635,7 @@ export class TournamentService {
     return `<button id="back-button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">${backText}</button>`;
   }
 
-  getAuthButtonTemplate(): string {
-    return AuthService.isAuthenticated()
-      ? `<button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Logout</button>`
-      : `<button id="login-tournament-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Login</button>`;
-  }
+  // 認証関連のメソッドは共通ヘッダーに移動したため削除
 
   private getRoundName(currentRound: number, totalPlayers: number): string {
     const totalRounds = Math.log2(totalPlayers);

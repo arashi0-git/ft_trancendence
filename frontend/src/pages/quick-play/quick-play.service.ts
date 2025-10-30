@@ -12,12 +12,22 @@ export class QuickPlayService extends BaseGameService {
   }
 
   attachGameControls(): void {
-    this.addControlListener("start-game", "click", () => this.startGame());
-    this.addControlListener("pause-game", "click", () => this.pauseGame());
-    this.addControlListener("reset-game", "click", () => this.resetGame());
-    this.addControlListener("reset-game-modal-btn", "click", () =>
-      this.resetGame(),
-    );
+    this.addControlListener("start-game", "click", (event) => {
+      event.stopPropagation();
+      this.startGame();
+    });
+    this.addControlListener("pause-game", "click", (event) => {
+      event.stopPropagation();
+      this.pauseGame();
+    });
+    this.addControlListener("reset-game", "click", (event) => {
+      event.stopPropagation();
+      this.resetGame();
+    });
+    this.addControlListener("reset-game-modal-btn", "click", (event) => {
+      event.stopPropagation();
+      this.resetGame();
+    });
   }
 
   protected onGameStart(): void {
@@ -80,30 +90,7 @@ export class QuickPlayService extends BaseGameService {
     router.navigate(path);
   }
 
-  async handleLogout(): Promise<void> {
-    try {
-      await AuthService.logout();
-      this.notificationService.success("ログアウトしました");
-      this.navigateToHome();
-    } catch (error) {
-      console.error("ログアウトに失敗しました:", error);
-
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "ログアウト処理でエラーが発生しました";
-      this.notificationService.error(`ログアウトエラー: ${errorMessage}`);
-
-      // エラーが発生してもホームに戻る（ローカルトークンは既に削除済み）
-      this.navigateToHome();
-    }
-  }
-
-  getAuthButtonTemplate(): string {
-    return AuthService.isAuthenticated()
-      ? `<button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Logout</button>`
-      : `<button id="login-quick-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Login</button>`;
-  }
+  // 認証関連のメソッドは共通ヘッダーに移動したため削除
 
   // cleanup()はBaseGameServiceから継承
 }

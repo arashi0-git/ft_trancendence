@@ -45,6 +45,7 @@ export class UserSettingsPage extends SpacePageBase {
     }
 
     this.container.innerHTML = this.getTemplate();
+    this.initializeAppHeader();
     this.initializeSpaceBackground();
 
     this.form = this.container.querySelector(
@@ -99,6 +100,7 @@ export class UserSettingsPage extends SpacePageBase {
     this.followInput = null;
     this.followingListContainer = null;
     this.cleanupSpaceBackground();
+    this.cleanupAppHeader();
   }
 
   private getTemplate(): string {
