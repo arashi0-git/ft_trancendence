@@ -72,7 +72,7 @@ export class BabylonRender {
   }
 
   public initializeScene(gameState: GameState): void {
-    // Vyčistíme staré objekty (pokud existují)
+    // clean old objects if exists
     this.paddle1Mesh?.dispose();
     this.paddle2Mesh?.dispose();
     this.paddle3Mesh?.dispose();
@@ -81,29 +81,28 @@ export class BabylonRender {
     this.fieldMesh?.dispose();
     this.scoreBoard1?.dispose();
     this.scoreBoard2?.dispose();
-    // TODO: Smazat i čáry, pokud je potřeba
 
-    // Vytvoříme hřiště
+    // create playground
     this.fieldMesh = MeshBuilder.CreateGround("field", { width: 16, height: 8 }, this.scene);
     const fieldMaterial = new StandardMaterial("fieldMaterial", this.scene);
     fieldMaterial.diffuseColor = new Color3(0.2, 0.3, 0.2);
     fieldMaterial.emissiveColor = new Color3(0.05, 0.1, 0.05);
     this.fieldMesh.material = fieldMaterial;
 
-    // Vytvoříme pálky podle gameState
-    this.paddle1Mesh = this.createPaddleMesh("paddle1", gameState.player1.paddle.width, gameState.player1.paddle.height);
-    this.paddle2Mesh = this.createPaddleMesh("paddle2", gameState.player2.paddle.width, gameState.player2.paddle.height);
+    // Vcreate paddles from gameState
+    this.paddle1Mesh = this.createPaddleMesh("paddle1",gameState.player1.paddle.height);
+    this.paddle2Mesh = this.createPaddleMesh("paddle2", gameState.player2.paddle.height);
 
     if (this.playerCount === 4 && gameState.player3 && gameState.player4) {
-      this.paddle3Mesh = this.createPaddleMesh("paddle3", gameState.player3.paddle.width, gameState.player3.paddle.height);
-      this.paddle4Mesh = this.createPaddleMesh("paddle4", gameState.player4.paddle.width, gameState.player4.paddle.height);
+      this.paddle3Mesh = this.createPaddleMesh("paddle3", gameState.player3.paddle.height);
+      this.paddle4Mesh = this.createPaddleMesh("paddle4", gameState.player4.paddle.height);
     } else {
         this.paddle3Mesh = null;
         this.paddle4Mesh = null;
     }
 
 
-    // Vytvoříme míček
+    // creates ball
     this.ballMesh = MeshBuilder.CreateSphere("ball", { diameter: 0.3 }, this.scene);
     const ballMaterial = new StandardMaterial("ballMaterial", this.scene);
     ballMaterial.diffuseColor = new Color3(1, 1, 1);
@@ -111,20 +110,17 @@ export class BabylonRender {
     this.ballMesh.material = ballMaterial;
     this.ballMesh.position = new Vector3(0, 0.15, 0); // Výchozí pozice
 
-    // Vytvoříme scoreboardy a čáru
     this.createScoreBoards();
     this.createCenterLine();
 
-    // Resetujeme uložené skóre pro update
     this.prevScore1 = -1;
     this.prevScore2 = -1;
 
-    // Aktualizujeme pozice poprvé
     this.updateGameObjects(gameState);
   }
 
-  // Pomocná metoda pro vytvoření Meshe pálky
-  private createPaddleMesh(name: string, width: number, height: number): Mesh {
+  // help function for  Meshe paddle
+  private createPaddleMesh(name: string, height: number): Mesh {
       // Přepočet 2D rozměrů na 3D rozměry rendereru
       const meshWidth = 0.2; // Pevná šířka v 3D
       const meshDepth = (height / 400) * 8; // Přepočet výšky na hloubku v 3D (8 je výška hřiště)

@@ -15,6 +15,7 @@ export interface GameSetupConfig {
   selectId: string;
   selectLabel: string;
   buttonId: string;
+  buttonClasses?: string;
 }
 
 export class GameSetupUI {

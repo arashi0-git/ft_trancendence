@@ -41,7 +41,7 @@ export class AiModePage extends SpacePageBase implements PageComponent {
         </div>
         
         <div class="text-center text-sm text-gray-300">
-          <p><strong class="text-white">Player 1 (You):</strong> W/S (Up/Down), A/D (Left/Right)</p>
+          <p><strong class="text-white">Player 1 (You):</strong> W/S (Up/Down) </p>
           <p><strong class="text-white">Player 2 (AI):</strong> Computer controlled</p>
         </div>
 

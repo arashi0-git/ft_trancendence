@@ -254,44 +254,40 @@ export class PongGame3D {
 
   private updatePaddles(): void {
     const p1 = this.gameState.player1;
-    // P1 - Pohyb nahoru/dolů po celé výšce
-    if (this.keyState[p1.keys.up] && p1.paddle.y > p1.paddle.minY) {
+    // P1 - Pohyb nahoru/dolů
+    // --- OPRAVA ZDE: Přidán operátor '??' pro ošetření 'undefined' ---
+    if (this.keyState[p1.keys.up] && p1.paddle.y > (p1.paddle.minY ?? 0)) {
       p1.paddle.y -= p1.paddle.speed;
     }
-    if (this.keyState[p1.keys.down] && p1.paddle.y < p1.paddle.maxY) {
+    if (this.keyState[p1.keys.down] && p1.paddle.y < (p1.paddle.maxY ?? this.config.canvasHeight)) {
       p1.paddle.y += p1.paddle.speed;
     }
-
+  
     if (!this.isAiMode) {
       const p2 = this.gameState.player2;
-      // P2 - Pohyb nahoru/dolů po celé výšce
-      if (this.keyState[p2.keys.up] && p2.paddle.y > p2.paddle.minY) {
+      if (this.keyState[p2.keys.up] && p2.paddle.y > (p2.paddle.minY ?? 0)) {
         p2.paddle.y -= p2.paddle.speed;
       }
-      if (this.keyState[p2.keys.down] && p2.paddle.y < p2.paddle.maxY) {
+      if (this.keyState[p2.keys.down] && p2.paddle.y < (p2.paddle.maxY ?? this.config.canvasHeight)) {
         p2.paddle.y += p2.paddle.speed;
       }
 
       if (this.playerCount === 4 && this.gameState.player3 && this.gameState.player4) {
         const p3 = this.gameState.player3;
-        // P3 - Pohyb nahoru/dolů po celé výšce
-        if (this.keyState[p3.keys.up] && p3.paddle.y > p3.paddle.minY) { // Ověř si směr a klávesy!
+        if (p3.keys.up && this.keyState[p3.keys.up] && p3.paddle.y > (p3.paddle.minY ?? 0)) {
           p3.paddle.y -= p3.paddle.speed;
         }
-        if (this.keyState[p3.keys.down] && p3.paddle.y < p3.paddle.maxY) { // Ověř si směr a klávesy!
+        if (p3.keys.down && this.keyState[p3.keys.down] && p3.paddle.y < (p3.paddle.maxY ?? this.config.canvasHeight)) {
           p3.paddle.y += p3.paddle.speed;
         }
-        // Pohyb do stran pro P3 je odstraněn
 
         const p4 = this.gameState.player4;
-        // P4 - Pohyb nahoru/dolů po celé výšce
-        if (this.keyState[p4.keys.up] && p4.paddle.y > p4.paddle.minY) { // Ověř si směr a klávesy!
+        if (p4.keys.up && this.keyState[p4.keys.up] && p4.paddle.y > (p4.paddle.minY ?? 0)) {
           p4.paddle.y -= p4.paddle.speed;
         }
-        if (this.keyState[p4.keys.down] && p4.paddle.y < p4.paddle.maxY) { // Ověř si směr a klávesy!
+        if (p4.keys.down && this.keyState[p4.keys.down] && p4.paddle.y < (p4.paddle.maxY ?? this.config.canvasHeight)) {
           p4.paddle.y += p4.paddle.speed;
         }
-        // Pohyb do stran pro P4 je odstraněn
       }
     }
   }

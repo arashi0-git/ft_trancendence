@@ -42,7 +42,7 @@ export class QuickPlayPage extends SpacePageBase {
         
         <div class="text-center text-sm text-gray-300">
           <p><strong class="text-white">Player 1:</strong> W/S (Up/Down),</p>
-          <p><strong class="text-white">Player 2:</strong> X/C (Up/Down)</p>
+          <p><strong class="text-white">Player 2:</strong> arrow up/arrow down(Up/Down)</p>
           <p><strong class="text-white">Player 3:</strong> R/F (Up/Down)</p>
           <p><strong class="text-white">Player 4:</strong> I/K (Up/Down)</p>
         </div>
