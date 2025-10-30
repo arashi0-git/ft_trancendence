@@ -15,6 +15,10 @@ export class HomeService {
     this.navigate("/ai-mode");
   }
 
+  navigateToGameSettings(): void {
+    this.navigate("/game-settings");
+  }
+
   navigateToLogin(): void {
     this.navigate("/login");
   }

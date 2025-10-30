@@ -44,6 +44,14 @@ export class HomePage extends SpacePageBase {
             </div>
           </button>
         </div>
+
+        <button id="game-settings-btn" class="w-full bg-blue-200 hover:bg-blue-300 text-black py-3 px-4 rounded border border-blue-200 shadow-lg">
+            <div class="text-center">
+              <div class="font-semibold text-lg">⚙️ Game Settings</div>
+              <div class="text-sm opacity-90">Customize your game</div>
+            </div>
+          </button>
+          </div>
         
         <div class="border-t border-gray-600 pt-4">
           <p class="text-center text-sm text-gray-300 mb-3">Want to save your progress?</p>
@@ -94,6 +102,20 @@ export class HomePage extends SpacePageBase {
           );
         } catch (error) {
           console.error("AI Mode navigation error:", error);
+        }
+      });
+
+    document
+      .getElementById("game-settings-btn")
+      ?.addEventListener("click", async () => {
+        try {
+          await this.playTransitionAndNavigate(
+            () => this.service.navigateToGameSettings(),
+            "shootingStar",
+            400,
+          );
+        } catch (error) {
+          console.error("Game Settings navigation error:", error);
         }
       });
 
