@@ -43,11 +43,6 @@ export class QuickPlayPage extends SpacePageBase {
 
     const gameContent = `
       <div class="space-y-4">
-        <div class="flex justify-between items-center">
-          <h3 class="text-xl font-bold text-white">Quick Play - Pong</h3>
-          <button id="back-to-registration" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded border border-gray-400">Back to Registration</button>
-        </div>
-
         <div class="text-center">
           <div class="space-x-3">
             <button id="start-game" class="bg-green-600 hover:bg-green-700 text-white px-4 py-1 text-sm rounded border border-green-400 shadow-lg">Start Game</button>
@@ -196,11 +191,6 @@ export class QuickPlayPage extends SpacePageBase {
   }
 
   private attachGameEventListeners(): void {
-    document.getElementById("back-to-registration")?.addEventListener("click", () => {
-      this.service.cleanup();
-      void this.renderPlayerRegistrationView();
-    });
-
     this.service.attachGameControls();
   }
 

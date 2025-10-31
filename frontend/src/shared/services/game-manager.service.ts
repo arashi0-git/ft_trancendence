@@ -1,4 +1,6 @@
 import { PongGame3D } from "../game/pong-game-3d";
+import { gameCustomizationService } from "./game-customization.service";
+import type { GameCustomizationSettings } from "./game-customization.service";
 
 export type GameMode = "quick-play" | "tournament" | "ai-mode";
 
@@ -17,6 +19,7 @@ export interface GameConfig {
 export class GameManagerService {
   private pongGame: PongGame3D | null = null;
   private currentConfig: GameConfig | null = null;
+  private customizationUnsubscribe: (() => void) | null = null;
 
   initializeGame(config: GameConfig): void {
     try {
@@ -29,8 +32,15 @@ export class GameManagerService {
       }
 
       this.currentConfig = config;
+      const customizationSettings = gameCustomizationService.getSettings();
       // Make sure to pass config.playerCount here, not {}
-      this.pongGame = new PongGame3D(canvas, config.playerCount); // Pass the playerCount
+      this.pongGame = new PongGame3D(canvas, config.playerCount, {
+        fieldColorHex: customizationSettings.fieldColor,
+        ballColorHex: customizationSettings.ballColor,
+        paddleColorHex: customizationSettings.paddleColor,
+        paddleLength: customizationSettings.paddleLength,
+        ballSize: customizationSettings.ballSize,
+      }); // Pass the playerCount
 
       // AIモードの設定
       if (config.mode === "ai-mode") {
@@ -60,6 +70,18 @@ export class GameManagerService {
       }
 
       this.pongGame.resetGame();
+
+      this.customizationUnsubscribe = gameCustomizationService.subscribe(
+        (settings: GameCustomizationSettings) => {
+          if (this.pongGame) {
+            this.pongGame.setFieldColor(settings.fieldColor);
+            this.pongGame.setBallColor(settings.ballColor);
+            this.pongGame.setPaddleColor(settings.paddleColor);
+            this.pongGame.setPaddleLength(settings.paddleLength);
+            this.pongGame.setBallSize(settings.ballSize);
+          }
+        },
+      );
     } catch (error) {
       console.error("Failed to initialize game:", error);
       throw error;
@@ -96,6 +118,10 @@ export class GameManagerService {
     if (this.pongGame) {
       this.pongGame.destroy();
       this.pongGame = null;
+    }
+    if (this.customizationUnsubscribe) {
+      this.customizationUnsubscribe();
+      this.customizationUnsubscribe = null;
     }
     this.currentConfig = null;
   }
