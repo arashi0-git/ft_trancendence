@@ -77,8 +77,6 @@ export class PongGame3D {
         width: this.config.paddleWidth,
         height: PADDLE_HEIGHT,
         speed: this.config.paddleSpeed,
-        minX: 10,
-        maxX: 30,
         minY: 0,
         maxY: this.config.canvasHeight - PADDLE_HEIGHT,
       },
@@ -88,59 +86,51 @@ export class PongGame3D {
     const player2: Player = {
       id: 2,
       paddle: {
-        x: this.config.canvasWidth - 30, // Úplně vpravo
-        y: this.config.canvasHeight / 2 - PADDLE_HALF_HEIGHT, // Střed
+        x: this.config.canvasWidth - 30,
+        y: this.config.canvasHeight / 2 - PADDLE_HALF_HEIGHT,
         width: this.config.paddleWidth,
-        height: PADDLE_HEIGHT, // Plná výška
+        height: PADDLE_HEIGHT,
         speed: this.config.paddleSpeed,
-        minX: this.config.canvasWidth - 40, // Pevná X pozice
-        maxX: this.config.canvasWidth - 20, // Pevná X pozice
-        minY: 0, // Celá výška
-        maxY: this.config.canvasHeight - PADDLE_HEIGHT, // Celá výška
+        minY: 0,
+        maxY: this.config.canvasHeight - PADDLE_HEIGHT,
       },
       keys: {
         up: "ArrowUp",
         down: "ArrowDown",
-        left: "ArrowLeft",
-        right: "ArrowRight",
-      }, // Left/Right asi nebudeme potřebovat
+      },
     };
 
     let player3: Player | null = null;
     let player4: Player | null = null;
 
     if (this.playerCount === 4) {
-      const innerLeftX = this.config.canvasWidth / 4; // Vypočítáme X pozici
+      const innerLeftX = this.config.canvasWidth / 4;
       player3 = {
         id: 3,
         paddle: {
-          x: innerLeftX, // Správná X pozice
-          y: this.config.canvasHeight / 2 - PADDLE_HALF_HEIGHT, // Střed (jako ostatní)
+          x: innerLeftX,
+          y: this.config.canvasHeight / 2 - PADDLE_HALF_HEIGHT,
           width: this.config.paddleWidth,
-          height: PADDLE_HEIGHT, // !!! Plná výška (ne poloviční)
+          height: PADDLE_HEIGHT,
           speed: this.config.paddleSpeed,
-          minX: innerLeftX - 10, // Pevná X (nebo malý rozsah)
-          maxX: innerLeftX + 10, // Pevná X (nebo malý rozsah)
-          minY: 0, // Celá výška
-          maxY: this.config.canvasHeight - PADDLE_HEIGHT, // Celá výška
+          minY: 0,
+          maxY: this.config.canvasHeight - PADDLE_HEIGHT,
         },
-        keys: { up: "KeyR", down: "KeyF" }, // Odstraněno Left/Right
+        keys: { up: "KeyR", down: "KeyF" },
       };
       const innerRightX = (this.config.canvasWidth / 4) * 3;
       player4 = {
         id: 4,
         paddle: {
           x: innerRightX,
-          y: this.config.canvasHeight / 2 - PADDLE_HALF_HEIGHT, // Střed
+          y: this.config.canvasHeight / 2 - PADDLE_HALF_HEIGHT,
           width: this.config.paddleWidth,
-          height: PADDLE_HEIGHT, // Plná výška
+          height: PADDLE_HEIGHT,
           speed: this.config.paddleSpeed,
-          minX: innerRightX - 10, // Pevná X pozice
-          maxX: innerRightX + 10, // Pevná X pozice
-          minY: 0, // Celá výška
-          maxY: this.config.canvasHeight - PADDLE_HEIGHT, // Celá výška
+          minY: 0,
+          maxY: this.config.canvasHeight - PADDLE_HEIGHT,
         },
-        keys: { up: "KeyI", down: "KeyK" }, // Příklad
+        keys: { up: "KeyI", down: "KeyK" },
       };
     }
 
@@ -268,8 +258,6 @@ export class PongGame3D {
 
   private updatePaddles(): void {
     const p1 = this.gameState.player1;
-    // P1 - Pohyb nahoru/dolů
-    // --- OPRAVA ZDE: Přidán operátor '??' pro ošetření 'undefined' ---
     if (this.keyState[p1.keys.up] && p1.paddle.y > (p1.paddle.minY ?? 0)) {
       p1.paddle.y -= p1.paddle.speed;
     }
@@ -355,15 +343,10 @@ export class PongGame3D {
     const p4 = this.playerCount === 4 ? this.gameState.player4?.paddle : null;
 
     const ballRadius = ball.radius;
-    // Budeme počítat až při kontrole
     const ballTop = ball.y - ballRadius;
     const ballBottom = ball.y + ballRadius;
 
-    // --- Kolize s levou stranou (P1 a P3) ---
     if (ball.velocityX < 0) {
-      // Míček letí doleva
-
-      // Kolize s P3 (vnitřní levá pálka) - pouze pro 4 hráče
       if (p3) {
         const p3Right = p3.x + p3.width;
         const p3Top = p3.y;
@@ -456,18 +439,16 @@ export class PongGame3D {
       ) {
         const paddleCenterX = p2.x + p2.width / 2;
         if (ball.x < paddleCenterX) {
-          // Zásah LEVÉ (vnitřní) strany -> odraz doleva
           ball.velocityX = -Math.abs(ball.velocityX);
           ball.x = p2Left - ballRadius;
           const hitPos = (ball.y - (p2Top + p2.height / 2)) / (p2.height / 2);
           this.setBallDirection(-1, hitPos);
         } else {
-          // Zásah PRAVÉ (zadní) strany -> odraz DOPRAVA
-          ball.velocityX = Math.abs(ball.velocityX) * 0.8; // Malý odraz doprava
+          ball.velocityX = Math.abs(ball.velocityX) * 0.8;
           ball.x = p2.x + p2.width + ballRadius;
           ball.velocityY += (Math.random() - 0.5) * ball.speed * 0.2;
         }
-        return; // Kolize vyřešena
+        return;
       }
     }
   }
@@ -623,13 +604,10 @@ export class PongGame3D {
 
     // Player1の位置調整
     p1.y = Math.min(p1.y, this.config.canvasHeight - this.config.paddleHeight);
-    p1.maxX = this.config.canvasWidth / 2 - 50;
 
     // Player2の位置調整
     p2.x = this.config.canvasWidth - 30;
     p2.y = Math.min(p2.y, this.config.canvasHeight - this.config.paddleHeight);
-    p2.minX = this.config.canvasWidth / 2 + 50;
-    p2.maxX = this.config.canvasWidth - 20;
 
     // ボールの位置調整
     const ball = this.gameState.ball;

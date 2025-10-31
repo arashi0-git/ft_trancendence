@@ -97,8 +97,6 @@ export class PongGame {
         width: this.config.paddleWidth,
         height: this.config.paddleHeight,
         speed: this.config.paddleSpeed,
-        minX: 10,
-        maxX: this.config.canvasWidth / 2 - 50,
       },
       keys: {
         up: "KeyW",
@@ -114,8 +112,6 @@ export class PongGame {
         width: this.config.paddleWidth,
         height: this.config.paddleHeight,
         speed: this.config.paddleSpeed,
-        minX: this.config.canvasWidth / 2 + 50,
-        maxX: this.config.canvasWidth - 20,
       },
       keys: {
         up: "ArrowUp",
@@ -155,8 +151,6 @@ export class PongGame {
           width: this.config.paddleWidth,
           height: this.config.paddleHeight,
           speed: this.config.paddleSpeed,
-          minX: this.config.canvasWidth / 2 + 50,
-          maxX: this.config.canvasWidth - 20,
         },
         keys: {
           up: "KeyR",
@@ -172,8 +166,6 @@ export class PongGame {
           width: this.config.paddleWidth,
           height: this.config.paddleHeight,
           speed: this.config.paddleSpeed,
-          minX: this.config.canvasWidth / 2 + 50,
-          maxX: this.config.canvasWidth - 20,
         },
         keys: {
           up: "KeyI",
@@ -252,13 +244,10 @@ export class PongGame {
 
     // Player1の位置調整
     p1.y = Math.min(p1.y, this.config.canvasHeight - this.config.paddleHeight);
-    p1.maxX = this.config.canvasWidth / 2 - 50;
 
     // Player2の位置調整
     p2.x = this.config.canvasWidth - 30;
     p2.y = Math.min(p2.y, this.config.canvasHeight - this.config.paddleHeight);
-    p2.minX = this.config.canvasWidth / 2 + 50;
-    p2.maxX = this.config.canvasWidth - 20;
 
     // ボールの位置調整
     const ball = this.gameState.ball;

@@ -15,9 +15,6 @@ export interface Player {
   keys: {
     up: string;
     down: string;
-    left?: string;
-    right?: string;
-
   };
 }
 
@@ -27,8 +24,6 @@ export interface Paddle {
   width: number;
   height: number;
   speed: number;
-  minX: number;
-  maxX: number;
   minY?: number;
   maxY?: number;
 }
