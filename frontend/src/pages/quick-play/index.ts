@@ -1,23 +1,22 @@
 import { QuickPlayService } from "./quick-play.service";
 import { SpacePageBase } from "../../shared/components/space-page-base";
 import { GameSetupUI } from "../../shared/components/game-setup-ui";
-import { PlayerRegistrationUI } from "../../shared/components/player-registration-ui";
+import { PlayerRegistrationManager } from "../../shared/components/player-registration-manager";
 
 type QuickPlayStep = "setup" | "registration" | "game";
 
 export class QuickPlayPage extends SpacePageBase {
   private service: QuickPlayService;
   private gameSetupUI: GameSetupUI;
-  private playerRegistrationUI: PlayerRegistrationUI;
+  private playerRegistrationManager: PlayerRegistrationManager;
   private currentStep: QuickPlayStep = "setup";
   private selectedPlayerCount: number = 2;
-  private playerAliases: string[] = [];
 
   constructor(container: HTMLElement) {
     super(container);
     this.service = new QuickPlayService();
     this.gameSetupUI = new GameSetupUI();
-    this.playerRegistrationUI = new PlayerRegistrationUI();
+    this.playerRegistrationManager = new PlayerRegistrationManager();
   }
 
   render(): void {
@@ -26,8 +25,10 @@ export class QuickPlayPage extends SpacePageBase {
     this.initializeSpaceBackground();
   }
 
-
-  private renderGameView(playerCount: number): void {
+  private renderGameView(
+    playerCount: number,
+    aiPlayers?: { [key: string]: { difficulty: "easy" | "medium" | "hard" } },
+  ): void {
     const contentDiv = this.ensureBaseTemplate();
     if (!contentDiv) {
       console.warn(
@@ -36,18 +37,13 @@ export class QuickPlayPage extends SpacePageBase {
       return;
     }
 
-    this.playerRegistrationUI.destroy();
+    this.playerRegistrationManager.destroy();
     this.selectedPlayerCount = playerCount;
     this.currentStep = "game";
     this.updateHeader();
 
     const gameContent = `
       <div class="space-y-4">
-        <div class="flex justify-between items-center">
-          <h3 class="text-xl font-bold text-white">Quick Play - Pong</h3>
-          <button id="back-to-registration" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded border border-gray-400">Back to Registration</button>
-        </div>
-
         <div class="text-center">
           <div class="space-x-3">
             <button id="start-game" class="bg-green-600 hover:bg-green-700 text-white px-4 py-1 text-sm rounded border border-green-400 shadow-lg">Start Game</button>
@@ -78,7 +74,7 @@ export class QuickPlayPage extends SpacePageBase {
     `;
     contentDiv.innerHTML = gameContent;
     this.attachGameEventListeners();
-    this.service.initializeGame("pong-canvas", playerCount);
+    this.service.initializeGame("pong-canvas", playerCount, aiPlayers);
   }
 
   private renderSelectionView(): void {
@@ -91,8 +87,7 @@ export class QuickPlayPage extends SpacePageBase {
     }
 
     this.currentStep = "setup";
-    this.playerAliases = [];
-    this.playerRegistrationUI.destroy();
+    this.playerRegistrationManager.destroy();
     this.updateHeader();
 
     const selectionContent = this.gameSetupUI.getTemplate({
@@ -105,7 +100,8 @@ export class QuickPlayPage extends SpacePageBase {
       ],
       buttonId: "start-quick-play-btn",
       buttonText: "Next",
-      buttonClasses: "w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded border border-blue-400 shadow-lg"
+      buttonClasses:
+        "w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded border border-blue-400 shadow-lg",
     });
 
     const finalHtml = `
@@ -130,30 +126,51 @@ export class QuickPlayPage extends SpacePageBase {
     this.currentStep = "registration";
     this.updateHeader();
 
-    await this.playerRegistrationUI.render({
-      container: contentDiv,
-      playerCount: this.selectedPlayerCount,
-      heading: "Enter Player Aliases",
-      subtitle: `Quick Play (${this.selectedPlayerCount} players)`,
-      backButton: {
-        text: "Back to Setup",
-        classes:
-          "flex-1 bg-purple-400 hover:bg-purple-600 text-white py-2 px-4 rounded border border-purple-400 shadow-lg",
-      },
-      startButton: {
-        text: "Start Game",
-        classes:
-          "flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg",
-      },
-      onBack: () => {
-        this.playerAliases = [];
-        this.renderSelectionView();
-      },
-      onSubmit: (aliases) => {
-        this.playerAliases = aliases;
-        this.renderGameView(this.selectedPlayerCount);
-      },
-      initialAliases: this.playerAliases,
+    const registrationContainer = document.createElement("div");
+    contentDiv.innerHTML = `
+			<div class="flex space-x-4">
+				<button
+					id="back-to-setup"
+					class="flex-1 bg-purple-400 hover:bg-purple-600 text-white py-2 px-4 rounded border border-purple-400 shadow-lg"
+				>
+					Back to Setup
+				</button>
+				<button
+					id="start-game-btn"
+					class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg"
+					disabled
+				>
+					Start Game
+				</button>
+			</div>
+		`;
+
+    contentDiv.insertBefore(registrationContainer, contentDiv.firstChild);
+
+    try {
+      await this.playerRegistrationManager.render({
+        container: registrationContainer,
+        playerCount: this.selectedPlayerCount,
+        title: "Player Registration",
+        subtitle: `Quick Play (${this.selectedPlayerCount} players)`,
+        startButtonId: "start-game-btn",
+        requireHumanPlayer: false,
+      });
+    } catch (error) {
+      console.error("Failed to render registration view:", error);
+      // Quick Playでは通知サービスがないので、alertを使用
+      alert("プレイヤー登録画面の表示に失敗しました");
+      this.renderSelectionView();
+      return;
+    }
+
+    // イベントリスナーを追加
+    document.getElementById("back-to-setup")?.addEventListener("click", () => {
+      this.renderSelectionView();
+    });
+
+    document.getElementById("start-game-btn")?.addEventListener("click", () => {
+      this.startQuickPlayGame();
     });
   }
 
@@ -182,25 +199,45 @@ export class QuickPlayPage extends SpacePageBase {
   }
 
   private attachSelectionEventListeners(): void {
-    document.getElementById("start-quick-play-btn")?.addEventListener("click", () => {
-      const select = document.getElementById("player-count-select") as HTMLSelectElement;
-      if (select) {
-        const playerCount = parseInt(select.value, 10);
-        if (!Number.isNaN(playerCount)) {
-          this.selectedPlayerCount = playerCount;
-          this.playerAliases = [];
-          void this.renderPlayerRegistrationView();
+    document
+      .getElementById("start-quick-play-btn")
+      ?.addEventListener("click", () => {
+        const select = document.getElementById(
+          "player-count-select",
+        ) as HTMLSelectElement;
+        if (select) {
+          const playerCount = parseInt(select.value, 10);
+          if (!Number.isNaN(playerCount)) {
+            this.selectedPlayerCount = playerCount;
+            void this.renderPlayerRegistrationView();
+          }
         }
+      });
+  }
+
+  private startQuickPlayGame(): void {
+    if (!this.playerRegistrationManager.isValid()) {
+      return;
+    }
+
+    // AIプレイヤー設定を構築
+    const aiPlayers: {
+      [key: string]: { difficulty: "easy" | "medium" | "hard" };
+    } = {};
+
+    const playerSelections =
+      this.playerRegistrationManager.getPlayerSelections();
+    playerSelections.forEach((selection, index) => {
+      if (selection?.isAI && selection.aiDifficulty) {
+        const playerKey = `player${index + 1}`;
+        aiPlayers[playerKey] = { difficulty: selection.aiDifficulty };
       }
     });
+
+    this.renderGameView(this.selectedPlayerCount, aiPlayers);
   }
 
   private attachGameEventListeners(): void {
-    document.getElementById("back-to-registration")?.addEventListener("click", () => {
-      this.service.cleanup();
-      void this.renderPlayerRegistrationView();
-    });
-
     this.service.attachGameControls();
   }
 
@@ -234,7 +271,7 @@ export class QuickPlayPage extends SpacePageBase {
       title = "Quick Play - Pong";
       actionsHtml = `
         <button id="quick-play-header-back" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">
-          Back
+          Back to Registration
         </button>
       `;
     }
@@ -287,7 +324,7 @@ export class QuickPlayPage extends SpacePageBase {
 
   destroy(): void {
     this.service.cleanup();
-    this.playerRegistrationUI.destroy();
+    this.playerRegistrationManager.destroy();
     this.cleanupSpaceBackground();
     this.cleanupAppHeader();
   }
