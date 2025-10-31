@@ -112,7 +112,6 @@ export class PongGame3D {
         fieldColorHex: this.fieldColorHex,
         ballColorHex: this.ballColorHex,
         paddleColorHex: this.paddleColorHex,
-        paddleLength: this.paddleLengthSetting,
         ballRadius: this.config.ballRadius,
       },
     );
