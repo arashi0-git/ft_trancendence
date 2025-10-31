@@ -26,8 +26,8 @@ export class TournamentPage extends SpacePageBase {
     const title = this.service.getPageTitle();
 
     const content = `
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-white">${title}</h2>
+        <div class="flex justify-between items-center mb-2">
+          <h2 class="text-xl font-semibold text-white">${title}</h2>
           <div class="space-x-2">
             ${backButton}
           </div>

@@ -211,6 +211,7 @@ export class TournamentRegistration {
         isEliminated: false,
         wins: 0,
         losses: 0,
+        isAI: false,
       };
       if (this.tournament) {
         this.tournament.players.push(player);

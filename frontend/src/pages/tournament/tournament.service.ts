@@ -1,9 +1,10 @@
-import { AuthService } from "../../shared/services/auth-service";
 import { GameManagerService } from "../../shared/services/game-manager.service";
 import { NotificationService } from "../../shared/services/notification.service";
 import { router } from "../../routes/router";
 import { TournamentDataService } from "../../shared/services/tournament-data.service";
 import { GameSetupUI } from "../../shared/components/game-setup-ui";
+import { PlayerSelector } from "../../shared/components/player-selector";
+import type { PlayerOption } from "../../shared/types/tournament";
 
 export type TournamentStep =
   | "setup"
@@ -22,6 +23,8 @@ export class TournamentService {
   private tournamentData: TournamentDataService;
   private notificationService: NotificationService;
   private gameSetupUI: GameSetupUI;
+  private playerSelectors: PlayerSelector[] = [];
+  private playerSelections: (PlayerOption | null)[] = [];
   private eventListeners: Array<{
     element: HTMLElement;
     event: string;
@@ -95,7 +98,7 @@ export class TournamentService {
       ],
       buttonId: "create-tournament",
       buttonText: "Create Tournament",
-      
+
       buttonClasses:
         "w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded border border-blue-400 shadow-lg",
     });
@@ -147,12 +150,12 @@ export class TournamentService {
 
     container.innerHTML = `
       <div class="text-center mb-4">
-        <h3 class="text-lg font-semibold">Enter Player Aliases</h3>
+        <h3 class="text-lg font-semibold">Player Registration</h3>
         <p class="text-sm text-gray-300">Tournament: ${this.escapeHtml(tournament.name)} (${tournament.playerCount} players)</p>
       </div>
 
-      <div id="player-inputs" class="space-y-3 mb-4">
-        <!-- プレイヤー入力フィールド生成 -->
+      <div id="player-selectors" class="space-y-4 mb-4">
+        <!-- プレイヤー選択フィールド生成 -->
       </div>
 
       <div class="flex space-x-4">
@@ -172,7 +175,7 @@ export class TournamentService {
       </div>
     `;
 
-    await this.generatePlayerInputs(tournament.playerCount);
+    await this.generatePlayerSelectors(tournament.playerCount);
 
     this.attachEventListenerSafely("back-to-setup", "click", () => {
       // セットアップ画面に戻る時はトーナメントデータをクリア
@@ -185,91 +188,49 @@ export class TournamentService {
     );
   }
 
-  private async generatePlayerInputs(playerCount: number): Promise<void> {
-    const playerInputsContainer = document.getElementById("player-inputs");
-    if (!playerInputsContainer) return;
+  private async generatePlayerSelectors(playerCount: number): Promise<void> {
+    const playerSelectorsContainer =
+      document.getElementById("player-selectors");
+    if (!playerSelectorsContainer) return;
 
-    playerInputsContainer.innerHTML = "";
-
-    // ログインユーザー情報を取得
-    let currentUser: { username: string } | null = null;
-
-    try {
-      if (AuthService.isAuthenticated()) {
-        const user = await AuthService.getCurrentUser();
-        currentUser = {
-          username: user.username,
-        };
-      }
-    } catch (error) {
-      console.warn("Failed to load current user for tournament:", error);
-    }
+    playerSelectorsContainer.innerHTML = "";
+    this.playerSelectors = [];
+    this.playerSelections = new Array(playerCount).fill(null);
 
     for (let i = 1; i <= playerCount; i++) {
-      const inputDiv = document.createElement("div");
+      const selectorDiv = document.createElement("div");
+      playerSelectorsContainer.appendChild(selectorDiv);
 
-      const placeholder = currentUser
-        ? `Select ${currentUser.username} or enter custom alias`
-        : `Enter alias for Player ${i}`;
+      const playerSelector = new PlayerSelector(selectorDiv, i);
+      await playerSelector.render();
 
-      inputDiv.innerHTML = `
-        <label class="block text-sm font-medium text-white mb-1">Player ${i}</label>
-        <input
-          type="text"
-          id="player-${i}-alias"
-          list="player-${i}-options"
-          placeholder="${this.escapeHtml(placeholder)}"
-          maxlength="20"
-          required
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        >
-        ${
-          currentUser
-            ? `
-        <datalist id="player-${i}-options">
-          <option value="${this.escapeHtml(currentUser.username)}">${this.escapeHtml(currentUser.username)} (You)</option>
-        </datalist>
-        `
-            : ""
-        }
-      `;
+      playerSelector.setOnSelectionChange((playerOption) => {
+        this.playerSelections[i - 1] = playerOption;
+        this.validatePlayerSelections();
+      });
 
-      playerInputsContainer.appendChild(inputDiv);
-
-      const input = inputDiv.querySelector(
-        `#player-${i}-alias`,
-      ) as HTMLInputElement;
-
-      if (input) {
-        this.addEventListenerWithTracking(input, "input", () =>
-          this.validatePlayerInputs(),
-        );
-      }
+      this.playerSelectors.push(playerSelector);
     }
   }
-  private validatePlayerInputs(): void {
+  private validatePlayerSelections(): void {
     const startBtn = document.getElementById(
       "start-tournament",
     ) as HTMLButtonElement;
-    const inputs = document.querySelectorAll(
-      "#player-inputs input",
-    ) as NodeListOf<HTMLInputElement>;
 
     let allValid = true;
     const aliases = new Set<string>();
 
-    inputs.forEach((input) => {
-      const alias = input.value.trim().toLowerCase();
+    this.playerSelections.forEach((selection) => {
+      if (!selection) {
+        allValid = false;
+        return;
+      }
 
-      if (!alias) {
+      const alias = selection.displayName.toLowerCase();
+      if (aliases.has(alias)) {
         allValid = false;
-        input.classList.add("border-red-500");
-      } else if (aliases.has(alias)) {
-        allValid = false;
-        input.classList.add("border-red-500");
       } else {
         aliases.add(alias);
-        input.classList.remove("border-red-500");
       }
     });
 
@@ -292,16 +253,13 @@ export class TournamentService {
     tournament.currentRound = 1;
     tournament.status = "setup";
 
-    const inputs = document.querySelectorAll(
-      "#player-inputs input",
-    ) as NodeListOf<HTMLInputElement>;
+    console.log("Found player selections:", this.playerSelections.length);
 
-    console.log("Found inputs:", inputs.length);
-
-    inputs.forEach((input) => {
-      const alias = input.value.trim();
-      console.log("Adding player:", alias);
-      this.tournamentData.addPlayer(alias);
+    this.playerSelections.forEach((selection) => {
+      if (selection) {
+        console.log("Adding player:", selection);
+        this.tournamentData.addPlayerFromSelection(selection);
+      }
     });
 
     try {
@@ -494,30 +452,34 @@ export class TournamentService {
     const player2 = this.tournamentData.getPlayer(match.player2Id);
 
     container.innerHTML = `
-      <div class="text-center mb-4">
-        <h3 class="text-xl font-semibold text-white">${this.escapeHtml(player1?.alias || "Player 1")} vs ${this.escapeHtml(player2?.alias || "Player 2")}</h3>
-        <p class="text-gray-300">Match ${this.escapeHtml(matchId)} - First to 5 points wins</p>
+      <!-- コンパクトなヘッダー -->
+      <div class="text-center mb-2">
+        <h3 class="text-lg font-medium text-white">${this.escapeHtml(player1?.alias || "Player 1")} vs ${this.escapeHtml(player2?.alias || "Player 2")}</h3>
+        <p class="text-sm text-gray-400">Match ${this.escapeHtml(matchId)} - First to 5 points wins</p>
       </div>
 
-      <div class="mb-4 text-center">
-        <div class="space-x-4">
-          <button id="start-tournament-game" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded">
+      <!-- コンパクトなボタン -->
+      <div class="mb-2 text-center">
+        <div class="space-x-2">
+          <button id="start-tournament-game" class="bg-green-500 hover:bg-green-600 text-white px-4 py-1 text-sm rounded">
             Start Match
           </button>
-          <button id="pause-tournament-game" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded" disabled>
+          <button id="pause-tournament-game" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-1 text-sm rounded" disabled>
             Pause
           </button>
-          <button id="reset-tournament-game" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded">
+          <button id="reset-tournament-game" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 text-sm rounded">
             Reset
           </button>
         </div>
       </div>
       
-      <div class="flex justify-center mb-4">
-        <canvas id="tournament-pong-canvas" class="border-2 border-gray-300 bg-black"></canvas>
+      <!-- 大きなゲームフィールド -->
+      <div class="flex justify-center mb-2 w-full">
+        <canvas id="tournament-pong-canvas" class="border-2 border-gray-300 bg-black rounded-lg shadow-lg max-w-full max-h-[80vh]" style="width: 100%; height: auto;"></canvas>
       </div>
       
-      <div class="text-center text-sm text-gray-300">
+      <!-- コンパクトなコントロール説明 -->
+      <div class="text-center text-xs text-gray-400">
         <p><strong>${this.escapeHtml(player1?.alias || "Player 1")}:</strong> W/S (Up/Down), A/D (Left/Right)</p>
         <p><strong>${this.escapeHtml(player2?.alias || "Player 2")}:</strong> ↑/↓ (Up/Down), ←/→ (Left/Right)</p>
       </div>
@@ -622,10 +584,45 @@ export class TournamentService {
   private initializeMatchGame(matchId: string): void {
     console.log(`Initializing Match: ${matchId}`);
 
+    const match = this.tournamentData.getMatch(matchId);
+    if (!match) {
+      console.error(`Match ${matchId} not found`);
+      return;
+    }
+
+    const player1 = this.tournamentData.getPlayer(match.player1Id);
+    const player2 = this.tournamentData.getPlayer(match.player2Id);
+
+    console.log(
+      `Player 1: ${player1?.alias}, isAI: ${player1?.isAI}, difficulty: ${player1?.aiDifficulty}`,
+    );
+    console.log(
+      `Player 2: ${player2?.alias}, isAI: ${player2?.isAI}, difficulty: ${player2?.aiDifficulty}`,
+    );
+
+    // AIプレイヤー設定を構築
+    const aiPlayers: {
+      player1?: { difficulty: "easy" | "medium" | "hard" };
+      player2?: { difficulty: "easy" | "medium" | "hard" };
+    } = {};
+    if (player1?.isAI && player1.aiDifficulty) {
+      aiPlayers.player1 = { difficulty: player1.aiDifficulty };
+      console.log(
+        `Setting AI for player1 with difficulty: ${player1.aiDifficulty}`,
+      );
+    }
+    if (player2?.isAI && player2.aiDifficulty) {
+      aiPlayers.player2 = { difficulty: player2.aiDifficulty };
+      console.log(
+        `Setting AI for player2 with difficulty: ${player2.aiDifficulty}`,
+      );
+    }
+
     this.gameManager.cleanup();
     this.gameManager.initializeGame({
       mode: "tournament",
       canvasId: "tournament-pong-canvas",
+      aiPlayers: Object.keys(aiPlayers).length > 0 ? aiPlayers : undefined,
       onGameEnd: (data: { winner: number; score1: number; score2: number }) => {
         console.log(`Match Ended: ${matchId}`, data);
         this.handleMatchEnd(matchId, data.winner, {

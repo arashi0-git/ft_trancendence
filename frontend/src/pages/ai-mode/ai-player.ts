@@ -26,6 +26,7 @@ export class AiPlayer {
   private isActive: boolean = false;
   private isMoving: boolean = false;
   private currentDirection: "up" | "down" | "none" = "none";
+  private playerNumber: 1 | 2;
 
   private readonly difficultyConfigs: Record<AiDifficulty, AiConfig> = {
     easy: {
@@ -48,8 +49,9 @@ export class AiPlayer {
     },
   };
 
-  constructor(difficulty: AiDifficulty = "medium") {
+  constructor(difficulty: AiDifficulty = "medium", playerNumber: 1 | 2 = 2) {
     this.config = this.difficultyConfigs[difficulty];
+    this.playerNumber = playerNumber;
   }
 
   start(gameManager: GameManagerService): void {
@@ -128,10 +130,13 @@ export class AiPlayer {
     const gameState = this.gameManager.getGameState();
     if (!gameState || gameState.gameStatus !== "playing") return;
 
+    const currentPlayer =
+      this.playerNumber === 1 ? gameState.player1 : gameState.player2;
+
     console.log(
-      `AI Update: Ball at (${gameState.ball.x}, ${gameState.ball.y}), velocity: (${gameState.ball.velocityX}, ${gameState.ball.velocityY})`,
+      `AI Update (Player ${this.playerNumber}): Ball at (${gameState.ball.x}, ${gameState.ball.y}), velocity: (${gameState.ball.velocityX}, ${gameState.ball.velocityY})`,
     );
-    console.log(`AI Paddle at: ${gameState.player2.paddle.y}`);
+    console.log(`AI Paddle at: ${currentPlayer.paddle.y}`);
 
     const predictedPosition = this.predictBallPosition(gameState);
 
@@ -142,7 +147,7 @@ export class AiPlayer {
       this.targetY = predictedPosition.y + missOffset;
     } else {
       // パドルの中央で打てるように調整
-      this.targetY = predictedPosition.y - gameState.player2.paddle.height / 2;
+      this.targetY = predictedPosition.y - currentPlayer.paddle.height / 2;
     }
 
     console.log(
@@ -158,10 +163,15 @@ export class AiPlayer {
 
   private predictBallPosition(gameState: GameState): PredictedPosition {
     const ball = gameState.ball;
-    const paddle = gameState.player2.paddle;
+    const paddle =
+      this.playerNumber === 1
+        ? gameState.player1.paddle
+        : gameState.player2.paddle;
 
     // ボールがAI側に向かっていない場合は中央に戻る
-    if (ball.velocityX <= 0) {
+    const ballMovingTowardsAI =
+      this.playerNumber === 1 ? ball.velocityX < 0 : ball.velocityX > 0;
+    if (!ballMovingTowardsAI) {
       const canvasSize = this.gameManager?.getCanvasSize();
       const canvasHeight = canvasSize?.height || 400; // フォールバック値
       return {
@@ -182,7 +192,10 @@ export class AiPlayer {
     const paddleX = paddle.x;
 
     // ボールがパドルのX位置に到達するまでシミュレート
-    while (ballX < paddleX && time < 500) {
+    const targetReached =
+      this.playerNumber === 1 ? () => ballX <= paddleX : () => ballX >= paddleX;
+
+    while (!targetReached() && time < 500) {
       // 時間制限を短縮
       ballX += velocityX;
       ballY += velocityY;
@@ -216,7 +229,9 @@ export class AiPlayer {
     const currentState = this.gameManager.getGameState();
     if (!currentState || currentState.gameStatus !== "playing") return;
 
-    const paddle = currentState.player2.paddle;
+    const currentPlayer =
+      this.playerNumber === 1 ? currentState.player1 : currentState.player2;
+    const paddle = currentPlayer.paddle;
     const paddleCenter = paddle.y + paddle.height / 2;
     const difference = this.targetY - paddleCenter;
     const canvasSize = this.gameManager.getCanvasSize();
@@ -257,7 +272,9 @@ export class AiPlayer {
         return;
       }
 
-      const paddle = currentState.player2.paddle;
+      const currentPlayer =
+        this.playerNumber === 1 ? currentState.player1 : currentState.player2;
+      const paddle = currentPlayer.paddle;
       const paddleCenter = paddle.y + paddle.height / 2;
       const difference = this.targetY - paddleCenter;
 
@@ -279,7 +296,7 @@ export class AiPlayer {
       const moveDistance = direction === "down" ? moveSpeed : -moveSpeed;
 
       try {
-        this.gameManager.moveAiPaddle(moveDistance);
+        this.gameManager.moveAiPaddle(moveDistance, this.playerNumber);
       } catch (error) {
         console.error("AI movement error:", error);
         this.stopMovement();
