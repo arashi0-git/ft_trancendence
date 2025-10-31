@@ -168,14 +168,21 @@ export class TournamentService {
 
     container.insertBefore(registrationContainer, container.firstChild);
 
-    await this.playerRegistrationManager.render({
-      container: registrationContainer,
-      playerCount: tournament.playerCount,
-      title: "Player Registration",
-      subtitle: `Tournament: ${tournament.name} (${tournament.playerCount} players)`,
-      startButtonId: "start-tournament",
-      requireHumanPlayer: true,
-    });
+    try {
+      await this.playerRegistrationManager.render({
+        container: registrationContainer,
+        playerCount: tournament.playerCount,
+        title: "Player Registration",
+        subtitle: `Tournament: ${tournament.name} (${tournament.playerCount} players)`,
+        startButtonId: "start-tournament",
+        requireHumanPlayer: true,
+      });
+    } catch (error) {
+      console.error("Failed to render registration view:", error);
+      this.notificationService.error("プレイヤー登録画面の表示に失敗しました");
+      this.navigateToSetup();
+      return;
+    }
 
     this.attachEventListenerSafely("back-to-setup", "click", () => {
       // セットアップ画面に戻る時はトーナメントデータをクリア
@@ -209,6 +216,11 @@ export class TournamentService {
 
     const playerSelections =
       this.playerRegistrationManager.getPlayerSelections();
+    if (!playerSelections || !Array.isArray(playerSelections)) {
+      console.error("Invalid player selections");
+      this.notificationService.error("プレイヤー選択の取得に失敗しました");
+      return;
+    }
     console.log("Found player selections:", playerSelections.length);
 
     playerSelections.forEach((selection) => {

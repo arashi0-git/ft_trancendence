@@ -17,41 +17,57 @@ export class PlayerRegistrationManager {
   private playerSelections: (PlayerOption | null)[] = [];
 
   async render(config: PlayerRegistrationConfig): Promise<void> {
-    this.destroy();
-    this.config = config;
+    try {
+      this.destroy();
+      this.config = config;
 
-    const titleHtml = config.title
-      ? `<h3 class="text-lg font-semibold">${this.escapeHtml(config.title)}</h3>`
-      : "";
-    const subtitleHtml = config.subtitle
-      ? `<p class="text-sm text-gray-300">${this.escapeHtml(config.subtitle)}</p>`
-      : "";
+      if (!config.container) {
+        throw new Error("Container element is required");
+      }
 
-    config.container.innerHTML = `
-			<div class="text-center mb-4">
-				${titleHtml}
-				${subtitleHtml}
-			</div>
+      const titleHtml = config.title
+        ? `<h3 class="text-lg font-semibold">${this.escapeHtml(config.title)}</h3>`
+        : "";
+      const subtitleHtml = config.subtitle
+        ? `<p class="text-sm text-gray-300">${this.escapeHtml(config.subtitle)}</p>`
+        : "";
 
-			<div id="player-selectors" class="space-y-4 mb-4">
-				<!-- プレイヤー選択フィールド生成 -->
-			</div>
-		`;
+      config.container.innerHTML = `
+				<div class="text-center mb-4">
+					${titleHtml}
+					${subtitleHtml}
+				</div>
 
-    await this.generatePlayerSelectors();
-    this.validatePlayerSelections();
+				<div id="player-selectors" class="space-y-4 mb-4">
+					<!-- プレイヤー選択フィールド生成 -->
+				</div>
+			`;
+
+      await this.generatePlayerSelectors();
+      this.validatePlayerSelections();
+    } catch (error) {
+      console.error("PlayerRegistrationManager render failed:", error);
+      this.destroy();
+      throw error;
+    }
   }
 
   private async generatePlayerSelectors(): Promise<void> {
-    if (!this.config) return;
+    if (!this.config) {
+      throw new Error("Configuration is not set");
+    }
 
     const playerSelectorsContainer =
       document.getElementById("player-selectors");
-    if (!playerSelectorsContainer) return;
+    if (!playerSelectorsContainer) {
+      throw new Error("Player selectors container not found");
+    }
 
     playerSelectorsContainer.innerHTML = "";
     this.cleanupPlayerSelectors();
     this.playerSelections = new Array(this.config.playerCount).fill(null);
+
+    let successfulSelectors = 0;
 
     for (let i = 1; i <= this.config.playerCount; i++) {
       const selectorDiv = document.createElement("div");
@@ -60,18 +76,30 @@ export class PlayerRegistrationManager {
       const playerSelector = new PlayerSelector(selectorDiv, i);
       try {
         await playerSelector.render();
+
+        playerSelector.setOnSelectionChange((playerOption) => {
+          this.playerSelections[i - 1] = playerOption;
+          this.validatePlayerSelections();
+          this.config?.onSelectionChange?.(this.playerSelections);
+        });
+
+        this.playerSelectors.push(playerSelector);
+        successfulSelectors++;
       } catch (error) {
         console.error(`Failed to render player selector ${i}:`, error);
-        continue;
+        // セレクターの作成に失敗した場合、divを削除
+        selectorDiv.remove();
       }
+    }
 
-      playerSelector.setOnSelectionChange((playerOption) => {
-        this.playerSelections[i - 1] = playerOption;
-        this.validatePlayerSelections();
-        this.config?.onSelectionChange?.(this.playerSelections);
-      });
+    if (successfulSelectors === 0) {
+      throw new Error("Failed to render any player selectors");
+    }
 
-      this.playerSelectors.push(playerSelector);
+    if (successfulSelectors < this.config.playerCount) {
+      console.warn(
+        `Only ${successfulSelectors} out of ${this.config.playerCount} player selectors were rendered successfully`,
+      );
     }
   }
 
@@ -156,14 +184,15 @@ export class PlayerRegistrationManager {
   }
 
   public reset(): void {
+    if (!this.config) return;
     this.playerSelectors.forEach((selector) => {
       selector.reset();
     });
-    this.playerSelections = new Array(this.config?.playerCount || 0).fill(null);
+    this.playerSelections = new Array(this.config.playerCount).fill(null);
     this.validatePlayerSelections();
   }
 
-  destroy(): void {
+  public destroy(): void {
     this.cleanupPlayerSelectors();
     this.config = null;
   }

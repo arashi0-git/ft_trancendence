@@ -147,14 +147,22 @@ export class QuickPlayPage extends SpacePageBase {
 
     contentDiv.insertBefore(registrationContainer, contentDiv.firstChild);
 
-    await this.playerRegistrationManager.render({
-      container: registrationContainer,
-      playerCount: this.selectedPlayerCount,
-      title: "Player Registration",
-      subtitle: `Quick Play (${this.selectedPlayerCount} players)`,
-      startButtonId: "start-game-btn",
-      requireHumanPlayer: false,
-    });
+    try {
+      await this.playerRegistrationManager.render({
+        container: registrationContainer,
+        playerCount: this.selectedPlayerCount,
+        title: "Player Registration",
+        subtitle: `Quick Play (${this.selectedPlayerCount} players)`,
+        startButtonId: "start-game-btn",
+        requireHumanPlayer: false,
+      });
+    } catch (error) {
+      console.error("Failed to render registration view:", error);
+      // Quick Playでは通知サービスがないので、alertを使用
+      alert("プレイヤー登録画面の表示に失敗しました");
+      this.renderSelectionView();
+      return;
+    }
 
     // イベントリスナーを追加
     document.getElementById("back-to-setup")?.addEventListener("click", () => {
