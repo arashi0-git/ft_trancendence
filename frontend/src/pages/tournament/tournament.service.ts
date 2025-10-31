@@ -3,9 +3,7 @@ import { NotificationService } from "../../shared/services/notification.service"
 import { router } from "../../routes/router";
 import { TournamentDataService } from "../../shared/services/tournament-data.service";
 import { GameSetupUI } from "../../shared/components/game-setup-ui";
-import { PlayerSelector } from "../../shared/components/player-selector";
-import type { PlayerOption } from "../../shared/types/tournament";
-import { PlayerRegistrationUI } from "../../shared/components/player-registration-ui";
+import { PlayerRegistrationManager } from "../../shared/components/player-registration-manager";
 
 export type TournamentStep =
   | "setup"
@@ -24,9 +22,7 @@ export class TournamentService {
   private tournamentData: TournamentDataService;
   private notificationService: NotificationService;
   private gameSetupUI: GameSetupUI;
-  private playerSelectors: PlayerSelector[] = [];
-  private playerSelections: (PlayerOption | null)[] = [];
-  private playerRegistrationUI: PlayerRegistrationUI;
+  private playerRegistrationManager: PlayerRegistrationManager;
   private eventListeners: Array<{
     element: HTMLElement;
     event: string;
@@ -38,7 +34,7 @@ export class TournamentService {
     this.tournamentData = TournamentDataService.getInstance();
     this.notificationService = NotificationService.getInstance();
     this.gameSetupUI = new GameSetupUI();
-    this.playerRegistrationUI = new PlayerRegistrationUI();
+    this.playerRegistrationManager = new PlayerRegistrationManager();
   }
 
   setCurrentPath(path: string): void {
@@ -151,20 +147,8 @@ export class TournamentService {
       return;
     }
 
+    const registrationContainer = document.createElement("div");
     container.innerHTML = `
-      <div class="text-center mb-4">
-        <h3 class="text-lg font-semibold">Player Registration</h3>
-        <p class="text-sm text-gray-300">Tournament: ${this.escapeHtml(tournament.name)} (${tournament.playerCount} players)</p>
-      </div>
-
-      <div id="player-selectors" class="space-y-4 mb-4">
-        <!-- プレイヤー選択フィールド生成 -->
-      </div>
-
-      <div id="validation-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-        <!-- エラーメッセージがここに表示される -->
-      </div>
-
       <div class="flex space-x-4">
         <button
           id="back-to-setup"
@@ -182,7 +166,16 @@ export class TournamentService {
       </div>
     `;
 
-    await this.generatePlayerSelectors(tournament.playerCount);
+    container.insertBefore(registrationContainer, container.firstChild);
+
+    await this.playerRegistrationManager.render({
+      container: registrationContainer,
+      playerCount: tournament.playerCount,
+      title: "Player Registration",
+      subtitle: `Tournament: ${tournament.name} (${tournament.playerCount} players)`,
+      startButtonId: "start-tournament",
+      requireHumanPlayer: true,
+    });
 
     this.attachEventListenerSafely("back-to-setup", "click", () => {
       // セットアップ画面に戻る時はトーナメントデータをクリア
@@ -195,108 +188,12 @@ export class TournamentService {
     );
   }
 
-  private async generatePlayerSelectors(playerCount: number): Promise<void> {
-    const playerSelectorsContainer =
-      document.getElementById("player-selectors");
-    if (!playerSelectorsContainer) return;
-
-    playerSelectorsContainer.innerHTML = "";
-    this.playerSelectors = [];
-    this.playerSelections = new Array(playerCount).fill(null);
-
-    for (let i = 1; i <= playerCount; i++) {
-      const selectorDiv = document.createElement("div");
-      playerSelectorsContainer.appendChild(selectorDiv);
-
-      const playerSelector = new PlayerSelector(selectorDiv, i);
-      try {
-        await playerSelector.render();
-      } catch (error) {
-        console.error(`Failed to render player selector ${i}:`, error);
-        this.notificationService.error(
-          `プレイヤー${i}の選択UIの読み込みに失敗しました`,
-        );
-        continue;
-      }
-
-      playerSelector.setOnSelectionChange((playerOption) => {
-        this.playerSelections[i - 1] = playerOption;
-        this.validatePlayerSelections();
-      });
-
-      this.playerSelectors.push(playerSelector);
-    }
-  }
-
-  private validatePlayerSelections(): void {
-    const startBtn = document.getElementById(
-      "start-tournament",
-    ) as HTMLButtonElement;
-
-    const validationError = this.getValidationError();
-
-    if (startBtn) {
-      startBtn.disabled = validationError !== null;
-    }
-  }
-
-  private getValidationError(): string | null {
-    const aliases = new Set<string>();
-    let hasHumanPlayer = false;
-    let missingPlayers = 0;
-    let hasDuplicateNames = false;
-
-    this.playerSelections.forEach((selection) => {
-      if (!selection) {
-        missingPlayers++;
-        return;
-      }
-
-      // 人間プレイヤーがいるかチェック
-      if (!selection.isAI) {
-        hasHumanPlayer = true;
-      }
-
-      const alias = selection.displayName.toLowerCase();
-      if (aliases.has(alias)) {
-        hasDuplicateNames = true;
-      } else {
-        aliases.add(alias);
-      }
-    });
-
-    // エラーメッセージの優先順位
-    if (missingPlayers > 0) {
-      return `${missingPlayers}人のプレイヤーが選択されていません`;
-    }
-    if (hasDuplicateNames) {
-      return "プレイヤー名が重複しています";
-    }
-    if (!hasHumanPlayer) {
-      return "少なくとも1人は人間プレイヤーを選択してください";
-    }
-
-    return null;
-  }
-
   private startTournament(): void {
     console.log("Starting tournament...");
 
     // バリデーションチェック
-    const validationError = this.getValidationError();
-    const errorDiv = document.getElementById("validation-error") as HTMLElement;
-
-    if (validationError) {
-      if (errorDiv) {
-        errorDiv.textContent = validationError;
-        errorDiv.classList.remove("hidden");
-      }
+    if (!this.playerRegistrationManager.isValid()) {
       return;
-    }
-
-    // エラーメッセージを隠す
-    if (errorDiv) {
-      errorDiv.classList.add("hidden");
     }
     const tournament = this.tournamentData.getCurrentTournament();
     if (!tournament) {
@@ -310,9 +207,11 @@ export class TournamentService {
     tournament.currentRound = 1;
     tournament.status = "setup";
 
-    console.log("Found player selections:", this.playerSelections.length);
+    const playerSelections =
+      this.playerRegistrationManager.getPlayerSelections();
+    console.log("Found player selections:", playerSelections.length);
 
-    this.playerSelections.forEach((selection) => {
+    playerSelections.forEach((selection) => {
       if (selection) {
         console.log("Adding player:", selection);
         this.tournamentData.addPlayerFromSelection(selection);
@@ -413,13 +312,7 @@ export class TournamentService {
       element.removeEventListener(event, handler);
     });
     this.eventListeners = [];
-    // PlayerSelectorインスタンスをクリーンアップ
-    this.playerSelectors.forEach((selector) => {
-      selector.destroy();
-    });
-    this.playerSelectors = [];
-    this.playerSelections = [];
-    this.playerRegistrationUI.destroy();
+    this.playerRegistrationManager.destroy();
   }
 
   cleanup(): void {

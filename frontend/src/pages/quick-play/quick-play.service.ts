@@ -3,11 +3,16 @@ import { BaseGameService } from "../../shared/services/base-game.service";
 import { router } from "../../routes/router";
 
 export class QuickPlayService extends BaseGameService {
-  initializeGame(canvasId: string, playerCount: number): void {
+  initializeGame(
+    canvasId: string,
+    playerCount: number,
+    aiPlayers?: { [key: string]: { difficulty: "easy" | "medium" | "hard" } },
+  ): void {
     this.gameManager.initializeGame({
       mode: "quick-play",
       canvasId: canvasId,
       playerCount: playerCount,
+      aiPlayers: aiPlayers,
       onGameEnd: (data: any) => this.handleGameEnd(data),
     });
   }
