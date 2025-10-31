@@ -32,6 +32,7 @@ const isValidColorHex = (value: string | undefined): value is string =>
 export class BabylonRender {
   private scene: Scene;
   private camera: ArcRotateCamera;
+  private readonly FIELD_WIDTH = 28;
   private paddle1Mesh!: Mesh;
   private paddle2Mesh!: Mesh;
   private paddle3Mesh: Mesh | null = null;
@@ -81,8 +82,8 @@ export class BabylonRender {
     this.camera = new ArcRotateCamera(
       "camera",
       -Math.PI / 2,
-      Math.PI / 3,
-      20,
+      Math.PI / 4, // より浅い角度でフィールドをアップに
+      22, // カメラを近づけてフィールドをアップ
       Vector3.Zero(),
       this.scene,
     );
@@ -233,9 +234,9 @@ export class BabylonRender {
       this.fieldMesh.dispose(false, true);
     }
 
-    // 新しいサイズでフィールドを作成
+    // 新しいサイズでフィールドを作成（より大きなフィールド）
     const aspectRatio = this.gameWidth / this.gameHeight;
-    const fieldWidth = 16;
+    const fieldWidth = this.FIELD_WIDTH; // さらに大きく
     const fieldHeight = fieldWidth / aspectRatio;
 
     this.fieldMesh = MeshBuilder.CreateGround(
@@ -261,10 +262,10 @@ export class BabylonRender {
 
   private createPaddleMesh(name: string, logicalPaddleHeight: number): Mesh {
     const aspectRatio = this.gameWidth / this.gameHeight;
-    const fieldWidth = 16;
+    const fieldWidth = this.FIELD_WIDTH;
     const fieldHeight = fieldWidth / aspectRatio;
     const scaleY = fieldHeight / this.gameHeight;
-    const paddleDepth = logicalPaddleHeight * scaleY;
+    const paddleDepth = logicalPaddleHeight * scaleY * 0.7; // パドルを30%短くする
     const paddleMesh = MeshBuilder.CreateBox(
       name,
       { width: 0.2, height: 0.2, depth: paddleDepth },
@@ -290,20 +291,36 @@ export class BabylonRender {
     this.recreateCenterLine();
 
     // Creating paddles
-    this.paddle1Mesh = this.createPaddleMesh("paddle1", gameState.player1.paddle.height);
-    this.paddle2Mesh = this.createPaddleMesh("paddle2", gameState.player2.paddle.height);
+    this.paddle1Mesh = this.createPaddleMesh(
+      "paddle1",
+      gameState.player1.paddle.height,
+    );
+    this.paddle2Mesh = this.createPaddleMesh(
+      "paddle2",
+      gameState.player2.paddle.height,
+    );
 
     if (gameState.player3 && gameState.player4) {
-      this.paddle3Mesh = this.createPaddleMesh("paddle3", gameState.player3.paddle.height);
-      this.paddle4Mesh = this.createPaddleMesh("paddle4", gameState.player4.paddle.height);
+      this.paddle3Mesh = this.createPaddleMesh(
+        "paddle3",
+        gameState.player3.paddle.height,
+      );
+      this.paddle4Mesh = this.createPaddleMesh(
+        "paddle4",
+        gameState.player4.paddle.height,
+      );
     } else {
-        this.paddle3Mesh = null;
-        this.paddle4Mesh = null;
+      this.paddle3Mesh = null;
+      this.paddle4Mesh = null;
     }
     this.updatePaddleMaterials();
 
-    // creating ball
-    this.ballMesh = MeshBuilder.CreateSphere("ball", { diameter: 0.3 }, this.scene);
+    // creating ball (より大きく)
+    this.ballMesh = MeshBuilder.CreateSphere(
+      "ball",
+      { diameter: 0.5 }, // 0.3から0.5に増加
+      this.scene,
+    );
     const ballMaterial = new StandardMaterial("ballMaterial", this.scene);
     this.applyBallColor(ballMaterial);
     this.ballMesh.material = ballMaterial;
@@ -319,7 +336,7 @@ export class BabylonRender {
   public createGameObjects() {
     // ゲームサイズに基づいてフィールドサイズを計算（アスペクト比を維持）
     const aspectRatio = this.gameWidth / this.gameHeight;
-    const fieldWidth = 16;
+    const fieldWidth = this.FIELD_WIDTH;
     const fieldHeight = fieldWidth / aspectRatio;
 
     this.fieldMesh = MeshBuilder.CreateGround(
@@ -354,7 +371,7 @@ export class BabylonRender {
 
     this.ballMesh = MeshBuilder.CreateSphere(
       "ball",
-      { diameter: 0.3 },
+      { diameter: 0.5 }, // より大きなボール
       this.scene,
     );
     const ballMaterial = new StandardMaterial("ballMaterial", this.scene);
@@ -372,7 +389,7 @@ export class BabylonRender {
   private createCenterLine() {
     // 中央線を点線で作成（動的なフィールドサイズに合わせて調整）
     const aspectRatio = this.gameWidth / this.gameHeight;
-    const fieldWidth = 16;
+    const fieldWidth = this.FIELD_WIDTH;
     const fieldHeight = fieldWidth / aspectRatio;
 
     const lineSegments = 8; // 点線の数
@@ -385,15 +402,23 @@ export class BabylonRender {
     const startOffset = -totalPatternLength / 2;
 
     for (let i = 0; i < lineSegments; i++) {
-      const positionZ = startOffset + i * (segmentLength + gapLength) + segmentLength / 2;
+      const positionZ =
+        startOffset + i * (segmentLength + gapLength) + segmentLength / 2;
       // フィールド範囲内かチェック
       if (Math.abs(positionZ) <= fieldHeight / 2 - segmentLength / 2) {
         // 各線分を作成
-        const lineSegment = MeshBuilder.CreateBox(`centerLine${i}`, { width: 0.08, height: 0.02, depth: segmentLength }, this.scene);
+        const lineSegment = MeshBuilder.CreateBox(
+          `centerLine${i}`,
+          { width: 0.08, height: 0.02, depth: segmentLength },
+          this.scene,
+        );
         lineSegment.position = new Vector3(0, 0.01, positionZ);
-        const lineMaterial = new StandardMaterial(`centerLineMaterial${i}`, this.scene);
+        const lineMaterial = new StandardMaterial(
+          `centerLineMaterial${i}`,
+          this.scene,
+        );
         lineMaterial.diffuseColor = new Color3(1, 1, 1);
-        lineMaterial.emissiveColor = new Color3(0.5, 0.5, 0.5);  // より明るく光らせる
+        lineMaterial.emissiveColor = new Color3(0.5, 0.5, 0.5); // より明るく光らせる
         lineSegment.material = lineMaterial;
 
         // 作成したセグメントを配列に保存
@@ -487,18 +512,18 @@ export class BabylonRender {
   }
 
   private createScoreBoards() {
-    // Player 1 スコアボード
+    // Player 1 スコアボード（より大きく）
     this.scoreBoard1 = MeshBuilder.CreatePlane(
       "scoreBoard1",
-      { width: 2, height: 1 },
+      { width: 3, height: 1.5 }, // サイズを1.5倍に
       this.scene,
     );
-    this.scoreBoard1.position = new Vector3(-4, 3, 0);
-    this.scoreBoard1.rotation.x = Math.PI / 6; // 少し下向きに傾ける
+    this.scoreBoard1.position = new Vector3(-6, 4, 0); // より外側、高い位置に
+    this.scoreBoard1.rotation.x = Math.PI / 5; // 少し下向きに傾ける
 
     this.scoreTexture1 = new DynamicTexture(
       "scoreTexture1",
-      { width: 256, height: 128 },
+      { width: 384, height: 192 }, // テクスチャサイズを1.5倍に
       this.scene,
     );
     const scoreMaterial1 = new StandardMaterial("scoreMaterial1", this.scene);
@@ -506,18 +531,18 @@ export class BabylonRender {
     scoreMaterial1.emissiveColor = new Color3(0.3, 0.3, 0.3); // 少し光らせる
     this.scoreBoard1.material = scoreMaterial1;
 
-    // Player 2 スコアボード
+    // Player 2 スコアボード（より大きく）
     this.scoreBoard2 = MeshBuilder.CreatePlane(
       "scoreBoard2",
-      { width: 2, height: 1 },
+      { width: 3, height: 1.5 }, // サイズを1.5倍に
       this.scene,
     );
-    this.scoreBoard2.position = new Vector3(4, 3, 0);
-    this.scoreBoard2.rotation.x = Math.PI / 6;
+    this.scoreBoard2.position = new Vector3(6, 4, 0); // より外側、高い位置に
+    this.scoreBoard2.rotation.x = Math.PI / 5;
 
     this.scoreTexture2 = new DynamicTexture(
       "scoreTexture2",
-      { width: 256, height: 128 },
+      { width: 384, height: 192 }, // テクスチャサイズを1.5倍に
       this.scene,
     );
     const scoreMaterial2 = new StandardMaterial("scoreMaterial2", this.scene);
@@ -536,7 +561,7 @@ export class BabylonRender {
       `Player 1\n${score1}`,
       null,
       null,
-      "bold 48px Arial",
+      "bold 64px Arial", // 48pxから64pxに増加
       "white",
       "transparent",
       true,
@@ -548,7 +573,7 @@ export class BabylonRender {
       `Player 2\n${score2}`,
       null,
       null,
-      "bold 48px Arial",
+      "bold 64px Arial", // 48pxから64pxに増加
       "white",
       "transparent",
       true,
@@ -557,27 +582,45 @@ export class BabylonRender {
 
   public updateGameObjects(gameState: GameState) {
     const aspectRatio = this.gameWidth / this.gameHeight;
-    const fieldWidth = 16;
+    const fieldWidth = this.FIELD_WIDTH;
     const fieldHeight = fieldWidth / aspectRatio;
     const scaleX = fieldWidth / this.gameWidth;
     const scaleY = fieldHeight / this.gameHeight;
 
     // Paddle 1
-    this.paddle1Mesh.position.x = (gameState.player1.paddle.x - this.gameWidth / 2) * scaleX;
-    this.paddle1Mesh.position.z = (this.gameHeight / 2 - gameState.player1.paddle.y - gameState.player1.paddle.height / 2) * scaleY;
+    this.paddle1Mesh.position.x =
+      (gameState.player1.paddle.x - this.gameWidth / 2) * scaleX;
+    this.paddle1Mesh.position.z =
+      (this.gameHeight / 2 -
+        gameState.player1.paddle.y -
+        gameState.player1.paddle.height / 2) *
+      scaleY;
 
     // Paddle 2
-    this.paddle2Mesh.position.x = (gameState.player2.paddle.x - this.gameWidth / 2) * scaleX;
-    this.paddle2Mesh.position.z = (this.gameHeight / 2 - gameState.player2.paddle.y - gameState.player2.paddle.height / 2) * scaleY;
+    this.paddle2Mesh.position.x =
+      (gameState.player2.paddle.x - this.gameWidth / 2) * scaleX;
+    this.paddle2Mesh.position.z =
+      (this.gameHeight / 2 -
+        gameState.player2.paddle.y -
+        gameState.player2.paddle.height / 2) *
+      scaleY;
 
     // Paddle 3 and 4
     if (this.paddle3Mesh && gameState.player3) {
-       this.paddle3Mesh.position.x = (gameState.player3.paddle.x - this.gameWidth / 2) * scaleX; // Použij this.gameWidth
-       this.paddle3Mesh.position.z = (this.gameHeight / 2 - (gameState.player3.paddle.y + gameState.player3.paddle.height / 2)) * scaleY; // Použij this.gameHeight
+      this.paddle3Mesh.position.x =
+        (gameState.player3.paddle.x - this.gameWidth / 2) * scaleX; // Použij this.gameWidth
+      this.paddle3Mesh.position.z =
+        (this.gameHeight / 2 -
+          (gameState.player3.paddle.y + gameState.player3.paddle.height / 2)) *
+        scaleY; // Použij this.gameHeight
     }
-     if (this.paddle4Mesh && gameState.player4) {
-       this.paddle4Mesh.position.x = (gameState.player4.paddle.x - this.gameWidth / 2) * scaleX; // Použij this.gameWidth
-       this.paddle4Mesh.position.z = (this.gameHeight / 2 - (gameState.player4.paddle.y + gameState.player4.paddle.height / 2)) * scaleY; // Použij this.gameHeight
+    if (this.paddle4Mesh && gameState.player4) {
+      this.paddle4Mesh.position.x =
+        (gameState.player4.paddle.x - this.gameWidth / 2) * scaleX; // Použij this.gameWidth
+      this.paddle4Mesh.position.z =
+        (this.gameHeight / 2 -
+          (gameState.player4.paddle.y + gameState.player4.paddle.height / 2)) *
+        scaleY; // Použij this.gameHeight
     }
     // Ball
     this.ballMesh.position.x = (gameState.ball.x - this.gameWidth / 2) * scaleX;

@@ -1,8 +1,13 @@
+import type { PlayerOption } from "../types/tournament";
+
 export interface TournamentPlayer {
   id: string;
   alias: string;
   wins: number;
   losses: number;
+  isAI: boolean;
+  aiDifficulty?: "easy" | "medium" | "hard";
+  userId?: number;
 }
 
 export interface TournamentMatch {
@@ -57,6 +62,23 @@ export class TournamentDataService {
       alias: alias.trim(),
       wins: 0,
       losses: 0,
+      isAI: false,
+    };
+
+    this.currentTournament.players.push(player);
+  }
+
+  addPlayerFromSelection(playerOption: PlayerOption): void {
+    if (!this.currentTournament) return;
+
+    const player: TournamentPlayer = {
+      id: crypto.randomUUID(),
+      alias: playerOption.displayName,
+      wins: 0,
+      losses: 0,
+      isAI: playerOption.isAI,
+      aiDifficulty: playerOption.aiDifficulty,
+      userId: playerOption.userId,
     };
 
     this.currentTournament.players.push(player);

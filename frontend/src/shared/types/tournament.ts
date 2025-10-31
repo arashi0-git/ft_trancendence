@@ -17,6 +17,8 @@ export interface TournamentPlayer {
   isEliminated: boolean;
   wins: number;
   losses: number;
+  isAI: boolean;
+  aiDifficulty?: "easy" | "medium" | "hard";
 }
 
 export interface Match {
@@ -41,4 +43,11 @@ export interface TournamentConfig {
     ballSpeed: number;
     paddleSpeed: number;
   };
+}
+export interface PlayerOption {
+  id: string;
+  displayName: string;
+  isAI: boolean;
+  aiDifficulty?: "easy" | "medium" | "hard";
+  userId?: number;
 }
