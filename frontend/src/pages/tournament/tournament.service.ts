@@ -221,25 +221,10 @@ export class TournamentService {
       "start-tournament",
     ) as HTMLButtonElement;
 
-    let allValid = true;
-    const aliases = new Set<string>();
-
-    this.playerSelections.forEach((selection) => {
-      if (!selection) {
-        allValid = false;
-        return;
-      }
-
-      const alias = selection.displayName.toLowerCase();
-      if (aliases.has(alias)) {
-        allValid = false;
-      } else {
-        aliases.add(alias);
-      }
-    });
+    const validationError = this.getValidationError();
 
     if (startBtn) {
-      startBtn.disabled = !allValid;
+      startBtn.disabled = validationError !== null;
     }
   }
 
