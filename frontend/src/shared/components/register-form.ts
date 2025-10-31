@@ -99,11 +99,13 @@ export class RegisterForm {
   }
 
   private attachEventListeners(): void {
-    const form = this.container.querySelector<HTMLFormElement>("#register-form");
+    const form =
+      this.container.querySelector<HTMLFormElement>("#register-form");
     const showLoginBtn =
       this.container.querySelector<HTMLButtonElement>("#show-login");
-    const showHomeBtn =
-      this.container.querySelector<HTMLButtonElement>("#register-show-home");
+    const showHomeBtn = this.container.querySelector<HTMLButtonElement>(
+      "#register-show-home",
+    );
 
     if (!form || !showLoginBtn || !showHomeBtn) {
       console.error("Register form elements not found");
@@ -135,11 +137,11 @@ export class RegisterForm {
     const confirmPassword =
       (formData.get("confirm-password") as string | null)?.toString() || "";
 
-    const submitBtn = this.container.querySelector<HTMLButtonElement>(
-      "#register-submit",
+    const submitBtn =
+      this.container.querySelector<HTMLButtonElement>("#register-submit");
+    const errorDiv = this.container.querySelector<HTMLDivElement>(
+      "#register-error-message",
     );
-    const errorDiv =
-      this.container.querySelector<HTMLDivElement>("#register-error-message");
 
     if (!submitBtn || !errorDiv) {
       console.error("Register form controls not found");

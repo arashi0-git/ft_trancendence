@@ -9,22 +9,28 @@ export class TournamentPage extends SpacePageBase {
     this.service = new TournamentService();
   }
 
-  render(): void {
+  async render(): Promise<void> {
     // URLパスに基づいて適切な画面を表示
     const currentPath = window.location.pathname;
     this.service.setCurrentPath(currentPath);
 
     this.container.innerHTML = this.getTemplate();
-    this.service.initializeCurrentView();
+    this.initializeAppHeader();
+    this.attachEventListeners();
+    await this.service.initializeCurrentView();
     this.initializeSpaceBackground();
   }
 
   private getTemplate(): string {
+    const backButton = this.service.getBackButtonTemplate();
     const title = this.service.getPageTitle();
 
     const content = `
-        <div class="text-center mb-4">
-          <h2 class="text-2xl font-bold text-white inline-block">${title}</h2>
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-white">${title}</h2>
+          <div class="space-x-2">
+            ${backButton}
+          </div>
         </div>
         <div id="tournament-content"></div>
         <div id="game-over-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
@@ -41,8 +47,17 @@ export class TournamentPage extends SpacePageBase {
     return this.getSpaceTemplate(content);
   }
 
+  private attachEventListeners(): void {
+    document.getElementById("back-button")?.addEventListener("click", () => {
+      this.service.handleBackNavigation();
+    });
+
+    // 認証関連のイベントリスナーは共通ヘッダーで処理されるため削除
+  }
+
   destroy(): void {
     this.service.cleanup();
     this.cleanupSpaceBackground();
+    this.cleanupAppHeader();
   }
 }

@@ -11,15 +11,13 @@ export class HomePage extends SpacePageBase {
 
   render(): void {
     this.container.innerHTML = this.getTemplate();
+    this.initializeAppHeader();
     this.attachEventListeners();
     this.initializeSpaceBackground();
   }
 
   private getTemplate(): string {
-    const authButtons = this.service.getAuthButtonsTemplate();
-
     const content = `
-        <h2 class="text-2xl font-bold mb-4 text-center text-white">Welcome to ft_transcendence</h2>
         <p class="text-center text-gray-300 mb-6">Choose how you want to play Pong!</p>
         
         <div class="space-y-4 mb-6">
@@ -52,11 +50,6 @@ export class HomePage extends SpacePageBase {
             </div>
           </button>
           </div>
-        
-        <div class="border-t border-gray-600 pt-4">
-          <p class="text-center text-sm text-gray-300 mb-3">Want to save your progress?</p>
-          ${authButtons}
-        </div>
     `;
 
     return this.getSpaceTemplate(content);
@@ -105,7 +98,7 @@ export class HomePage extends SpacePageBase {
         }
       });
 
-    document
+         document
       .getElementById("game-settings-btn")
       ?.addEventListener("click", async () => {
         try {
@@ -118,31 +111,10 @@ export class HomePage extends SpacePageBase {
           console.error("Game Settings navigation error:", error);
         }
       });
-
-    document.getElementById("login-btn")?.addEventListener("click", () => {
-      this.service.navigateToLogin();
-    });
-
-    document.getElementById("register-btn")?.addEventListener("click", () => {
-      this.service.navigateToRegister();
-    });
-
-    document.getElementById("settings-btn")?.addEventListener("click", () => {
-      this.service.navigateToSettings();
-    });
-
-    document
-      .getElementById("logout-btn")
-      ?.addEventListener("click", async () => {
-        try {
-          await this.service.handleLogout();
-        } catch (error) {
-          console.error("Logout handler error:", error);
-        }
-      });
   }
 
   destroy(): void {
     this.cleanupSpaceBackground();
+    this.cleanupAppHeader();
   }
 }

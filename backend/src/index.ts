@@ -70,7 +70,7 @@ async function registerPlugins() {
     },
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
-    methods: ["GET", "POST", "PATCH", "OPTIONS"],
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     maxAge: 60 * 60 * 24, // 24 hours
   });
 
@@ -91,12 +91,6 @@ async function registerPlugins() {
     root: avatarsDir,
     prefix: "/uploads/avatars/",
     decorateReply: false,
-  });
-
-  // 静的ファイル配信（フロントエンド用）
-  await fastify.register(staticFiles, {
-    root: path.join(__dirname, "../../frontend/dist"),
-    prefix: "/",
   });
 }
 

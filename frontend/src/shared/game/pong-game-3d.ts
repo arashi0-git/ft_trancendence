@@ -22,6 +22,7 @@ export class PongGame3D {
   > = {};
   private isAiMode: boolean = false;
   private animationId: number | null = null;
+  private boundHandleResize: () => void;
   private playerCount: number;
 
   constructor(canvas: HTMLCanvasElement, playerCount: number = 2) {
@@ -29,10 +30,14 @@ export class PongGame3D {
     this.playerCount = playerCount;
     console.log(`PongGame3D created for ${this.playerCount} players.`); // just for control
     this.engine = new Engine(canvas, true);
+    this.boundHandleResize = this.handleResize.bind(this);
+
+    // レスポンシブサイズを計算
+    const { width, height } = this.calculateResponsiveSize();
 
     this.config = {
-      canvasWidth: 800,
-      canvasHeight: 400,
+      canvasWidth: width,
+      canvasHeight: height,
       paddleWidth: 10,
       paddleHeight: 80,
       paddleSpeed: 5,
@@ -44,7 +49,14 @@ export class PongGame3D {
     this.canvas.width = this.config.canvasWidth;
     this.canvas.height = this.config.canvasHeight;
 
-    this.renderer = new BabylonRender(this.engine, this.playerCount);
+    // ウィンドウリサイズ時の処理
+    window.addEventListener("resize", this.boundHandleResize);
+
+    this.renderer = new BabylonRender(
+      this.engine,
+      this.config.canvasWidth,
+      this.config.canvasHeight,
+    );
     this.initializeGame();
     this.setupEventListeners();
 
@@ -412,52 +424,50 @@ export class PongGame3D {
           ball.velocityY += (Math.random() - 0.5) * ball.speed * 0.2;
        }
        return; // Kolize vyřešena
-    } // Konec kontroly P2
+    } 
 
-  } // Konec else if (ball.velocityX > 0)
-} // Konec metody
+  } 
+} 
 
   private checkScore(): void {
     const ball = this.gameState.ball;
     let scored = false;
     let scoringPlayer: 1 | 2 | null = null;
 
-    if (ball.x + ball.radius < 0) { // Míč za levou stranou
-      this.gameState.score.player2++; // Bod pro pravý tým (P2 a P4)
+    if (ball.x + ball.radius < 0) {
+      this.gameState.score.player2++;
       scored = true;
-      scoringPlayer = 2; // Gól dal levý tým (skóruje pravý)
-    } else if (ball.x - ball.radius > this.config.canvasWidth) { // Míč za pravou stranou
-      this.gameState.score.player1++; // Bod pro levý tým (P1 a P3)
+      scoringPlayer = 2;
+    } else if (ball.x - ball.radius > this.config.canvasWidth) {
+      this.gameState.score.player1++;
       scored = true;
-      scoringPlayer = 1; // Gól dal pravý tým (skóruje levý)
+      scoringPlayer = 1; 
     }
 
     if (scored) {
       const listeners = this.eventListeners.onScoreUpdate;
       (listeners || []).forEach((callback) => {
         if (callback) {
-          callback(this.gameState.score); // Pošli aktuální skóre
+          callback(this.gameState.score);
         }
       });
-      // Resetuj míček, pošli ho na stranu, která dostala gól
       this.resetBall(scoringPlayer === 1 ? -1 : 1);
     }
 
-    // Kontrola konce hry zůstává stejná, protože skóre je pořád player1 vs player2
     if (this.gameState.score.player1 >= this.config.maxScore) {
-      this.endGame(1); // Vyhrál levý tým
+      this.endGame(1); // left team wins
     } else if (this.gameState.score.player2 >= this.config.maxScore) {
-      this.endGame(2); // Vyhrál pravý tým
+      this.endGame(2); // right team wins
     }
   }
 
-  // Uprav resetBall, aby přijímal směr
-  private resetBall(direction: number = 1): void { // Výchozí směr doprava
+
+  private resetBall(direction: number = 1): void {
     const ball = this.gameState.ball;
     ball.x = this.config.canvasWidth / 2;
     ball.y = this.config.canvasHeight / 2;
     ball.speed = this.config.ballSpeed * 0.5;
-    this.setBallDirection(direction, Math.random() * 0.5 - 0.25); // Menší náhodný úhel
+    this.setBallDirection(direction, Math.random() * 0.5 - 0.25);
   }
 
 
@@ -524,12 +534,81 @@ export class PongGame3D {
     });
   }
 
+  private calculateResponsiveSize(): { width: number; height: number } {
+    const maxWidth = Math.min(window.innerWidth - 120, 900); // 最大900px、余白120px
+    const maxHeight = Math.min(window.innerHeight - 400, 500); // 最大500px、UI用に400px確保
+
+    // アスペクト比を維持 (2:1)
+    const aspectRatio = 2;
+    let width = maxWidth;
+    let height = width / aspectRatio;
+
+    if (height > maxHeight) {
+      height = maxHeight;
+      width = height * aspectRatio;
+    }
+
+    // 最小サイズを確保
+    width = Math.max(width, 500);
+    height = Math.max(height, 250);
+
+    return { width: Math.floor(width), height: Math.floor(height) };
+  }
+
+  private handleResize(): void {
+    const { width, height } = this.calculateResponsiveSize();
+
+    this.config.canvasWidth = width;
+    this.config.canvasHeight = height;
+    this.canvas.width = width;
+    this.canvas.height = height;
+
+    // ゲーム状態を新しいサイズに合わせて調整
+    this.adjustGameStateToNewSize();
+
+    // 3Dオブジェクトを更新
+    this.renderer.updateGameObjects(this.gameState);
+
+    // エンジンのリサイズ
+    this.engine.resize();
+  }
+
+  private adjustGameStateToNewSize(): void {
+    if (!this.gameState) return;
+
+    // プレイヤーの位置を新しいサイズに合わせて調整
+    const p1 = this.gameState.player1.paddle;
+    const p2 = this.gameState.player2.paddle;
+
+    // Player1の位置調整
+    p1.y = Math.min(p1.y, this.config.canvasHeight - this.config.paddleHeight);
+    p1.maxX = this.config.canvasWidth / 2 - 50;
+
+    // Player2の位置調整
+    p2.x = this.config.canvasWidth - 30;
+    p2.y = Math.min(p2.y, this.config.canvasHeight - this.config.paddleHeight);
+    p2.minX = this.config.canvasWidth / 2 + 50;
+    p2.maxX = this.config.canvasWidth - 20;
+
+    // ボールの位置調整
+    const ball = this.gameState.ball;
+    ball.x = Math.min(
+      Math.max(ball.x, ball.radius),
+      this.config.canvasWidth - ball.radius,
+    );
+    ball.y = Math.min(
+      Math.max(ball.y, ball.radius),
+      this.config.canvasHeight - ball.radius,
+    );
+  }
+
   public destroy(): void {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
     }
     document.removeEventListener("keydown", this.keydownHandler);
     document.removeEventListener("keyup", this.keyupHandler);
+    window.removeEventListener("resize", this.boundHandleResize);
     this.engine.dispose();
     this.renderer.dispose();
   }

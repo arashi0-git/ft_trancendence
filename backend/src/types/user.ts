@@ -1,4 +1,4 @@
-import { PublicUser } from "../models/User";
+import { PublicUser } from "../models/user";
 
 export interface CreateUserRequest {
   username: string;
@@ -28,4 +28,8 @@ export interface UpdateUserProfileRequest {
 export interface UpdateUserSettingsRequest extends UpdateUserProfileRequest {
   currentPassword?: string;
   newPassword?: string;
+}
+
+export interface FollowUserRequest {
+  username: string;
 }

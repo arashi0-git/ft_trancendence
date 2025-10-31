@@ -40,6 +40,9 @@ export class GameSetupUI {
           `<option value="${opt.value}" ${opt.disabled ? "disabled" : ""}>${opt.text}</option>`,
       )
       .join("");
+    const buttonClasses =
+      config.buttonClasses ||
+      "w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg";
 
     return `
       <div class="space-y-4 max-w-sm mx-auto">
@@ -50,7 +53,7 @@ export class GameSetupUI {
             ${optionsHtml}
           </select>
         </div>
-        <button id="${config.buttonId}" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg">
+        <button id="${config.buttonId}" class="${buttonClasses}">
           ${config.buttonText}
         </button>
       </div>

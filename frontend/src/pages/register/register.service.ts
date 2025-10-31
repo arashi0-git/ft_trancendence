@@ -27,7 +27,7 @@ export class RegisterService {
     this.registerForm.setOnShowLogin(() => {
       this.navigateToLogin();
     });
-    
+
     this.registerForm.setOnShowHome(() => {
       this.navigateToHome();
     });
