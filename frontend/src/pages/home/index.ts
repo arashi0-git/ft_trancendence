@@ -35,12 +35,7 @@ export class HomePage extends SpacePageBase {
             </div>
           </button>
           
-          <button id="ai-mode-btn" class="w-full bg-blue-800 hover:bg-blue-900 text-white py-3 px-4 rounded border border-blue-800 shadow-lg">
-            <div class="text-center">
-              <div class="font-semibold text-lg">🤖 AI Mode</div>
-              <div class="text-sm opacity-90">1 Player vs Computer - Test your skills</div>
-            </div>
-          </button>
+
         </div>
 
         <button id="game-settings-btn" class="w-full bg-blue-200 hover:bg-blue-300 text-black py-3 px-4 rounded border border-blue-200 shadow-lg">
@@ -85,20 +80,6 @@ export class HomePage extends SpacePageBase {
       });
 
     document
-      .getElementById("ai-mode-btn")
-      ?.addEventListener("click", async () => {
-        try {
-          await this.playTransitionAndNavigate(
-            () => this.service.navigateToAiMode(),
-            "warpOut",
-            800,
-          );
-        } catch (error) {
-          console.error("AI Mode navigation error:", error);
-        }
-      });
-
-         document
       .getElementById("game-settings-btn")
       ?.addEventListener("click", async () => {
         try {

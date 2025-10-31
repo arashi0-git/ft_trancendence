@@ -1,4 +1,5 @@
 import { PongGame3D } from "../game/pong-game-3d";
+import { AiPlayer } from "../../pages/ai-mode/ai-player";
 
 export type GameMode = "quick-play" | "tournament" | "ai-mode";
 
@@ -6,6 +7,10 @@ export interface GameConfig {
   mode: GameMode;
   canvasId: string;
   playerCount?: number;
+  aiPlayers?: {
+    player1?: { difficulty: "easy" | "medium" | "hard" };
+    player2?: { difficulty: "easy" | "medium" | "hard" };
+  };
   onGameEnd?: (data: {
     winner: number;
     score1: number;
@@ -17,6 +22,8 @@ export interface GameConfig {
 export class GameManagerService {
   private pongGame: PongGame3D | null = null;
   private currentConfig: GameConfig | null = null;
+  private aiPlayer1: AiPlayer | null = null;
+  private aiPlayer2: AiPlayer | null = null;
 
   initializeGame(config: GameConfig): void {
     try {
@@ -35,6 +42,29 @@ export class GameManagerService {
       // AIモードの設定
       if (config.mode === "ai-mode") {
         this.pongGame.setAiMode(true);
+      }
+
+      // AIプレイヤーの設定
+      if (config.aiPlayers) {
+        if (config.aiPlayers.player1) {
+          this.aiPlayer1 = new AiPlayer(config.aiPlayers.player1.difficulty, 1);
+          console.log(
+            `Created AI Player 1 with difficulty: ${config.aiPlayers.player1.difficulty}`,
+          );
+        }
+        if (config.aiPlayers.player2) {
+          this.aiPlayer2 = new AiPlayer(config.aiPlayers.player2.difficulty, 2);
+          console.log(
+            `Created AI Player 2 with difficulty: ${config.aiPlayers.player2.difficulty}`,
+          );
+        }
+        // AIプレイヤーがいる場合はAIモードを有効にする
+        this.pongGame.setAiMode(true);
+        // AIプレイヤー情報を設定
+        this.pongGame.setAiPlayers({
+          player1: !!config.aiPlayers.player1,
+          player2: !!config.aiPlayers.player2,
+        });
       }
 
       // イベントハンドラーの設定
@@ -72,6 +102,14 @@ export class GameManagerService {
       throw new Error("Game not initialized");
     }
     this.pongGame.startGame();
+
+    // AIプレイヤーを開始
+    if (this.aiPlayer1) {
+      this.aiPlayer1.start(this);
+    }
+    if (this.aiPlayer2) {
+      this.aiPlayer2.start(this);
+    }
   }
 
   pauseGame(): void {
@@ -79,6 +117,14 @@ export class GameManagerService {
       throw new Error("Game not initialized");
     }
     this.pongGame.pauseGame();
+
+    // AIプレイヤーを一時停止
+    if (this.aiPlayer1) {
+      this.aiPlayer1.pause();
+    }
+    if (this.aiPlayer2) {
+      this.aiPlayer2.pause();
+    }
   }
 
   resetGame(): void {
@@ -86,6 +132,14 @@ export class GameManagerService {
       throw new Error("Game not initialized");
     }
     this.pongGame.resetGame();
+
+    // AIプレイヤーをリセット
+    if (this.aiPlayer1) {
+      this.aiPlayer1.reset();
+    }
+    if (this.aiPlayer2) {
+      this.aiPlayer2.reset();
+    }
   }
 
   getGameState() {
@@ -93,6 +147,14 @@ export class GameManagerService {
   }
 
   cleanup(): void {
+    if (this.aiPlayer1) {
+      this.aiPlayer1.cleanup();
+      this.aiPlayer1 = null;
+    }
+    if (this.aiPlayer2) {
+      this.aiPlayer2.cleanup();
+      this.aiPlayer2 = null;
+    }
     if (this.pongGame) {
       this.pongGame.destroy();
       this.pongGame = null;
@@ -113,11 +175,11 @@ export class GameManagerService {
     return this.currentConfig?.mode || null;
   }
 
-  moveAiPaddle(deltaY: number): void {
+  moveAiPaddle(deltaY: number, playerNumber: 1 | 2 = 2): void {
     if (!this.pongGame) {
       throw new Error("Game not initialized");
     }
-    this.pongGame.moveAiPaddle(deltaY);
+    this.pongGame.moveAiPaddle(deltaY, playerNumber);
   }
 
   getCanvasSize(): { width: number; height: number } | null {

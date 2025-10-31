@@ -21,6 +21,10 @@ export class PongGame3D {
     Record<keyof GameEvents, Array<(...args: any[]) => void>>
   > = {};
   private isAiMode: boolean = false;
+  private aiPlayers: { player1: boolean; player2: boolean } = {
+    player1: false,
+    player2: false,
+  }; // AIプレイヤー管理
   private animationId: number | null = null;
   private boundHandleResize: () => void;
   private playerCount: number;
@@ -33,7 +37,6 @@ export class PongGame3D {
 
     // レスポンシブサイズを計算
     const { width, height } = this.calculateResponsiveSize();
-
     this.config = {
       canvasWidth: width,
       canvasHeight: height,
@@ -56,6 +59,7 @@ export class PongGame3D {
       this.config.canvasWidth,
       this.config.canvasHeight,
     );
+
     this.initializeGame();
     this.setupEventListeners();
 
@@ -68,6 +72,7 @@ export class PongGame3D {
   private initializeGame(): void {
     const PADDLE_HEIGHT = this.config.paddleHeight;
     const PADDLE_HALF_HEIGHT = this.config.paddleHeight / 2;
+
     // 既存のPongGameと同じ初期化処理をコピー
     const player1: Player = {
       id: 1,
@@ -118,6 +123,7 @@ export class PongGame3D {
         },
         keys: { up: "KeyR", down: "KeyF" },
       };
+
       const innerRightX = (this.config.canvasWidth / 4) * 3;
       player4 = {
         id: 4,
@@ -158,8 +164,8 @@ export class PongGame3D {
       score,
       gameStatus: "waiting",
     };
-    this.renderer.initializeScene(this.gameState);
 
+    this.renderer.initializeScene(this.gameState);
     this.setBallDirection(Math.random() > 0.5 ? 1 : -1, Math.random() * 2 - 1);
   }
 
@@ -209,10 +215,21 @@ export class PongGame3D {
     this.isAiMode = isAiMode;
   }
 
-  public moveAiPaddle(deltaY: number): void {
+  // AIプレイヤー設定メソッドを追加
+  public setAiPlayers(aiPlayers: {
+    player1?: boolean;
+    player2?: boolean;
+  }): void {
+    this.aiPlayers.player1 = aiPlayers.player1 || false;
+    this.aiPlayers.player2 = aiPlayers.player2 || false;
+  }
+
+  public moveAiPaddle(deltaY: number, playerNumber: 1 | 2 = 2): void {
     if (!this.isAiMode) return;
 
-    const paddle = this.gameState.player2.paddle;
+    const player =
+      playerNumber === 1 ? this.gameState.player1 : this.gameState.player2;
+    const paddle = player.paddle;
     const newY = paddle.y + deltaY;
 
     // 境界チェック
@@ -258,18 +275,23 @@ export class PongGame3D {
 
   private updatePaddles(): void {
     const p1 = this.gameState.player1;
-    if (this.keyState[p1.keys.up] && p1.paddle.y > (p1.paddle.minY ?? 0)) {
-      p1.paddle.y -= p1.paddle.speed;
-    }
-    if (
-      this.keyState[p1.keys.down] &&
-      p1.paddle.y < (p1.paddle.maxY ?? this.config.canvasHeight)
-    ) {
-      p1.paddle.y += p1.paddle.speed;
+
+    // Player 1の処理（AIでない場合のみキーボード入力を受け付ける）
+    if (!this.aiPlayers.player1) {
+      if (this.keyState[p1.keys.up] && p1.paddle.y > (p1.paddle.minY ?? 0)) {
+        p1.paddle.y -= p1.paddle.speed;
+      }
+      if (
+        this.keyState[p1.keys.down] &&
+        p1.paddle.y < (p1.paddle.maxY ?? this.config.canvasHeight)
+      ) {
+        p1.paddle.y += p1.paddle.speed;
+      }
     }
 
-    if (!this.isAiMode) {
-      const p2 = this.gameState.player2;
+    // Player 2の処理（AIでない場合のみキーボード入力を受け付ける）
+    const p2 = this.gameState.player2;
+    if (!this.aiPlayers.player2) {
       if (this.keyState[p2.keys.up] && p2.paddle.y > (p2.paddle.minY ?? 0)) {
         p2.paddle.y -= p2.paddle.speed;
       }
@@ -322,7 +344,6 @@ export class PongGame3D {
 
   private updateBall(): void {
     const ball = this.gameState.ball;
-
     ball.x += ball.velocityX;
     ball.y += ball.velocityY;
 
@@ -353,6 +374,7 @@ export class PongGame3D {
         const p3Bottom = p3.y + p3.height;
         const currentBallLeft = ball.x - ballRadius;
         const currentBallRight = ball.x + ballRadius;
+
         if (
           currentBallLeft <= p3Right &&
           currentBallRight >= p3.x &&
@@ -379,6 +401,7 @@ export class PongGame3D {
       const p1Bottom = p1.y + p1.height;
       const currentBallLeftP1 = ball.x - ballRadius;
       const currentBallRightP1 = ball.x + ballRadius;
+
       if (
         currentBallLeftP1 <= p1Right &&
         currentBallRightP1 >= p1.x &&
@@ -405,6 +428,7 @@ export class PongGame3D {
         const p4Bottom = p4.y + p4.height;
         const currentBallLeftP4 = ball.x - ballRadius;
         const currentBallRightP4 = ball.x + ballRadius;
+
         if (
           currentBallRightP4 >= p4Left &&
           currentBallLeftP4 <= p4.x + p4.width &&
@@ -431,6 +455,7 @@ export class PongGame3D {
       const p2Bottom = p2.y + p2.height;
       const currentBallLeftP2 = ball.x - ballRadius;
       const currentBallRightP2 = ball.x + ballRadius;
+
       if (
         currentBallRightP2 >= p2Left &&
         currentBallLeftP2 <= p2.x + p2.width &&
@@ -501,6 +526,7 @@ export class PongGame3D {
       cancelAnimationFrame(this.animationId);
       this.animationId = null;
     }
+
     this.keyState = {};
 
     const listenersState = this.eventListeners.onGameStateChange;
@@ -531,6 +557,7 @@ export class PongGame3D {
         cancelAnimationFrame(this.animationId);
         this.animationId = null;
       }
+
       const listeners = this.eventListeners.onGameStateChange;
       (listeners || []).forEach((callback) => {
         if (callback) {
@@ -545,9 +572,11 @@ export class PongGame3D {
       cancelAnimationFrame(this.animationId);
       this.animationId = null;
     }
+
     this.keyState = {};
     this.initializeGame();
     this.renderer.updateGameObjects(this.gameState);
+
     const listeners = this.eventListeners.onGameStateChange;
     (listeners || []).forEach((callback) => {
       if (callback) {
@@ -579,7 +608,6 @@ export class PongGame3D {
 
   private handleResize(): void {
     const { width, height } = this.calculateResponsiveSize();
-
     this.config.canvasWidth = width;
     this.config.canvasHeight = height;
     this.canvas.width = width;
@@ -625,9 +653,11 @@ export class PongGame3D {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
     }
+
     document.removeEventListener("keydown", this.keydownHandler);
     document.removeEventListener("keyup", this.keyupHandler);
     window.removeEventListener("resize", this.boundHandleResize);
+
     this.engine.dispose();
     this.renderer.dispose();
   }
@@ -651,6 +681,7 @@ export class PongGame3D {
     if (!this.eventListeners[event] || !callback) {
       return;
     }
+
     const index = this.eventListeners[event]?.indexOf(callback) ?? -1;
     if (index > -1) {
       this.eventListeners[event]?.splice(index, 1);
@@ -659,10 +690,12 @@ export class PongGame3D {
 
   private deepFreeze<T>(obj: T): Readonly<T> {
     if (obj === null || typeof obj !== "object") return obj as Readonly<T>;
+
     if (Array.isArray(obj))
       return Object.freeze(
         obj.map((v) => this.deepFreeze(v)),
       ) as unknown as Readonly<T>;
+
     const out: any = {};
     for (const k in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, k))

@@ -3,6 +3,8 @@ import { NotificationService } from "../../shared/services/notification.service"
 import { router } from "../../routes/router";
 import { TournamentDataService } from "../../shared/services/tournament-data.service";
 import { GameSetupUI } from "../../shared/components/game-setup-ui";
+import { PlayerSelector } from "../../shared/components/player-selector";
+import type { PlayerOption } from "../../shared/types/tournament";
 import { PlayerRegistrationUI } from "../../shared/components/player-registration-ui";
 
 export type TournamentStep =
@@ -22,6 +24,8 @@ export class TournamentService {
   private tournamentData: TournamentDataService;
   private notificationService: NotificationService;
   private gameSetupUI: GameSetupUI;
+  private playerSelectors: PlayerSelector[] = [];
+  private playerSelections: (PlayerOption | null)[] = [];
   private playerRegistrationUI: PlayerRegistrationUI;
   private eventListeners: Array<{
     element: HTMLElement;
@@ -97,7 +101,7 @@ export class TournamentService {
       ],
       buttonId: "create-tournament",
       buttonText: "Create Tournament",
-      
+
       buttonClasses:
         "w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded border border-blue-400 shadow-lg",
     });
@@ -147,30 +151,153 @@ export class TournamentService {
       return;
     }
 
-    await this.playerRegistrationUI.render({
-      container,
-      playerCount: tournament.playerCount,
-      heading: "Enter Player Aliases",
-      subtitle: `Tournament: ${tournament.name} (${tournament.playerCount} players)`,
-      backButton: {
-        text: "Back to Setup",
-        classes:
-          "flex-1 bg-purple-400 hover:bg-purple-600 text-white py-2 px-4 rounded border border-purple-400 shadow-lg",
-      },
-      startButton: {
-        text: "Start Tournament",
-        classes:
-          "flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg",
-      },
-      onBack: () => {
-        this.tournamentData.clearTournament();
-        this.navigateToSetup();
-      },
-      onSubmit: (aliases) => this.startTournament(aliases),
+    container.innerHTML = `
+      <div class="text-center mb-4">
+        <h3 class="text-lg font-semibold">Player Registration</h3>
+        <p class="text-sm text-gray-300">Tournament: ${this.escapeHtml(tournament.name)} (${tournament.playerCount} players)</p>
+      </div>
+
+      <div id="player-selectors" class="space-y-4 mb-4">
+        <!-- プレイヤー選択フィールド生成 -->
+      </div>
+
+      <div id="validation-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <!-- エラーメッセージがここに表示される -->
+      </div>
+
+      <div class="flex space-x-4">
+        <button
+          id="back-to-setup"
+          class="flex-1 bg-purple-400 hover:bg-purple-600 text-white py-2 px-4 rounded border border-purple-400 shadow-lg"
+        >
+          Back to Setup
+        </button>
+        <button
+          id="start-tournament"
+          class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg"
+          disabled
+        >
+          Start Tournament
+        </button>
+      </div>
+    `;
+
+    await this.generatePlayerSelectors(tournament.playerCount);
+
+    this.attachEventListenerSafely("back-to-setup", "click", () => {
+      // セットアップ画面に戻る時はトーナメントデータをクリア
+      this.tournamentData.clearTournament();
+      this.navigateToSetup();
     });
+
+    this.attachEventListenerSafely("start-tournament", "click", () =>
+      this.startTournament(),
+    );
   }
 
-  private startTournament(aliases: string[]): void {
+  private async generatePlayerSelectors(playerCount: number): Promise<void> {
+    const playerSelectorsContainer =
+      document.getElementById("player-selectors");
+    if (!playerSelectorsContainer) return;
+
+    playerSelectorsContainer.innerHTML = "";
+    this.playerSelectors = [];
+    this.playerSelections = new Array(playerCount).fill(null);
+
+    for (let i = 1; i <= playerCount; i++) {
+      const selectorDiv = document.createElement("div");
+      playerSelectorsContainer.appendChild(selectorDiv);
+
+      const playerSelector = new PlayerSelector(selectorDiv, i);
+      try {
+        await playerSelector.render();
+      } catch (error) {
+        console.error(`Failed to render player selector ${i}:`, error);
+        this.notificationService.error(
+          `プレイヤー${i}の選択UIの読み込みに失敗しました`,
+        );
+        continue;
+      }
+
+      playerSelector.setOnSelectionChange((playerOption) => {
+        this.playerSelections[i - 1] = playerOption;
+        this.validatePlayerSelections();
+      });
+
+      this.playerSelectors.push(playerSelector);
+    }
+  }
+
+  private validatePlayerSelections(): void {
+    const startBtn = document.getElementById(
+      "start-tournament",
+    ) as HTMLButtonElement;
+
+    const validationError = this.getValidationError();
+
+    if (startBtn) {
+      startBtn.disabled = validationError !== null;
+    }
+  }
+
+  private getValidationError(): string | null {
+    const aliases = new Set<string>();
+    let hasHumanPlayer = false;
+    let missingPlayers = 0;
+    let hasDuplicateNames = false;
+
+    this.playerSelections.forEach((selection) => {
+      if (!selection) {
+        missingPlayers++;
+        return;
+      }
+
+      // 人間プレイヤーがいるかチェック
+      if (!selection.isAI) {
+        hasHumanPlayer = true;
+      }
+
+      const alias = selection.displayName.toLowerCase();
+      if (aliases.has(alias)) {
+        hasDuplicateNames = true;
+      } else {
+        aliases.add(alias);
+      }
+    });
+
+    // エラーメッセージの優先順位
+    if (missingPlayers > 0) {
+      return `${missingPlayers}人のプレイヤーが選択されていません`;
+    }
+    if (hasDuplicateNames) {
+      return "プレイヤー名が重複しています";
+    }
+    if (!hasHumanPlayer) {
+      return "少なくとも1人は人間プレイヤーを選択してください";
+    }
+
+    return null;
+  }
+
+  private startTournament(): void {
+    console.log("Starting tournament...");
+
+    // バリデーションチェック
+    const validationError = this.getValidationError();
+    const errorDiv = document.getElementById("validation-error") as HTMLElement;
+
+    if (validationError) {
+      if (errorDiv) {
+        errorDiv.textContent = validationError;
+        errorDiv.classList.remove("hidden");
+      }
+      return;
+    }
+
+    // エラーメッセージを隠す
+    if (errorDiv) {
+      errorDiv.classList.add("hidden");
+    }
     const tournament = this.tournamentData.getCurrentTournament();
     if (!tournament) {
       console.error("No tournament found");
@@ -183,12 +310,19 @@ export class TournamentService {
     tournament.currentRound = 1;
     tournament.status = "setup";
 
-    aliases.forEach((alias) => {
-      this.tournamentData.addPlayer(alias);
+    console.log("Found player selections:", this.playerSelections.length);
+
+    this.playerSelections.forEach((selection) => {
+      if (selection) {
+        console.log("Adding player:", selection);
+        this.tournamentData.addPlayerFromSelection(selection);
+      }
     });
 
     try {
+      console.log("Generating matches...");
       this.tournamentData.generateMatches();
+      console.log("Matches generated, navigating to bracket...");
       this.navigateToBracket();
     } catch (error) {
       console.error("Error generating matches:", error);
@@ -279,6 +413,12 @@ export class TournamentService {
       element.removeEventListener(event, handler);
     });
     this.eventListeners = [];
+    // PlayerSelectorインスタンスをクリーンアップ
+    this.playerSelectors.forEach((selector) => {
+      selector.destroy();
+    });
+    this.playerSelectors = [];
+    this.playerSelections = [];
     this.playerRegistrationUI.destroy();
   }
 
@@ -379,30 +519,34 @@ export class TournamentService {
     const player2 = this.tournamentData.getPlayer(match.player2Id);
 
     container.innerHTML = `
-      <div class="text-center mb-4">
-        <h3 class="text-xl font-semibold text-white">${this.escapeHtml(player1?.alias || "Player 1")} vs ${this.escapeHtml(player2?.alias || "Player 2")}</h3>
-        <p class="text-gray-300">Match ${this.escapeHtml(matchId)} - First to 5 points wins</p>
+      <!-- コンパクトなヘッダー -->
+      <div class="text-center mb-2">
+        <h3 class="text-lg font-medium text-white">${this.escapeHtml(player1?.alias || "Player 1")} vs ${this.escapeHtml(player2?.alias || "Player 2")}</h3>
+        <p class="text-sm text-gray-400">Match ${this.escapeHtml(matchId)} - First to 5 points wins</p>
       </div>
 
-      <div class="mb-4 text-center">
-        <div class="space-x-4">
-          <button id="start-tournament-game" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded">
+      <!-- コンパクトなボタン -->
+      <div class="mb-2 text-center">
+        <div class="space-x-2">
+          <button id="start-tournament-game" class="bg-green-500 hover:bg-green-600 text-white px-4 py-1 text-sm rounded">
             Start Match
           </button>
-          <button id="pause-tournament-game" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded" disabled>
+          <button id="pause-tournament-game" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-1 text-sm rounded" disabled>
             Pause
           </button>
-          <button id="reset-tournament-game" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded">
+          <button id="reset-tournament-game" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 text-sm rounded">
             Reset
           </button>
         </div>
       </div>
       
-      <div class="flex justify-center mb-4">
-        <canvas id="tournament-pong-canvas" class="border-2 border-gray-300 bg-black"></canvas>
+      <!-- 大きなゲームフィールド -->
+      <div class="flex justify-center mb-2 w-full">
+        <canvas id="tournament-pong-canvas" class="border-2 border-gray-300 bg-black rounded-lg shadow-lg max-w-full max-h-[80vh]" style="width: 100%; height: auto;"></canvas>
       </div>
       
-      <div class="text-center text-sm text-gray-300">
+      <!-- コンパクトなコントロール説明 -->
+      <div class="text-center text-xs text-gray-400">
         <p><strong>${this.escapeHtml(player1?.alias || "Player 1")}:</strong> W/S (Up/Down), A/D (Left/Right)</p>
         <p><strong>${this.escapeHtml(player2?.alias || "Player 2")}:</strong> ↑/↓ (Up/Down), ←/→ (Left/Right)</p>
       </div>
@@ -508,10 +652,45 @@ export class TournamentService {
   private initializeMatchGame(matchId: string): void {
     console.log(`Initializing Match: ${matchId}`);
 
+    const match = this.tournamentData.getMatch(matchId);
+    if (!match) {
+      console.error(`Match ${matchId} not found`);
+      return;
+    }
+
+    const player1 = this.tournamentData.getPlayer(match.player1Id);
+    const player2 = this.tournamentData.getPlayer(match.player2Id);
+
+    console.log(
+      `Player 1: ${player1?.alias}, isAI: ${player1?.isAI}, difficulty: ${player1?.aiDifficulty}`,
+    );
+    console.log(
+      `Player 2: ${player2?.alias}, isAI: ${player2?.isAI}, difficulty: ${player2?.aiDifficulty}`,
+    );
+
+    // AIプレイヤー設定を構築
+    const aiPlayers: {
+      player1?: { difficulty: "easy" | "medium" | "hard" };
+      player2?: { difficulty: "easy" | "medium" | "hard" };
+    } = {};
+    if (player1?.isAI && player1.aiDifficulty) {
+      aiPlayers.player1 = { difficulty: player1.aiDifficulty };
+      console.log(
+        `Setting AI for player1 with difficulty: ${player1.aiDifficulty}`,
+      );
+    }
+    if (player2?.isAI && player2.aiDifficulty) {
+      aiPlayers.player2 = { difficulty: player2.aiDifficulty };
+      console.log(
+        `Setting AI for player2 with difficulty: ${player2.aiDifficulty}`,
+      );
+    }
+
     this.gameManager.cleanup();
     this.gameManager.initializeGame({
       mode: "tournament",
       canvasId: "tournament-pong-canvas",
+      aiPlayers: Object.keys(aiPlayers).length > 0 ? aiPlayers : undefined,
       onGameEnd: (data: { winner: number; score1: number; score2: number }) => {
         console.log(`Match Ended: ${matchId}`, data);
         this.handleMatchEnd(matchId, data.winner, {
