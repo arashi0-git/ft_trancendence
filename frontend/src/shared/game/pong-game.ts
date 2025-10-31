@@ -33,7 +33,11 @@ export class PongGame {
     "KeyD",
   ];
 
-  constructor(canvas: HTMLCanvasElement, playerCount: number = 2, config?: Partial<GameConfig>) {
+  constructor(
+    canvas: HTMLCanvasElement,
+    playerCount: number = 2,
+    config?: Partial<GameConfig>,
+  ) {
     this.canvas = canvas;
     this.playerCount = playerCount;
     const ctx = canvas.getContext("2d");
@@ -117,8 +121,6 @@ export class PongGame {
         up: "ArrowUp",
         down: "ArrowDown",
       },
-
-
     };
 
     const ball: Ball = {
@@ -349,33 +351,45 @@ export class PongGame {
 
   private updatePaddles(): void {
     const p1 = this.gameState.player1;
-    // P1 - 上下移動 
+    // P1 - 上下移動
     if (this.keyState[p1.keys.up] && p1.paddle.y > (p1.paddle.minY ?? 0)) {
       p1.paddle.y -= p1.paddle.speed;
     }
-    if (this.keyState[p1.keys.down] && p1.paddle.y < (p1.paddle.maxY ?? this.config.canvasHeight)) {
+    if (
+      this.keyState[p1.keys.down] &&
+      p1.paddle.y < (p1.paddle.maxY ?? this.config.canvasHeight)
+    ) {
       p1.paddle.y += p1.paddle.speed;
     }
-
 
     // AIモードではPlayer2のキー入力を無視 (
     if (!this.isAiMode) {
       const p2 = this.gameState.player2;
-      // P2 - 上下移動 
+      // P2 - 上下移動
       if (this.keyState[p2.keys.up] && p2.paddle.y > (p2.paddle.minY ?? 0)) {
         p2.paddle.y -= p2.paddle.speed;
       }
-      if (this.keyState[p2.keys.down] && p2.paddle.y < (p2.paddle.maxY ?? this.config.canvasHeight)) {
+      if (
+        this.keyState[p2.keys.down] &&
+        p2.paddle.y < (p2.paddle.maxY ?? this.config.canvasHeight)
+      ) {
         p2.paddle.y += p2.paddle.speed;
       }
 
-      if (this.playerCount === 4 && this.gameState.player3 && this.gameState.player4) {
+      if (
+        this.playerCount === 4 &&
+        this.gameState.player3 &&
+        this.gameState.player4
+      ) {
         const p3 = this.gameState.player3;
-        // P3 - 上下移動 
+        // P3 - 上下移動
         if (this.keyState[p3.keys.up] && p3.paddle.y > (p3.paddle.minY ?? 0)) {
           p3.paddle.y -= p3.paddle.speed;
         }
-        if (this.keyState[p3.keys.down] && p3.paddle.y < (p3.paddle.maxY ?? this.config.canvasHeight)) {
+        if (
+          this.keyState[p3.keys.down] &&
+          p3.paddle.y < (p3.paddle.maxY ?? this.config.canvasHeight)
+        ) {
           p3.paddle.y += p3.paddle.speed;
         }
         // --- 修正ここまで
@@ -385,7 +399,10 @@ export class PongGame {
         if (this.keyState[p4.keys.up] && p4.paddle.y > (p4.paddle.minY ?? 0)) {
           p4.paddle.y -= p4.paddle.speed;
         }
-        if (this.keyState[p4.keys.down] && p4.paddle.y < (p4.paddle.maxY ?? this.config.canvasHeight)) {
+        if (
+          this.keyState[p4.keys.down] &&
+          p4.paddle.y < (p4.paddle.maxY ?? this.config.canvasHeight)
+        ) {
           p4.paddle.y += p4.paddle.speed;
         }
       }
@@ -420,64 +437,60 @@ export class PongGame {
     const ballTop = ball.y - ballRadius;
     const ballBottom = ball.y + ballRadius;
 
-    // --- Kolize s levou stranou (P1 a P3) ---
-    if (ball.velocityX < 0) { // Míček letí doleva
-
-      // ---> KONTROLA P3 NEJDŘÍV <---
+    if (ball.velocityX < 0) {
       if (p3) {
         const p3Right = p3.x + p3.width;
         const p3Top = p3.y;
         const p3Bottom = p3.y + p3.height;
         const ballLeft = ball.x - ballRadius;
         const ballRight = ball.x + ballRadius;
-        // console.log(...);
-        if (ballLeft <= p3Right && ballRight >= p3.x && ballBottom >= p3Top && ballTop <= p3Bottom) {
-          console.log("%cP3 COLLISION DETECTED!", "color: orange; font-weight: bold;");
-          if (ball.x > p3.x + p3.width / 2) { // Zásah PRAVÉ (vnitřní) strany -> odraz doprava
-            console.log("--> P3 Hit INNER side"); // <-- PŘIDEJ LOG
+        if (
+          ballLeft <= p3Right &&
+          ballRight >= p3.x &&
+          ballBottom >= p3Top &&
+          ballTop <= p3Bottom
+        ) {
+          if (ball.x > p3.x + p3.width / 2) {
             ball.velocityX = Math.abs(ball.velocityX);
             ball.x = p3Right + ballRadius;
             const hitPos = (ball.y - (p3Top + p3.height / 2)) / (p3.height / 2);
             this.setBallDirection(1, hitPos);
-          } else { // Zásah LEVÉ (zadní) strany -> odraz DOLEVA
-            console.log("--> P3 Hit OUTER side"); // <-- PŘIDEJ LOG
+          } else {
             ball.velocityX = -Math.abs(ball.velocityX) * 0.8;
             ball.x = p3.x - ballRadius;
             ball.velocityY += (Math.random() - 0.5) * ball.speed * 0.2;
           }
-          console.log(`--> P3 After Collision: ballX=${ball.x.toFixed(1)}, velocityX=${ball.velocityX.toFixed(1)}`); // <-- PŘIDEJ LOG
-          return; // Kolize vyřešena
+          return;
         }
-      }// Konec kontroly P3
+      }
 
-      // ---> KONTROLA P1 AŽ DRUHÁ <---
       const p1Right = p1.x + p1.width;
       const p1Top = p1.y;
       const p1Bottom = p1.y + p1.height;
       const ballLeftP1 = ball.x - ballRadius; // Spočítáme aktuální ballLeft
-      const ballRightP1 = ball.x + ballRadius;// Spočítáme aktuální ballRight
-      if (ballLeftP1 <= p1Right && ballRightP1 >= p1.x && ballBottom >= p1Top && ballTop <= p1Bottom) {
+      const ballRightP1 = ball.x + ballRadius; // Spočítáme aktuální ballRight
+      if (
+        ballLeftP1 <= p1Right &&
+        ballRightP1 >= p1.x &&
+        ballBottom >= p1Top &&
+        ballTop <= p1Bottom
+      ) {
         const paddleCenterX = p1.x + p1.width / 2;
-        console.log(`P1 Collision! ball.x=${ball.x.toFixed(1)}, paddleCenterX=${paddleCenterX.toFixed(1)}`);
         if (ball.x > paddleCenterX) {
-          console.log("-> Hit INNER side (right)");
           ball.velocityX = Math.abs(ball.velocityX);
           ball.x = p1Right + ballRadius;
           const hitPos = (ball.y - (p1Top + p1.height / 2)) / (p1.height / 2);
           this.setBallDirection(1, hitPos);
         } else {
-          console.log("-> Hit OUTER side (left)");
           ball.velocityX = -Math.abs(ball.velocityX) * 0.8;
           ball.x = p1.x - ballRadius;
           ball.velocityY += (Math.random() - 0.5) * ball.speed * 0.2;
         }
         return;
       } // Konec kontroly P1
-
     } // Konec bloku if (ball.velocityX < 0)
-
-    // --- Kolize s pravou stranou (P2 a P4) ---
-    else if (ball.velocityX > 0) { // Míček letí doprava
+    else if (ball.velocityX > 0) {
+      // Míček letí doprava
 
       // ---> KONTROLA P4 NEJDŘÍV <---
       if (p4) {
@@ -485,15 +498,21 @@ export class PongGame {
         const p4Top = p4.y;
         const p4Bottom = p4.y + p4.height;
         const ballLeftP4 = ball.x - ballRadius; // Spočítáme aktuální ballLeft
-        const ballRightP4 = ball.x + ballRadius;// Spočítáme aktuální ballRight
-        if (ballRightP4 >= p4Left && ballLeftP4 <= p4.x + p4.width && ballBottom >= p4Top && ballTop <= p4Bottom) {
-          console.log("%cP4 COLLISION DETECTED!", "color: cyan; font-weight: bold;");
-          if (ball.x < p4.x + p4.width / 2) { // Zásah LEVÉ (vnitřní) strany -> odraz doleva
+        const ballRightP4 = ball.x + ballRadius; // Spočítáme aktuální ballRight
+        if (
+          ballRightP4 >= p4Left &&
+          ballLeftP4 <= p4.x + p4.width &&
+          ballBottom >= p4Top &&
+          ballTop <= p4Bottom
+        ) {
+          if (ball.x < p4.x + p4.width / 2) {
+            // Zásah LEVÉ (vnitřní) strany -> odraz doleva
             ball.velocityX = -Math.abs(ball.velocityX);
             ball.x = p4Left - ballRadius;
             const hitPos = (ball.y - (p4Top + p4.height / 2)) / (p4.height / 2);
             this.setBallDirection(-1, hitPos);
-          } else { // Zásah PRAVÉ (zadní) strany -> odraz DOPRAVA
+          } else {
+            // Zásah PRAVÉ (zadní) strany -> odraz DOPRAVA
             ball.velocityX = Math.abs(ball.velocityX) * 0.8;
             ball.x = p4.x + p4.width + ballRadius;
             ball.velocityY += (Math.random() - 0.5) * ball.speed * 0.2;
@@ -507,8 +526,13 @@ export class PongGame {
       const p2Top = p2.y;
       const p2Bottom = p2.y + p2.height;
       const ballLeftP2 = ball.x - ballRadius; // Spočítáme aktuální ballLeft
-      const ballRightP2 = ball.x + ballRadius;// Spočítáme aktuální ballRight
-      if (ballRightP2 >= p2Left && ballLeftP2 <= p2.x + p2.width && ballBottom >= p2Top && ballTop <= p2Bottom) {
+      const ballRightP2 = ball.x + ballRadius; // Spočítáme aktuální ballRight
+      if (
+        ballRightP2 >= p2Left &&
+        ballLeftP2 <= p2.x + p2.width &&
+        ballBottom >= p2Top &&
+        ballTop <= p2Bottom
+      ) {
         if (ball.x < p2.x + p2.width / 2) {
           ball.velocityX = -Math.abs(ball.velocityX);
           ball.x = p2Left - ballRadius;
@@ -521,7 +545,6 @@ export class PongGame {
         }
         return;
       } // Konec kontroly P2
-
     } // Konec bloku else if (ball.velocityX > 0)
   } // Konec metody
 
@@ -621,7 +644,11 @@ export class PongGame {
     this.drawPaddle(this.gameState.player1.paddle);
     this.drawPaddle(this.gameState.player2.paddle);
 
-    if (this.playerCount === 4 && this.gameState.player3 && this.gameState.player4) {
+    if (
+      this.playerCount === 4 &&
+      this.gameState.player3 &&
+      this.gameState.player4
+    ) {
       this.drawPaddle(this.gameState.player3.paddle);
       this.drawPaddle(this.gameState.player4.paddle);
     }
