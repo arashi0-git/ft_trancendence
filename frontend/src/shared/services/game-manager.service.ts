@@ -117,6 +117,14 @@ export class GameManagerService {
       throw new Error("Game not initialized");
     }
     this.pongGame.pauseGame();
+
+    // AIプレイヤーを一時停止
+    if (this.aiPlayer1) {
+      this.aiPlayer1.pause();
+    }
+    if (this.aiPlayer2) {
+      this.aiPlayer2.pause();
+    }
   }
 
   resetGame(): void {
@@ -124,6 +132,14 @@ export class GameManagerService {
       throw new Error("Game not initialized");
     }
     this.pongGame.resetGame();
+
+    // AIプレイヤーをリセット
+    if (this.aiPlayer1) {
+      this.aiPlayer1.reset();
+    }
+    if (this.aiPlayer2) {
+      this.aiPlayer2.reset();
+    }
   }
 
   getGameState() {

@@ -158,6 +158,10 @@ export class TournamentService {
         <!-- プレイヤー選択フィールド生成 -->
       </div>
 
+      <div id="validation-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <!-- エラーメッセージがここに表示される -->
+      </div>
+
       <div class="flex space-x-4">
         <button
           id="back-to-setup"
@@ -239,8 +243,65 @@ export class TournamentService {
     }
   }
 
+  private getValidationError(): string | null {
+    const aliases = new Set<string>();
+    let hasHumanPlayer = false;
+    let missingPlayers = 0;
+    let hasDuplicateNames = false;
+
+    this.playerSelections.forEach((selection) => {
+      if (!selection) {
+        missingPlayers++;
+        return;
+      }
+
+      // 人間プレイヤーがいるかチェック
+      if (!selection.isAI) {
+        hasHumanPlayer = true;
+      }
+
+      const alias = selection.displayName.toLowerCase();
+      if (aliases.has(alias)) {
+        hasDuplicateNames = true;
+      } else {
+        aliases.add(alias);
+      }
+    });
+
+    // エラーメッセージの優先順位
+    if (missingPlayers > 0) {
+      return `${missingPlayers}人のプレイヤーが選択されていません`;
+    }
+    if (hasDuplicateNames) {
+      return "プレイヤー名が重複しています";
+    }
+    if (!hasHumanPlayer) {
+      return "少なくとも1人は人間プレイヤーを選択してください";
+    }
+
+    return null;
+  }
+
   private startTournament(): void {
     console.log("Starting tournament...");
+
+    // バリデーションチェック
+    const validationError = this.getValidationError();
+    const errorDiv = document.getElementById("validation-error") as HTMLElement;
+
+    if (validationError) {
+      if (errorDiv) {
+        errorDiv.textContent = validationError;
+        errorDiv.classList.remove("hidden");
+      }
+      return;
+    }
+
+    // エラーメッセージを隠す
+    if (errorDiv) {
+      errorDiv.classList.add("hidden");
+    }
+
     const tournament = this.tournamentData.getCurrentTournament();
     if (!tournament) {
       console.error("No tournament found");

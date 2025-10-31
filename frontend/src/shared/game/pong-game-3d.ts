@@ -222,9 +222,6 @@ export class PongGame3D {
   }): void {
     this.aiPlayers.player1 = aiPlayers.player1 || false;
     this.aiPlayers.player2 = aiPlayers.player2 || false;
-    console.log(
-      `AI Players set: Player1=${this.aiPlayers.player1}, Player2=${this.aiPlayers.player2}`,
-    );
   }
 
   public moveAiPaddle(deltaY: number, playerNumber: 1 | 2 = 2): void {

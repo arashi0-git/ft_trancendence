@@ -15,6 +15,7 @@ import { GameState } from "../types/game";
 export class BabylonRender {
   private scene: Scene;
   private camera: ArcRotateCamera;
+  private readonly FIELD_WIDTH = 28;
   private paddle1Mesh!: Mesh;
   private paddle2Mesh!: Mesh;
   private paddle3Mesh: Mesh | null = null;
@@ -97,7 +98,7 @@ export class BabylonRender {
 
     // 新しいサイズでフィールドを作成（より大きなフィールド）
     const aspectRatio = this.gameWidth / this.gameHeight;
-    const fieldWidth = 28; // さらに大きく
+    const fieldWidth = this.FIELD_WIDTH; // さらに大きく
     const fieldHeight = fieldWidth / aspectRatio;
 
     this.fieldMesh = MeshBuilder.CreateGround(
@@ -124,7 +125,7 @@ export class BabylonRender {
 
   private createPaddleMesh(name: string, logicalPaddleHeight: number): Mesh {
     const aspectRatio = this.gameWidth / this.gameHeight;
-    const fieldWidth = 28;
+    const fieldWidth = this.FIELD_WIDTH;
     const fieldHeight = fieldWidth / aspectRatio;
     const scaleY = fieldHeight / this.gameHeight;
     const paddleDepth = logicalPaddleHeight * scaleY * 0.7; // パドルを30%短くする
@@ -198,7 +199,7 @@ export class BabylonRender {
   public createGameObjects() {
     // ゲームサイズに基づいてフィールドサイズを計算（アスペクト比を維持）
     const aspectRatio = this.gameWidth / this.gameHeight;
-    const fieldWidth = 28;
+    const fieldWidth = this.FIELD_WIDTH;
     const fieldHeight = fieldWidth / aspectRatio;
 
     this.fieldMesh = MeshBuilder.CreateGround(
@@ -253,7 +254,7 @@ export class BabylonRender {
   private createCenterLine() {
     // 中央線を点線で作成（動的なフィールドサイズに合わせて調整）
     const aspectRatio = this.gameWidth / this.gameHeight;
-    const fieldWidth = 28;
+    const fieldWidth = this.FIELD_WIDTH;
     const fieldHeight = fieldWidth / aspectRatio;
 
     const lineSegments = 8; // 点線の数
@@ -446,7 +447,7 @@ export class BabylonRender {
 
   public updateGameObjects(gameState: GameState) {
     const aspectRatio = this.gameWidth / this.gameHeight;
-    const fieldWidth = 28;
+    const fieldWidth = this.FIELD_WIDTH;
     const fieldHeight = fieldWidth / aspectRatio;
     const scaleX = fieldWidth / this.gameWidth;
     const scaleY = fieldHeight / this.gameHeight;
