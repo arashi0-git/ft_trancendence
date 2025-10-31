@@ -10,6 +10,39 @@ import {
 } from "../types/game";
 import { BabylonRender } from "./babylon-render";
 
+interface PongGameOptions {
+  fieldColorHex?: string;
+  ballColorHex?: string;
+  paddleColorHex?: string;
+  paddleLength?: PaddleLengthSetting;
+  ballSize?: BallSizeSetting;
+}
+
+const DEFAULT_FIELD_COLOR_HEX = "#245224";
+const DEFAULT_BALL_COLOR_HEX = "#ffffff";
+const DEFAULT_PADDLE_COLOR_HEX = "#ffffff";
+const COLOR_HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
+const BASE_PADDLE_HEIGHT = 80;
+const BASE_BALL_RADIUS = 8;
+
+type PaddleLengthSetting = "short" | "normal" | "long";
+type BallSizeSetting = "small" | "normal" | "big";
+
+const PADDLE_LENGTH_MULTIPLIERS: Record<PaddleLengthSetting, number> = {
+  short: 0.5,
+  normal: 1,
+  long: 4 / 3,
+};
+
+const BALL_SIZE_MULTIPLIERS: Record<BallSizeSetting, number> = {
+  small: 0.75,
+  normal: 1,
+  big: 3,
+};
+
+const isValidColorHex = (value: string | undefined): value is string =>
+  typeof value === "string" && COLOR_HEX_PATTERN.test(value);
+
 export class PongGame3D {
   private canvas: HTMLCanvasElement;
   private engine: Engine;
@@ -28,12 +61,32 @@ export class PongGame3D {
   private animationId: number | null = null;
   private boundHandleResize: () => void;
   private playerCount: number;
+  private fieldColorHex: string;
+  private ballColorHex: string;
+  private paddleColorHex: string;
+  private paddleLengthSetting: PaddleLengthSetting;
+  private ballSizeSetting: BallSizeSetting;
 
-  constructor(canvas: HTMLCanvasElement, playerCount: number = 2) {
+  constructor(
+    canvas: HTMLCanvasElement,
+    playerCount: number = 2,
+    options: PongGameOptions = {},
+  ) {
     this.canvas = canvas;
     this.playerCount = playerCount;
     this.engine = new Engine(canvas, true);
     this.boundHandleResize = this.handleResize.bind(this);
+    this.fieldColorHex = isValidColorHex(options.fieldColorHex)
+      ? options.fieldColorHex
+      : DEFAULT_FIELD_COLOR_HEX;
+    this.ballColorHex = isValidColorHex(options.ballColorHex)
+      ? options.ballColorHex
+      : DEFAULT_BALL_COLOR_HEX;
+    this.paddleColorHex = isValidColorHex(options.paddleColorHex)
+      ? options.paddleColorHex
+      : DEFAULT_PADDLE_COLOR_HEX;
+    this.paddleLengthSetting = this.normalizePaddleLength(options.paddleLength);
+    this.ballSizeSetting = this.normalizeBallSize(options.ballSize);
 
     // レスポンシブサイズを計算
     const { width, height } = this.calculateResponsiveSize();
@@ -41,9 +94,9 @@ export class PongGame3D {
       canvasWidth: width,
       canvasHeight: height,
       paddleWidth: 10,
-      paddleHeight: 80,
+      paddleHeight: this.calculatePaddleHeight(this.paddleLengthSetting),
       paddleSpeed: 5,
-      ballRadius: 8,
+      ballRadius: this.calculateBallRadius(this.ballSizeSetting),
       ballSpeed: 11,
       maxScore: 5,
     };
@@ -58,6 +111,12 @@ export class PongGame3D {
       this.engine,
       this.config.canvasWidth,
       this.config.canvasHeight,
+      {
+        fieldColorHex: this.fieldColorHex,
+        ballColorHex: this.ballColorHex,
+        paddleColorHex: this.paddleColorHex,
+        ballRadius: this.config.ballRadius,
+      },
     );
 
     this.initializeGame();
@@ -606,6 +665,32 @@ export class PongGame3D {
     return { width: Math.floor(width), height: Math.floor(height) };
   }
 
+  private normalizePaddleLength(
+    length?: string | PaddleLengthSetting,
+  ): PaddleLengthSetting {
+    if (length === "short" || length === "normal" || length === "long") {
+      return length;
+    }
+    return "normal";
+  }
+
+  private calculatePaddleHeight(length: PaddleLengthSetting): number {
+    const multiplier = PADDLE_LENGTH_MULTIPLIERS[length] ?? 1;
+    return Math.round(BASE_PADDLE_HEIGHT * multiplier);
+  }
+
+  private normalizeBallSize(size?: string | BallSizeSetting): BallSizeSetting {
+    if (size === "small" || size === "normal" || size === "big") {
+      return size;
+    }
+    return "normal";
+  }
+
+  private calculateBallRadius(size: BallSizeSetting): number {
+    const multiplier = BALL_SIZE_MULTIPLIERS[size] ?? 1;
+    return Math.round(BASE_BALL_RADIUS * multiplier);
+  }
+
   private handleResize(): void {
     const { width, height } = this.calculateResponsiveSize();
     this.config.canvasWidth = width;
@@ -739,5 +824,69 @@ export class PongGame3D {
       width: this.config.canvasWidth,
       height: this.config.canvasHeight,
     };
+  }
+
+  public setFieldColor(colorHex: string): void {
+    if (!isValidColorHex(colorHex)) {
+      console.warn(`PongGame3D: invalid field color '${colorHex}' ignored.`);
+      return;
+    }
+
+    if (this.fieldColorHex === colorHex) {
+      return;
+    }
+
+    this.fieldColorHex = colorHex;
+    this.renderer.setFieldColor(colorHex);
+  }
+
+  public setBallColor(colorHex: string): void {
+    if (!isValidColorHex(colorHex)) {
+      console.warn(`PongGame3D: invalid ball color '${colorHex}' ignored.`);
+      return;
+    }
+
+    if (this.ballColorHex === colorHex) {
+      return;
+    }
+
+    this.ballColorHex = colorHex;
+    this.renderer.setBallColor(colorHex);
+  }
+
+  public setPaddleColor(colorHex: string): void {
+    if (!isValidColorHex(colorHex)) {
+      console.warn(`PongGame3D: invalid paddle color '${colorHex}' ignored.`);
+      return;
+    }
+
+    if (this.paddleColorHex === colorHex) {
+      return;
+    }
+
+    this.paddleColorHex = colorHex;
+    this.renderer.setPaddleColor(colorHex);
+  }
+
+  public setPaddleLength(length: PaddleLengthSetting): void {
+    const normalized = this.normalizePaddleLength(length);
+    if (this.paddleLengthSetting === normalized) {
+      return;
+    }
+
+    this.paddleLengthSetting = normalized;
+    this.config.paddleHeight = this.calculatePaddleHeight(normalized);
+    this.resetGame();
+  }
+
+  public setBallSize(size: BallSizeSetting): void {
+    const normalized = this.normalizeBallSize(size);
+    if (this.ballSizeSetting === normalized) {
+      return;
+    }
+
+    this.ballSizeSetting = normalized;
+    this.config.ballRadius = this.calculateBallRadius(normalized);
+    this.resetGame();
   }
 }
