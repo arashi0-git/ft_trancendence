@@ -1,6 +1,8 @@
 export interface GameState {
   player1: Player;
   player2: Player;
+  player3?: Player | null;
+  player4?: Player | null;
   ball: Ball;
   score: Score;
   gameStatus: "waiting" | "playing" | "paused" | "finished";
@@ -13,8 +15,6 @@ export interface Player {
   keys: {
     up: string;
     down: string;
-    left: string;
-    right: string;
   };
 }
 
@@ -24,8 +24,8 @@ export interface Paddle {
   width: number;
   height: number;
   speed: number;
-  minX: number;
-  maxX: number;
+  minY?: number;
+  maxY?: number;
 }
 
 export interface Ball {

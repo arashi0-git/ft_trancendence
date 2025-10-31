@@ -3,6 +3,7 @@ import { GameManagerService } from "../../shared/services/game-manager.service";
 import { NotificationService } from "../../shared/services/notification.service";
 import { router } from "../../routes/router";
 import { TournamentDataService } from "../../shared/services/tournament-data.service";
+import { GameSetupUI } from "../../shared/components/game-setup-ui";
 
 export type TournamentStep =
   | "setup"
@@ -20,6 +21,7 @@ export class TournamentService {
   private gameManager: GameManagerService;
   private tournamentData: TournamentDataService;
   private notificationService: NotificationService;
+  private gameSetupUI: GameSetupUI;
   private eventListeners: Array<{
     element: HTMLElement;
     event: string;
@@ -30,6 +32,7 @@ export class TournamentService {
     this.gameManager = new GameManagerService();
     this.tournamentData = TournamentDataService.getInstance();
     this.notificationService = NotificationService.getInstance();
+    this.gameSetupUI = new GameSetupUI();
   }
 
   setCurrentPath(path: string): void {
@@ -77,35 +80,31 @@ export class TournamentService {
   }
 
   private renderSetupView(container: HTMLElement): void {
+    const setupFormHtml = this.gameSetupUI.getTemplate({
+      showNameInput: true,
+      nameInputId: "tournament-name",
+      nameLabel: "Tournament Name",
+      namePlaceholder: "Enter tournament name",
+      nameDefaultValue: "Pong Tournament",
+      selectId: "player-count",
+      selectLabel: "Number of Players",
+      options: [
+        { value: "2", text: "2 Players" },
+        { value: "4", text: "4 Players" },
+        { value: "8", text: "8 Players" },
+      ],
+      buttonId: "create-tournament",
+      buttonText: "Create Tournament",
+      
+      buttonClasses:
+        "w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded border border-blue-400 shadow-lg",
+    });
+
     container.innerHTML = `
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-white mb-2">Number of Players</label>
-          <select id="player-count" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-            <option value="2">2 Players</option>
-            <option value="4">4 Players</option>
-            <option value="8">8 Players</option>
-          </select>
+      <div class="max-w-xs mx-auto flex flex-col items-center space-y-3">
+        ${setupFormHtml}
+        
         </div>
-
-        <div>
-          <label class="block text-sm font-medium text-white mb-2">Tournament Name</label>
-          <input
-            type="text"
-            id="tournament-name"
-            placeholder="Enter tournament name"
-            value="Pong Tournament"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          >
-        </div>
-
-        <button
-          id="create-tournament"
-          class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded border border-blue-400 shadow-lg"
-        >
-          Create Tournament
-        </button>
-      </div>
     `;
 
     this.attachEventListenerSafely("create-tournament", "click", () =>
@@ -159,7 +158,7 @@ export class TournamentService {
       <div class="flex space-x-4">
         <button
           id="back-to-setup"
-          class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded border border-purple-400 shadow-lg"
+          class="flex-1 bg-purple-400 hover:bg-purple-600 text-white py-2 px-4 rounded border border-purple-400 shadow-lg"
         >
           Back to Setup
         </button>
@@ -459,7 +458,7 @@ export class TournamentService {
       </div>
       
       <div class="text-center">
-        <button id="new-tournament-btn" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded">
+        <button id="new-tournament-btn" class="bg-purple-400 hover:bg-purple-600 text-white px-6 py-2 rounded">
           New Tournament
         </button>
       </div>

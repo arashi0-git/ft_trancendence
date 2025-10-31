@@ -15,7 +15,7 @@ export class AiModePage extends SpacePageBase implements PageComponent {
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-white">AI Mode - Pong vs Computer</h2>
           <div class="space-x-2">
-            <button id="back-to-home" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">Home</button>
+            <button id="back-to-home" class="bg-purple-400 hover:bg-purple-600 text-white px-4 py-2 rounded border border-purple-400">Home</button>
           </div>
         </div>
 
@@ -41,7 +41,7 @@ export class AiModePage extends SpacePageBase implements PageComponent {
         </div>
         
         <div class="text-center text-sm text-gray-300">
-          <p><strong class="text-white">Player 1 (You):</strong> W/S (Up/Down), A/D (Left/Right)</p>
+          <p><strong class="text-white">Player 1 (You):</strong> W/S (Up/Down) </p>
           <p><strong class="text-white">Player 2 (AI):</strong> Computer controlled</p>
         </div>
 

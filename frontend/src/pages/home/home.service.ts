@@ -1,5 +1,5 @@
-import { AuthService } from "../../shared/services/auth-service";
-import { NotificationService } from "../../shared/services/notification.service";
+// import { AuthService } from "../../shared/services/auth-service";
+// import { NotificationService } from "../../shared/services/notification.service";
 import { router } from "../../routes/router";
 
 export class HomeService {
@@ -13,6 +13,10 @@ export class HomeService {
 
   navigateToAiMode(): void {
     this.navigate("/ai-mode");
+  }
+
+  navigateToGameSettings(): void {
+    this.navigate("/game-settings");
   }
 
   navigateToLogin(): void {
