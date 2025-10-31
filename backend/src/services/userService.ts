@@ -70,12 +70,7 @@ export class UserService {
       return null; // Invalid password
     }
 
-    await UserModel.updateLoginMetadata(user.id);
-
-    const updatedUser = await UserModel.findById(user.id);
-    if (!updatedUser) return null; // Should not happen
-
-    return stripPassword(updatedUser);
+    return stripPassword(user);
   }
 
   static async getUserById(id: number): Promise<UserWithoutPassword | null> {
@@ -92,6 +87,26 @@ export class UserService {
     isOnline: boolean,
   ): Promise<void> {
     await UserModel.setOnlineStatus(id, isOnline);
+  }
+
+  static async markUserLoggedIn(
+    id: number,
+  ): Promise<UserWithoutPassword | null> {
+    await UserModel.updateLoginMetadata(id);
+    const refreshedUser = await UserModel.findById(id);
+    return refreshedUser ? stripPassword(refreshedUser) : null;
+  }
+
+  static async verifyUserPassword(
+    id: number,
+    password: string,
+  ): Promise<boolean> {
+    const user = await UserModel.findById(id);
+    if (!user) {
+      return false;
+    }
+
+    return AuthUtils.verifyPassword(password, user.password_hash);
   }
 
   static async updateUserProfile(

@@ -4,6 +4,9 @@ import type {
   PublicUser,
   UpdateUserSettingsPayload,
   FollowedUserSummary,
+  TwoFactorChallengeResponse,
+  TwoFactorVerifyPayload,
+  TwoFactorStatusResponse,
 } from "../../shared/types/user";
 import { router } from "../../routes/router";
 
@@ -104,5 +107,29 @@ export class UserSettingsService {
       console.error("Failed to remove following:", error);
       throw error;
     }
+  }
+
+  async startTwoFactorSetup(): Promise<TwoFactorChallengeResponse> {
+    const challenge = await AuthService.requestTwoFactorSetup();
+    return challenge;
+  }
+
+  async startTwoFactorDisable(
+    currentPassword: string,
+  ): Promise<TwoFactorChallengeResponse> {
+    const challenge =
+      await AuthService.requestTwoFactorDisable(currentPassword);
+    return challenge;
+  }
+
+  async verifyTwoFactorCode(
+    payload: TwoFactorVerifyPayload,
+  ): Promise<TwoFactorStatusResponse> {
+    const result = await AuthService.verifyTwoFactorCode(payload);
+    if (!("twoFactorEnabled" in result)) {
+      throw new Error("Unexpected response from 2FA verification");
+    }
+    this.currentUser = result.user;
+    return result;
   }
 }

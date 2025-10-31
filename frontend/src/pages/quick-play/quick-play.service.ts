@@ -1,5 +1,4 @@
 import { BaseGameService } from "../../shared/services/base-game.service";
-import { AuthService } from "../../shared/services/auth-service";
 import { router } from "../../routes/router";
 
 export class QuickPlayService extends BaseGameService {

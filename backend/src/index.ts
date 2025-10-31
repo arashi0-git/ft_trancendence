@@ -27,6 +27,28 @@ const fastify = Fastify({
     : undefined,
 });
 
+// Allow empty JSON bodies (parsed as {}) for endpoints that don't require payloads.
+fastify.addContentTypeParser(
+  "application/json",
+  { parseAs: "string" },
+  (request, body, done) => {
+    try {
+      const text = typeof body === "string" ? body : (body?.toString() ?? "");
+      if (text.trim().length === 0) {
+        done(null, {});
+        return;
+      }
+      done(null, JSON.parse(text));
+    } catch (error) {
+      const parseError = error as Error & { statusCode?: number };
+      parseError.name = "FastifyError";
+      parseError.message = "Invalid JSON payload";
+      parseError.statusCode = 400;
+      done(parseError, undefined);
+    }
+  },
+);
+
 // プラグインの登録
 async function registerPlugins() {
   // CORS設定
