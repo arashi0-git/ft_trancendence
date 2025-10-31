@@ -157,7 +157,7 @@ export class PlayerSelector {
 
           this.currentSelection = {
             id: value,
-            displayName: "AI (Medium)", // 難易度を含めた表示名
+            displayName: `AI Player ${this.playerIndex} (Medium)`, // 枠ごとに一意な表示名
             isAI: true,
             aiDifficulty: "medium",
           };
@@ -195,7 +195,7 @@ export class PlayerSelector {
 
         if (this.currentSelection?.isAI) {
           this.currentSelection.aiDifficulty = difficulty;
-          this.currentSelection.displayName = `AI (${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)})`;
+          this.currentSelection.displayName = `AI Player ${this.playerIndex} (${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)})`;
           this.onSelectionChange?.(this.currentSelection);
         }
       });
