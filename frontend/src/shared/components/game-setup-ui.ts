@@ -45,7 +45,7 @@ export class GameSetupUI {
       "w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg";
 
     return `
-      <div class="space-y-4 max-w-sm mx-auto">
+      <div class="space-y-4 max-w-sm mx-auto w-full">
         ${nameInputHtml}
         <div>
           <label class="block text-sm font-medium text-white mb-2">${config.selectLabel}</label>

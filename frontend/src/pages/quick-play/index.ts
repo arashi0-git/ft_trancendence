@@ -1,35 +1,54 @@
 import { QuickPlayService } from "./quick-play.service";
 import { SpacePageBase } from "../../shared/components/space-page-base";
 import { GameSetupUI } from "../../shared/components/game-setup-ui";
+import { PlayerRegistrationUI } from "../../shared/components/player-registration-ui";
+
+type QuickPlayStep = "setup" | "registration" | "game";
 
 export class QuickPlayPage extends SpacePageBase {
   private service: QuickPlayService;
   private gameSetupUI: GameSetupUI;
+  private playerRegistrationUI: PlayerRegistrationUI;
+  private currentStep: QuickPlayStep = "setup";
+  private selectedPlayerCount: number = 2;
+  private playerAliases: string[] = [];
 
   constructor(container: HTMLElement) {
     super(container);
     this.service = new QuickPlayService();
     this.gameSetupUI = new GameSetupUI();
+    this.playerRegistrationUI = new PlayerRegistrationUI();
   }
 
-render(): void {
-    this.container.innerHTML = this.getTemplate(); // Vytvoří prázdný kontejner
-    this.renderSelectionView(); // Vykreslí výběr
+  render(): void {
+    this.ensureBaseTemplate();
+    this.renderSelectionView();
     this.initializeSpaceBackground();
-    this.initializeAppHeader(); // Přidáno pro zobrazení hlavičky
   }
 
 
   private renderGameView(playerCount: number): void {
+    const contentDiv = this.ensureBaseTemplate();
+    if (!contentDiv) {
+      console.warn(
+        "QuickPlayPage: failed to ensure base template for game view",
+      );
+      return;
+    }
+
+    this.playerRegistrationUI.destroy();
+    this.selectedPlayerCount = playerCount;
+    this.currentStep = "game";
+    this.updateHeader();
+
     const gameContent = `
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-white">Quick Play - Pong</h2>
-          <div class="space-x-2">
-            <button id="back-to-selection" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded border border-gray-400">Back to Selection</button>
-          </div>
+      <div class="space-y-4">
+        <div class="flex justify-between items-center">
+          <h3 class="text-xl font-bold text-white">Quick Play - Pong</h3>
+          <button id="back-to-registration" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded border border-gray-400">Back to Registration</button>
         </div>
 
-        <div class="mb-3 text-center">
+        <div class="text-center">
           <div class="space-x-3">
             <button id="start-game" class="bg-green-600 hover:bg-green-700 text-white px-4 py-1 text-sm rounded border border-green-400 shadow-lg">Start Game</button>
             <button id="pause-game" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-1 text-sm rounded border border-yellow-400 shadow-lg" disabled>Pause</button>
@@ -37,7 +56,7 @@ render(): void {
           </div>
         </div>
         
-        <div class="flex justify-center mb-3">
+        <div class="flex justify-center">
           <canvas id="pong-canvas" class="border-2 border-gray-300 bg-black max-w-full h-auto"></canvas>
         </div>
         
@@ -55,31 +74,26 @@ render(): void {
             </button>
           </div>  
         </div>
+      </div>
     `;
-    this.container.innerHTML = this.getSpaceTemplate(gameContent);
+    contentDiv.innerHTML = gameContent;
     this.attachGameEventListeners();
     this.service.initializeGame("pong-canvas", playerCount);
   }
 
   private renderSelectionView(): void {
-    let contentDiv = this.container.querySelector(
-      "#quick-play-content",
-    ) as HTMLElement | null;
-
-    if (!contentDiv) {
-      this.container.innerHTML = this.getTemplate();
-      this.initializeAppHeader();
-      contentDiv = this.container.querySelector(
-        "#quick-play-content",
-      ) as HTMLElement | null;
-    }
-
+    const contentDiv = this.ensureBaseTemplate();
     if (!contentDiv) {
       console.warn(
         "QuickPlayPage: failed to locate #quick-play-content container",
       );
       return;
     }
+
+    this.currentStep = "setup";
+    this.playerAliases = [];
+    this.playerRegistrationUI.destroy();
+    this.updateHeader();
 
     const selectionContent = this.gameSetupUI.getTemplate({
       showNameInput: false,
@@ -90,20 +104,13 @@ render(): void {
         { value: "4", text: "4 Players" }, // Povoleno
       ],
       buttonId: "start-quick-play-btn",
-      buttonText: "Start Game",
-      buttonClasses: "w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg"
+      buttonText: "Next",
+      buttonClasses: "w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded border border-blue-400 shadow-lg"
     });
 
     const finalHtml = `
       <div class="max-w-xs mx-auto flex flex-col items-center space-y-3">
-        <div class="text-center mb-2"> 
-            <h2 class="text-2xl font-bold text-white">Quick Play</h2>
-            <p class="text-lg text-gray-300">Select Mode</p>
-        </div>
-        <div class="w-full px-4">
-           ${selectionContent}
-        </div>
-        <button id="back-to-home" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400 mt-2">Home</button>
+        ${selectionContent}
       </div>
     `;
 
@@ -111,8 +118,56 @@ render(): void {
     this.attachSelectionEventListeners();
   }
 
+  private async renderPlayerRegistrationView(): Promise<void> {
+    const contentDiv = this.ensureBaseTemplate();
+    if (!contentDiv) {
+      console.warn(
+        "QuickPlayPage: failed to locate #quick-play-content container",
+      );
+      return;
+    }
+
+    this.currentStep = "registration";
+    this.updateHeader();
+
+    await this.playerRegistrationUI.render({
+      container: contentDiv,
+      playerCount: this.selectedPlayerCount,
+      heading: "Enter Player Aliases",
+      subtitle: `Quick Play (${this.selectedPlayerCount} players)`,
+      backButton: {
+        text: "Back to Setup",
+        classes:
+          "flex-1 bg-purple-400 hover:bg-purple-600 text-white py-2 px-4 rounded border border-purple-400 shadow-lg",
+      },
+      startButton: {
+        text: "Start Game",
+        classes:
+          "flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg",
+      },
+      onBack: () => {
+        this.playerAliases = [];
+        this.renderSelectionView();
+      },
+      onSubmit: (aliases) => {
+        this.playerAliases = aliases;
+        this.renderGameView(this.selectedPlayerCount);
+      },
+      initialAliases: this.playerAliases,
+    });
+  }
+
   private getTemplate(): string {
-    return this.getSpaceTemplate('<div id="quick-play-content"></div>');
+    const content = `
+      <div class="flex justify-between items-center mb-4">
+        <h2 id="quick-play-page-title" class="text-2xl font-bold text-white">Quick Play Setup</h2>
+        <div id="quick-play-header-actions" class="space-x-2">
+          <button id="quick-play-home-button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">Home</button>
+        </div>
+      </div>
+      <div id="quick-play-content"></div>
+    `;
+    return this.getSpaceTemplate(content);
   }
 
   private getControlsTemplate(playerCount: number): string {
@@ -127,30 +182,112 @@ render(): void {
   }
 
   private attachSelectionEventListeners(): void {
-    document.getElementById("back-to-home")?.addEventListener("click", () => {
-      this.service.navigateToHome();
-    });
-
     document.getElementById("start-quick-play-btn")?.addEventListener("click", () => {
       const select = document.getElementById("player-count-select") as HTMLSelectElement;
       if (select) {
         const playerCount = parseInt(select.value, 10);
-        this.renderGameView(playerCount); // Spustí herní pohled
+        if (!Number.isNaN(playerCount)) {
+          this.selectedPlayerCount = playerCount;
+          this.playerAliases = [];
+          void this.renderPlayerRegistrationView();
+        }
       }
     });
   }
 
   private attachGameEventListeners(): void {
-    document.getElementById("back-to-selection")?.addEventListener("click", () => {
-      this.service.cleanup(); // Musíme uklidit hru
-      this.renderSelectionView(); // Vrátí se na výběr
+    document.getElementById("back-to-registration")?.addEventListener("click", () => {
+      this.service.cleanup();
+      void this.renderPlayerRegistrationView();
     });
 
     this.service.attachGameControls();
   }
 
+  private updateHeader(): void {
+    const titleElement = this.container.querySelector(
+      "#quick-play-page-title",
+    ) as HTMLElement | null;
+    const actionsContainer = this.container.querySelector(
+      "#quick-play-header-actions",
+    ) as HTMLElement | null;
+
+    if (!titleElement || !actionsContainer) {
+      return;
+    }
+
+    let title = "Quick Play Setup";
+    let actionsHtml = `
+      <button id="quick-play-home-button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">
+        Home
+      </button>
+    `;
+
+    if (this.currentStep === "registration") {
+      title = "Player Registration";
+      actionsHtml = `
+        <button id="quick-play-header-home" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">
+          Home
+        </button>
+      `;
+    } else if (this.currentStep === "game") {
+      title = "Quick Play - Pong";
+      actionsHtml = `
+        <button id="quick-play-header-back" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">
+          Back
+        </button>
+      `;
+    }
+
+    titleElement.textContent = title;
+    actionsContainer.innerHTML = actionsHtml;
+
+    if (this.currentStep === "setup") {
+      document
+        .getElementById("quick-play-home-button")
+        ?.addEventListener("click", () => {
+          this.service.navigateToHome();
+        });
+    } else if (this.currentStep === "registration") {
+      document
+        .getElementById("quick-play-header-home")
+        ?.addEventListener("click", () => {
+          this.service.cleanup();
+          this.service.navigateToHome();
+        });
+    } else {
+      document
+        .getElementById("quick-play-header-back")
+        ?.addEventListener("click", () => {
+          if (this.currentStep === "game") {
+            this.service.cleanup();
+            void this.renderPlayerRegistrationView();
+          } else {
+            this.renderSelectionView();
+          }
+        });
+    }
+  }
+
+  private ensureBaseTemplate(): HTMLElement | null {
+    let contentDiv = this.container.querySelector(
+      "#quick-play-content",
+    ) as HTMLElement | null;
+
+    if (!contentDiv) {
+      this.container.innerHTML = this.getTemplate();
+      this.initializeAppHeader();
+      contentDiv = this.container.querySelector(
+        "#quick-play-content",
+      ) as HTMLElement | null;
+    }
+
+    return contentDiv;
+  }
+
   destroy(): void {
     this.service.cleanup();
+    this.playerRegistrationUI.destroy();
     this.cleanupSpaceBackground();
     this.cleanupAppHeader();
   }
