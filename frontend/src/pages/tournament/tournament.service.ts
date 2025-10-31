@@ -1,9 +1,9 @@
-import { AuthService } from "../../shared/services/auth-service";
 import { GameManagerService } from "../../shared/services/game-manager.service";
 import { NotificationService } from "../../shared/services/notification.service";
 import { router } from "../../routes/router";
 import { TournamentDataService } from "../../shared/services/tournament-data.service";
 import { GameSetupUI } from "../../shared/components/game-setup-ui";
+import { PlayerRegistrationUI } from "../../shared/components/player-registration-ui";
 
 export type TournamentStep =
   | "setup"
@@ -22,6 +22,7 @@ export class TournamentService {
   private tournamentData: TournamentDataService;
   private notificationService: NotificationService;
   private gameSetupUI: GameSetupUI;
+  private playerRegistrationUI: PlayerRegistrationUI;
   private eventListeners: Array<{
     element: HTMLElement;
     event: string;
@@ -33,6 +34,7 @@ export class TournamentService {
     this.tournamentData = TournamentDataService.getInstance();
     this.notificationService = NotificationService.getInstance();
     this.gameSetupUI = new GameSetupUI();
+    this.playerRegistrationUI = new PlayerRegistrationUI();
   }
 
   setCurrentPath(path: string): void {
@@ -145,141 +147,30 @@ export class TournamentService {
       return;
     }
 
-    container.innerHTML = `
-      <div class="text-center mb-4">
-        <h3 class="text-lg font-semibold">Enter Player Aliases</h3>
-        <p class="text-sm text-gray-300">Tournament: ${this.escapeHtml(tournament.name)} (${tournament.playerCount} players)</p>
-      </div>
-
-      <div id="player-inputs" class="space-y-3 mb-4">
-        <!-- プレイヤー入力フィールド生成 -->
-      </div>
-
-      <div class="flex space-x-4">
-        <button
-          id="back-to-setup"
-          class="flex-1 bg-purple-400 hover:bg-purple-600 text-white py-2 px-4 rounded border border-purple-400 shadow-lg"
-        >
-          Back to Setup
-        </button>
-        <button
-          id="start-tournament"
-          class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg"
-          disabled
-        >
-          Start Tournament
-        </button>
-      </div>
-    `;
-
-    await this.generatePlayerInputs(tournament.playerCount);
-
-    this.attachEventListenerSafely("back-to-setup", "click", () => {
-      // セットアップ画面に戻る時はトーナメントデータをクリア
-      this.tournamentData.clearTournament();
-      this.navigateToSetup();
+    await this.playerRegistrationUI.render({
+      container,
+      playerCount: tournament.playerCount,
+      heading: "Enter Player Aliases",
+      subtitle: `Tournament: ${tournament.name} (${tournament.playerCount} players)`,
+      backButton: {
+        text: "Back to Setup",
+        classes:
+          "flex-1 bg-purple-400 hover:bg-purple-600 text-white py-2 px-4 rounded border border-purple-400 shadow-lg",
+      },
+      startButton: {
+        text: "Start Tournament",
+        classes:
+          "flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg",
+      },
+      onBack: () => {
+        this.tournamentData.clearTournament();
+        this.navigateToSetup();
+      },
+      onSubmit: (aliases) => this.startTournament(aliases),
     });
-
-    this.attachEventListenerSafely("start-tournament", "click", () =>
-      this.startTournament(),
-    );
   }
 
-  private async generatePlayerInputs(playerCount: number): Promise<void> {
-    const playerInputsContainer = document.getElementById("player-inputs");
-    if (!playerInputsContainer) return;
-
-    playerInputsContainer.innerHTML = "";
-
-    // ログインユーザー情報を取得
-    let currentUser: { username: string } | null = null;
-
-    try {
-      if (AuthService.isAuthenticated()) {
-        const user = await AuthService.getCurrentUser();
-        currentUser = {
-          username: user.username,
-        };
-      }
-    } catch (error) {
-      console.warn("Failed to load current user for tournament:", error);
-    }
-
-    for (let i = 1; i <= playerCount; i++) {
-      const inputDiv = document.createElement("div");
-
-      const placeholder = currentUser
-        ? `Select ${currentUser.username} or enter custom alias`
-        : `Enter alias for Player ${i}`;
-
-      inputDiv.innerHTML = `
-        <label class="block text-sm font-medium text-white mb-1">Player ${i}</label>
-        <input
-          type="text"
-          id="player-${i}-alias"
-          list="player-${i}-options"
-          placeholder="${this.escapeHtml(placeholder)}"
-          maxlength="20"
-          required
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        >
-        ${
-          currentUser
-            ? `
-        <datalist id="player-${i}-options">
-          <option value="${this.escapeHtml(currentUser.username)}">${this.escapeHtml(currentUser.username)} (You)</option>
-        </datalist>
-        `
-            : ""
-        }
-      `;
-
-      playerInputsContainer.appendChild(inputDiv);
-
-      const input = inputDiv.querySelector(
-        `#player-${i}-alias`,
-      ) as HTMLInputElement;
-
-      if (input) {
-        this.addEventListenerWithTracking(input, "input", () =>
-          this.validatePlayerInputs(),
-        );
-      }
-    }
-  }
-  private validatePlayerInputs(): void {
-    const startBtn = document.getElementById(
-      "start-tournament",
-    ) as HTMLButtonElement;
-    const inputs = document.querySelectorAll(
-      "#player-inputs input",
-    ) as NodeListOf<HTMLInputElement>;
-
-    let allValid = true;
-    const aliases = new Set<string>();
-
-    inputs.forEach((input) => {
-      const alias = input.value.trim().toLowerCase();
-
-      if (!alias) {
-        allValid = false;
-        input.classList.add("border-red-500");
-      } else if (aliases.has(alias)) {
-        allValid = false;
-        input.classList.add("border-red-500");
-      } else {
-        aliases.add(alias);
-        input.classList.remove("border-red-500");
-      }
-    });
-
-    if (startBtn) {
-      startBtn.disabled = !allValid;
-    }
-  }
-
-  private startTournament(): void {
-    console.log("Starting tournament...");
+  private startTournament(aliases: string[]): void {
     const tournament = this.tournamentData.getCurrentTournament();
     if (!tournament) {
       console.error("No tournament found");
@@ -292,22 +183,12 @@ export class TournamentService {
     tournament.currentRound = 1;
     tournament.status = "setup";
 
-    const inputs = document.querySelectorAll(
-      "#player-inputs input",
-    ) as NodeListOf<HTMLInputElement>;
-
-    console.log("Found inputs:", inputs.length);
-
-    inputs.forEach((input) => {
-      const alias = input.value.trim();
-      console.log("Adding player:", alias);
+    aliases.forEach((alias) => {
       this.tournamentData.addPlayer(alias);
     });
 
     try {
-      console.log("Generating matches...");
       this.tournamentData.generateMatches();
-      console.log("Matches generated, navigating to bracket...");
       this.navigateToBracket();
     } catch (error) {
       console.error("Error generating matches:", error);
@@ -350,7 +231,10 @@ export class TournamentService {
   }
 
   getBackButtonTemplate(): string {
-    const backText = this.currentStep === "setup" ? "Home" : "Back";
+    const backText =
+      this.currentStep === "setup" || this.currentStep === "registration"
+        ? "Home"
+        : "Back";
     return `<button id="back-button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">${backText}</button>`;
   }
 
@@ -395,6 +279,7 @@ export class TournamentService {
       element.removeEventListener(event, handler);
     });
     this.eventListeners = [];
+    this.playerRegistrationUI.destroy();
   }
 
   cleanup(): void {
@@ -598,7 +483,8 @@ export class TournamentService {
   handleBackNavigation(): void {
     switch (this.currentStep) {
       case "registration":
-        this.navigateToSetup();
+        this.tournamentData.clearTournament();
+        this.navigate("/");
         break;
       case "bracket":
         this.navigateToRegistration();
