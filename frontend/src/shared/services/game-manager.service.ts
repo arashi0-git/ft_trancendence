@@ -28,11 +28,6 @@ export class GameManagerService {
         throw new Error(`Canvas with id '${config.canvasId}' not found`);
       }
 
-      // --- ADD THESE LOGS HERE ---
-      console.log("GameManagerService received config:", config);
-      console.log("GameManagerService passing playerCount:", config.playerCount, typeof config.playerCount);
-      // --- END OF LOGS ---
-
       this.currentConfig = config;
       // Make sure to pass config.playerCount here, not {}
       this.pongGame = new PongGame3D(canvas, config.playerCount); // Pass the playerCount

@@ -4,7 +4,6 @@ import { router } from "../../routes/router";
 
 export class QuickPlayService extends BaseGameService {
   initializeGame(canvasId: string, playerCount: number): void {
-    console.log("QuickPlayService received playerCount:", playerCount, typeof playerCount); //smazat
     this.gameManager.initializeGame({
       mode: "quick-play",
       canvasId: canvasId,
@@ -72,10 +71,9 @@ export class QuickPlayService extends BaseGameService {
       winnerNameEl.textContent = `Player ${data.winner}`;
       finalScoreEl.textContent = `${data.score1} - ${data.score2}`;
       modal.classList.remove("hidden");
-  
+
       startBtn?.classList.add("hidden");
       pauseBtn?.classList.add("hidden");
-
     } else {
       this.notificationService.success(`Player ${data.winner} wins! 🎉`);
     }

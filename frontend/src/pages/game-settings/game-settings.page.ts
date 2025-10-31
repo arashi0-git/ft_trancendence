@@ -47,13 +47,6 @@ export class GameSettingsPage extends SpacePageBase {
     document.getElementById("back-to-home")?.addEventListener("click", () => {
       this.service.navigateToHome();
     });
-
-    document
-      .getElementById("power-ups-toggle")
-      ?.addEventListener("change", (e) => {
-        const isEnabled = (e.target as HTMLInputElement).checked;
-        console.log("Power-ups:", isEnabled);
-      });
   }
 
   destroy(): void {
