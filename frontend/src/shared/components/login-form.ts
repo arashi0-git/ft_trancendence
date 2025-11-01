@@ -7,7 +7,6 @@ import type {
   TwoFactorChallengeResponse,
   TwoFactorStatusResponse,
 } from "../types/user";
-import { translate } from "../../i18n";
 
 export class LoginForm {
   private container: HTMLElement;
@@ -15,8 +14,7 @@ export class LoginForm {
 
   private onLoginSuccessCallback: (user: PublicUser) => void = (user) => {
     console.log("User logged in:", user);
-    const username = user?.username || translate("login.alerts.guest");
-    alert(translate("login.alerts.welcome", { username }));
+    alert(`Welcome back, ${user?.username || "User"}!`);
   };
 
   private onShowRegisterCallback: () => void = () => {
@@ -33,39 +31,30 @@ export class LoginForm {
   }
 
   private renderLoginView(): void {
-    const title = translate("login.title");
-    const emailLabel = translate("login.emailLabel");
-    const emailPlaceholder = translate("login.emailPlaceholder");
-    const passwordLabel = translate("login.passwordLabel");
-    const passwordPlaceholder = translate("login.passwordPlaceholder");
-    const submitLabel = translate("login.submit");
-    const registerLabel = translate("login.register");
-    const homeLabel = translate("login.home");
-
     this.container.innerHTML = `
       <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold mb-4 text-center">${title}</h2>
+        <h2 class="text-2xl font-bold mb-4 text-center">Login</h2>
         <form id="login-form" class="space-y-4">
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">${emailLabel}</label>
+            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
             <input
               type="email"
               id="email"
               name="email"
               required
               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="${emailPlaceholder}"
+              placeholder="Enter your email"
             >
           </div>
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700">${passwordLabel}</label>
+            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
             <input
               type="password"
               id="password"
               name="password"
               required
               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="${passwordPlaceholder}"
+              placeholder="Enter your password"
             >
           </div>
           <div id="error-message" class="hidden text-red-600 text-sm"></div>
@@ -75,21 +64,21 @@ export class LoginForm {
               id="login-submit"
               class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              ${submitLabel}
+              Login
             </button>
             <button 
               type="button" 
               id="show-register"
               class="w-full bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-700"
             >
-              ${registerLabel}
+              Don't have an account? Register
             </button>
             <button 
               type="button" 
               id="show-home"
               class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
-              ${homeLabel}
+              Back to Home
             </button>
           </div>
         </form>
@@ -100,20 +89,13 @@ export class LoginForm {
   }
 
   private renderTwoFactorView(): void {
-    const title = translate("login.twoFactor.title");
-    const fallbackMessage = translate("login.twoFactor.message");
-    const codeLabel = translate("login.twoFactor.codeLabel");
-    const codePlaceholder = translate("login.twoFactor.codePlaceholder");
-    const submitLabel = translate("login.twoFactor.submit");
-    const cancelLabel = translate("login.twoFactor.cancel");
-
     this.container.innerHTML = `
       <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold mb-4 text-center">${title}</h2>
+        <h2 class="text-2xl font-bold mb-4 text-center">Two-Factor Verification</h2>
         <p id="twofactor-message" class="text-sm text-gray-600 mb-4"></p>
         <form id="twofactor-form" class="space-y-4">
           <div>
-            <label for="twofactor-code" class="block text-sm font-medium text-gray-700">${codeLabel}</label>
+            <label for="twofactor-code" class="block text-sm font-medium text-gray-700">Verification Code</label>
             <input
               type="text"
               id="twofactor-code"
@@ -123,7 +105,7 @@ export class LoginForm {
               required
               inputmode="numeric"
               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 tracking-widest text-center"
-              placeholder="${codePlaceholder}"
+              placeholder="123456"
             >
           </div>
           <div id="twofactor-error" class="hidden text-red-600 text-sm"></div>
@@ -133,21 +115,23 @@ export class LoginForm {
               id="twofactor-submit"
               class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              ${submitLabel}
+              Verify Code
             </button>
             <button 
               type="button" 
               id="twofactor-cancel"
               class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
-              ${cancelLabel}
+              Back to Login
             </button>
           </div>
         </form>
       </div>
     `;
 
-    const message = this.twoFactorChallenge?.message || fallbackMessage;
+    const message =
+      this.twoFactorChallenge?.message ||
+      "Enter the verification code sent to your email.";
     const messageElement = this.container.querySelector(
       "#twofactor-message",
     ) as HTMLParagraphElement | null;
@@ -223,13 +207,13 @@ export class LoginForm {
     };
 
     if (!loginData.email || !loginData.password) {
-      errorDiv.textContent = translate("login.errors.required");
+      errorDiv.textContent = "Email and password are required";
       errorDiv.classList.remove("hidden");
       return;
     }
 
     submitBtn.disabled = true;
-    submitBtn.textContent = translate("login.status.loggingIn");
+    submitBtn.textContent = "Logging in...";
 
     try {
       const response = await AuthService.login(loginData);
@@ -243,15 +227,12 @@ export class LoginForm {
       this.handleLoginSuccess(response);
     } catch (error) {
       console.error("Login failed:", error);
-      const fallbackMessage = translate("login.errors.generic");
       errorDiv.textContent =
-        error instanceof Error && error.message
-          ? error.message
-          : fallbackMessage;
+        error instanceof Error ? error.message : "Login failed";
       errorDiv.classList.remove("hidden");
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = translate("login.submit");
+      submitBtn.textContent = "Login";
     }
   }
 
@@ -260,7 +241,6 @@ export class LoginForm {
 
     if (!this.twoFactorChallenge?.twoFactorToken) {
       console.error("Two-factor challenge missing");
-      alert(translate("login.errors.twoFactorMissing"));
       return;
     }
 
@@ -282,13 +262,13 @@ export class LoginForm {
 
     const code = ((formData.get("code") as string) || "").trim();
     if (!/^\d{6}$/.test(code)) {
-      errorDiv.textContent = translate("login.errors.twoFactorInvalid");
+      errorDiv.textContent = "Enter the 6-digit code from your email";
       errorDiv.classList.remove("hidden");
       return;
     }
 
     submitBtn.disabled = true;
-    submitBtn.textContent = translate("login.status.verifying");
+    submitBtn.textContent = "Verifying...";
 
     try {
       const result = await AuthService.verifyTwoFactorCode({
@@ -302,19 +282,16 @@ export class LoginForm {
       }
 
       // Unexpected payload for login flow
-      errorDiv.textContent = translate("login.errors.twoFactorUnexpected");
+      errorDiv.textContent = "Unexpected response while verifying code.";
       errorDiv.classList.remove("hidden");
     } catch (error) {
       console.error("Two-factor verification failed:", error);
-      const fallbackMessage = translate("login.errors.twoFactorGeneric");
       errorDiv.textContent =
-        error instanceof Error && error.message
-          ? error.message
-          : fallbackMessage;
+        error instanceof Error ? error.message : "Verification failed";
       errorDiv.classList.remove("hidden");
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = translate("login.twoFactor.submit");
+      submitBtn.textContent = "Verify Code";
     }
   }
 
