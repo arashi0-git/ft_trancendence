@@ -7,6 +7,7 @@ export interface PublicUser {
   updated_at: string;
   is_online: boolean;
   last_login: string | null;
+  two_factor_enabled: boolean;
 }
 
 export interface CreateUserRequest {
@@ -23,6 +24,25 @@ export interface LoginRequest {
 export interface AuthResponse {
   user: PublicUser;
   token: string;
+}
+
+export interface TwoFactorChallengeResponse {
+  requiresTwoFactor: true;
+  twoFactorToken: string;
+  delivery: "email";
+  expiresIn: number;
+  message: string;
+}
+
+export type AuthResult = AuthResponse | TwoFactorChallengeResponse;
+
+export interface TwoFactorVerifyPayload {
+  token: string;
+  code: string;
+}
+
+export interface TwoFactorStatusResponse {
+  user: PublicUser;
 }
 
 export interface UpdateUserSettingsPayload {

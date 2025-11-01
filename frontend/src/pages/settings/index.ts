@@ -6,6 +6,7 @@ import type {
   PublicUser,
   UpdateUserSettingsPayload,
   FollowedUserSummary,
+  TwoFactorChallengeResponse,
 } from "../../shared/types/user";
 import { router } from "../../routes/router";
 
@@ -29,6 +30,21 @@ export class UserSettingsPage extends SpacePageBase {
   private boundHandleFollowClick = this.handleFollowClick.bind(this);
   private boundHandleFollowKeydown = this.handleFollowKeydown.bind(this);
   private boundHandleFollowingClick = this.handleFollowingClick.bind(this);
+  private twoFactorStatusText: HTMLElement | null = null;
+  private enableTwoFactorButton: HTMLButtonElement | null = null;
+  private disableTwoFactorButton: HTMLButtonElement | null = null;
+  private twoFactorCodeContainer: HTMLElement | null = null;
+  private twoFactorCodeInput: HTMLInputElement | null = null;
+  private twoFactorVerifyButton: HTMLButtonElement | null = null;
+  private twoFactorCancelButton: HTMLButtonElement | null = null;
+  private twoFactorError: HTMLElement | null = null;
+  private twoFactorHelper: HTMLElement | null = null;
+  private pendingTwoFactorChallenge: TwoFactorChallengeResponse | null = null;
+  private pendingTwoFactorPurpose: "enable" | "disable" | null = null;
+  private boundHandleTwoFactorEnable = this.handleTwoFactorEnable.bind(this);
+  private boundHandleTwoFactorDisable = this.handleTwoFactorDisable.bind(this);
+  private boundHandleTwoFactorVerify = this.handleTwoFactorVerify.bind(this);
+  private boundHandleTwoFactorCancel = this.handleTwoFactorCancel.bind(this);
 
   constructor(container: HTMLElement) {
     super(container);
@@ -60,6 +76,33 @@ export class UserSettingsPage extends SpacePageBase {
     this.followingListContainer = this.container.querySelector(
       "#following-list-container",
     ) as HTMLElement | null;
+    this.twoFactorStatusText = this.container.querySelector(
+      "#twofactor-status-text",
+    ) as HTMLElement | null;
+    this.enableTwoFactorButton = this.container.querySelector(
+      "#enable-2fa-btn",
+    ) as HTMLButtonElement | null;
+    this.disableTwoFactorButton = this.container.querySelector(
+      "#disable-2fa-btn",
+    ) as HTMLButtonElement | null;
+    this.twoFactorCodeContainer = this.container.querySelector(
+      "#twofactor-code-container",
+    ) as HTMLElement | null;
+    this.twoFactorCodeInput = this.container.querySelector(
+      "#twofactor-code-input",
+    ) as HTMLInputElement | null;
+    this.twoFactorVerifyButton = this.container.querySelector(
+      "#twofactor-verify-btn",
+    ) as HTMLButtonElement | null;
+    this.twoFactorCancelButton = this.container.querySelector(
+      "#twofactor-cancel-btn",
+    ) as HTMLButtonElement | null;
+    this.twoFactorError = this.container.querySelector(
+      "#twofactor-error",
+    ) as HTMLElement | null;
+    this.twoFactorHelper = this.container.querySelector(
+      "#twofactor-helper",
+    ) as HTMLElement | null;
 
     this.followingLoaded = false;
     this.renderFollowingLoading();
@@ -90,6 +133,22 @@ export class UserSettingsPage extends SpacePageBase {
       "click",
       this.boundHandleFollowingClick,
     );
+    this.enableTwoFactorButton?.removeEventListener(
+      "click",
+      this.boundHandleTwoFactorEnable,
+    );
+    this.disableTwoFactorButton?.removeEventListener(
+      "click",
+      this.boundHandleTwoFactorDisable,
+    );
+    this.twoFactorVerifyButton?.removeEventListener(
+      "click",
+      this.boundHandleTwoFactorVerify,
+    );
+    this.twoFactorCancelButton?.removeEventListener(
+      "click",
+      this.boundHandleTwoFactorCancel,
+    );
 
     this.revokePreviewUrl();
     this.selectedFile = null;
@@ -99,6 +158,17 @@ export class UserSettingsPage extends SpacePageBase {
     this.followControls = null;
     this.followInput = null;
     this.followingListContainer = null;
+    this.twoFactorStatusText = null;
+    this.enableTwoFactorButton = null;
+    this.disableTwoFactorButton = null;
+    this.twoFactorCodeContainer = null;
+    this.twoFactorCodeInput = null;
+    this.twoFactorVerifyButton = null;
+    this.twoFactorCancelButton = null;
+    this.twoFactorError = null;
+    this.twoFactorHelper = null;
+    this.pendingTwoFactorChallenge = null;
+    this.pendingTwoFactorPurpose = null;
     this.cleanupSpaceBackground();
     this.cleanupAppHeader();
   }
@@ -235,6 +305,73 @@ export class UserSettingsPage extends SpacePageBase {
                 autocomplete="new-password"
               />
             </div>
+
+            <div class="border border-cyan-500/30 rounded-lg p-4 bg-gray-900/40 space-y-3">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <h4 class="text-md font-semibold text-cyan-200">Two-Factor Authentication (2FA)</h4>
+                  <p id="twofactor-status-text" class="text-xs text-gray-400">
+                    Checking your 2FA status...
+                  </p>
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    id="enable-2fa-btn"
+                    class="px-4 py-2 rounded bg-cyan-500 hover:bg-cyan-600 text-white font-semibold transition"
+                  >
+                    Enable 2FA
+                  </button>
+                  <button
+                    type="button"
+                    id="disable-2fa-btn"
+                    class="hidden px-4 py-2 rounded bg-red-500/80 hover:bg-red-500 text-white font-semibold transition"
+                  >
+                    Disable 2FA
+                  </button>
+                </div>
+              </div>
+
+              <div
+                id="twofactor-code-container"
+                class="hidden mt-2 space-y-3 border border-cyan-500/20 rounded-lg p-3 bg-gray-900/60"
+              >
+                <p id="twofactor-helper" class="text-xs text-gray-400"></p>
+                <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
+                  <div class="flex-1">
+                    <label class="block text-sm text-gray-300 mb-1" for="twofactor-code-input">
+                      Verification code
+                    </label>
+                    <input
+                      id="twofactor-code-input"
+                      type="text"
+                      inputmode="numeric"
+                      pattern="\\d{6}"
+                      maxlength="6"
+                      class="w-full bg-gray-900/70 border border-cyan-500/30 rounded px-3 py-2 text-white tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                      placeholder="123456"
+                    />
+                  </div>
+                  <div class="flex gap-2">
+                    <button
+                      type="button"
+                      id="twofactor-verify-btn"
+                      class="px-4 py-2 rounded bg-blue-500 hover:bg-blue-600 text-white font-semibold transition"
+                    >
+                      Verify
+                    </button>
+                    <button
+                      type="button"
+                      id="twofactor-cancel-btn"
+                      class="px-4 py-2 rounded bg-gray-600 hover:bg-gray-700 text-white font-semibold transition"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+                <div id="twofactor-error" class="hidden text-sm text-red-300"></div>
+              </div>
+            </div>
           </section>
 
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
@@ -307,6 +444,22 @@ export class UserSettingsPage extends SpacePageBase {
     this.followingListContainer?.addEventListener(
       "click",
       this.boundHandleFollowingClick,
+    );
+    this.enableTwoFactorButton?.addEventListener(
+      "click",
+      this.boundHandleTwoFactorEnable,
+    );
+    this.disableTwoFactorButton?.addEventListener(
+      "click",
+      this.boundHandleTwoFactorDisable,
+    );
+    this.twoFactorVerifyButton?.addEventListener(
+      "click",
+      this.boundHandleTwoFactorVerify,
+    );
+    this.twoFactorCancelButton?.addEventListener(
+      "click",
+      this.boundHandleTwoFactorCancel,
     );
   }
 
@@ -467,6 +620,8 @@ export class UserSettingsPage extends SpacePageBase {
     };
 
     this.updateAvatarPreview(sanitizedProfileUrl || null, user);
+    this.updateTwoFactorUi(user);
+    this.hideTwoFactorCodeEntry(true);
   }
 
   private updateAvatarPreview(url: string | null, user?: PublicUser): void {
@@ -502,6 +657,232 @@ export class UserSettingsPage extends SpacePageBase {
       img.removeAttribute("src");
       placeholder.classList.remove("hidden");
     }
+  }
+
+  private updateTwoFactorUi(user: PublicUser): void {
+    if (this.twoFactorStatusText) {
+      this.twoFactorStatusText.textContent = user.two_factor_enabled
+        ? "Two-factor authentication is enabled on your account."
+        : "Two-factor authentication is currently disabled.";
+    }
+
+    const isEnabled = user.two_factor_enabled;
+    this.enableTwoFactorButton?.classList.toggle("hidden", isEnabled);
+    this.disableTwoFactorButton?.classList.toggle("hidden", !isEnabled);
+
+    if (!isEnabled) {
+      this.hideTwoFactorCodeEntry();
+    }
+  }
+
+  private showTwoFactorCodeEntry(
+    message: string,
+    expiresInSeconds: number,
+  ): void {
+    if (!this.twoFactorCodeContainer) {
+      return;
+    }
+
+    if (this.twoFactorHelper) {
+      if (expiresInSeconds < 60) {
+        const seconds = Math.max(1, expiresInSeconds);
+        this.twoFactorHelper.textContent = `${message} (Expires in approximately ${seconds} second${seconds === 1 ? "" : "s"}.)`;
+      } else {
+        const minutes = Math.round(expiresInSeconds / 60);
+        this.twoFactorHelper.textContent = `${message} (Expires in approximately ${minutes} minute${minutes === 1 ? "" : "s"}.)`;
+      }
+    }
+
+    if (this.twoFactorError) {
+      this.twoFactorError.classList.add("hidden");
+      this.twoFactorError.textContent = "";
+    }
+
+    if (this.twoFactorCodeInput) {
+      this.twoFactorCodeInput.value = "";
+      this.twoFactorCodeInput.focus();
+    }
+
+    this.twoFactorCodeContainer.classList.remove("hidden");
+  }
+
+  private hideTwoFactorCodeEntry(resetChallenge = false): void {
+    if (this.twoFactorCodeContainer) {
+      this.twoFactorCodeContainer.classList.add("hidden");
+    }
+    if (this.twoFactorCodeInput) {
+      this.twoFactorCodeInput.value = "";
+    }
+    if (this.twoFactorError) {
+      this.twoFactorError.classList.add("hidden");
+      this.twoFactorError.textContent = "";
+    }
+    if (this.twoFactorHelper && !resetChallenge) {
+      this.twoFactorHelper.textContent = "";
+    }
+    if (resetChallenge) {
+      this.twoFactorHelper && (this.twoFactorHelper.textContent = "");
+      this.pendingTwoFactorChallenge = null;
+      this.pendingTwoFactorPurpose = null;
+    }
+  }
+
+  private setTwoFactorButtonsDisabled(disabled: boolean): void {
+    if (this.enableTwoFactorButton) {
+      this.enableTwoFactorButton.disabled = disabled;
+    }
+    if (this.disableTwoFactorButton) {
+      this.disableTwoFactorButton.disabled = disabled;
+    }
+  }
+
+  private async handleTwoFactorEnable(): Promise<void> {
+    const user = this.service.getUser();
+    if (!user || user.two_factor_enabled) {
+      return;
+    }
+
+    this.setTwoFactorButtonsDisabled(true);
+    this.hideTwoFactorCodeEntry(true);
+
+    try {
+      const challenge = await this.service.startTwoFactorSetup();
+      this.pendingTwoFactorChallenge = challenge;
+      this.pendingTwoFactorPurpose = "enable";
+      this.showTwoFactorCodeEntry(
+        challenge.message ||
+          "We sent a verification code to your email address.",
+        challenge.expiresIn,
+      );
+      NotificationService.getInstance().info(
+        "Check your email and enter the 6-digit code to finish enabling 2FA.",
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to start two-factor setup.";
+      NotificationService.getInstance().error(message);
+    } finally {
+      this.setTwoFactorButtonsDisabled(false);
+    }
+  }
+
+  private async handleTwoFactorDisable(): Promise<void> {
+    const user = this.service.getUser();
+    if (!user || !user.two_factor_enabled) {
+      return;
+    }
+
+    const currentPasswordInput =
+      this.form?.querySelector<HTMLInputElement>("#current-password");
+
+    const currentPassword = currentPasswordInput?.value ?? "";
+    if (!currentPassword) {
+      NotificationService.getInstance().warning(
+        "Enter your current password before disabling 2FA.",
+      );
+      currentPasswordInput?.focus();
+      return;
+    }
+
+    this.setTwoFactorButtonsDisabled(true);
+    this.hideTwoFactorCodeEntry(true);
+
+    try {
+      const challenge =
+        await this.service.startTwoFactorDisable(currentPassword);
+      this.pendingTwoFactorChallenge = challenge;
+      this.pendingTwoFactorPurpose = "disable";
+      this.showTwoFactorCodeEntry(
+        challenge.message ||
+          "We sent a verification code to your email address.",
+        challenge.expiresIn,
+      );
+      NotificationService.getInstance().info(
+        "Enter the 6-digit code from your email to disable 2FA.",
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to start 2FA disable process.";
+      NotificationService.getInstance().error(message);
+    } finally {
+      this.setTwoFactorButtonsDisabled(false);
+    }
+  }
+
+  private async handleTwoFactorVerify(): Promise<void> {
+    if (
+      !this.pendingTwoFactorChallenge ||
+      !this.pendingTwoFactorChallenge.twoFactorToken ||
+      !this.pendingTwoFactorPurpose
+    ) {
+      return;
+    }
+
+    const code = this.twoFactorCodeInput?.value.trim() ?? "";
+    if (!/^\d{6}$/.test(code)) {
+      if (this.twoFactorError) {
+        this.twoFactorError.textContent =
+          "Enter the 6-digit code that was emailed to you.";
+        this.twoFactorError.classList.remove("hidden");
+      }
+      this.twoFactorCodeInput?.focus();
+      return;
+    }
+
+    if (this.twoFactorError) {
+      this.twoFactorError.classList.add("hidden");
+      this.twoFactorError.textContent = "";
+    }
+
+    this.setTwoFactorButtonsDisabled(true);
+    this.twoFactorVerifyButton && (this.twoFactorVerifyButton.disabled = true);
+
+    try {
+      const result = await this.service.verifyTwoFactorCode({
+        token: this.pendingTwoFactorChallenge.twoFactorToken,
+        code,
+      });
+
+      this.pendingTwoFactorChallenge = null;
+      const purpose = this.pendingTwoFactorPurpose;
+      this.pendingTwoFactorPurpose = null;
+      this.hideTwoFactorCodeEntry(true);
+
+      NotificationService.getInstance().success(
+        purpose === "enable"
+          ? "Two-factor authentication is now enabled."
+          : "Two-factor authentication has been disabled.",
+      );
+
+      this.updateTwoFactorUi(result.user);
+      if (purpose === "disable") {
+        const currentPasswordInput =
+          this.form?.querySelector<HTMLInputElement>("#current-password");
+        if (currentPasswordInput) {
+          currentPasswordInput.value = "";
+        }
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Verification failed.";
+      if (this.twoFactorError) {
+        this.twoFactorError.textContent = message;
+        this.twoFactorError.classList.remove("hidden");
+      }
+    } finally {
+      this.setTwoFactorButtonsDisabled(false);
+      if (this.twoFactorVerifyButton) {
+        this.twoFactorVerifyButton.disabled = false;
+      }
+    }
+  }
+
+  private handleTwoFactorCancel(): void {
+    this.hideTwoFactorCodeEntry(true);
   }
 
   private derivePlaceholderInitial(user?: {

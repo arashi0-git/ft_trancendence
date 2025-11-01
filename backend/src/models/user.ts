@@ -11,6 +11,7 @@ export interface UserRecord {
   is_online: boolean;
   last_login: string | null;
   token_version: number;
+  two_factor_enabled: number;
 }
 
 export interface CreateUserParams {
@@ -19,12 +20,20 @@ export interface CreateUserParams {
   passwordHash: string;
 }
 
-export type UserWithoutPassword = Omit<UserRecord, "password_hash">;
+export type UserWithoutPassword = Omit<
+  UserRecord,
+  "password_hash" | "two_factor_enabled"
+> & {
+  two_factor_enabled: boolean;
+};
 export type PublicUser = Omit<UserWithoutPassword, "token_version">;
 
 export function stripPassword(user: UserRecord): UserWithoutPassword {
-  const { password_hash, ...rest } = user;
-  return rest;
+  const { password_hash, two_factor_enabled, ...rest } = user;
+  return {
+    ...rest,
+    two_factor_enabled: Boolean(two_factor_enabled),
+  };
 }
 
 export function toPublicUser(user: UserWithoutPassword): PublicUser {
@@ -137,6 +146,16 @@ export class UserModel {
     await db.run(
       "UPDATE users SET password_hash = ?, token_version = token_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
       [passwordHash, id],
+    );
+  }
+
+  static async setTwoFactorEnabled(
+    id: number,
+    enabled: boolean,
+  ): Promise<void> {
+    await db.run(
+      "UPDATE users SET two_factor_enabled = ?, token_version = token_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      [enabled ? 1 : 0, id],
     );
   }
 }

@@ -19,6 +19,23 @@ export interface AuthResponse {
   token: string;
 }
 
+export interface TwoFactorChallengeResponse {
+  requiresTwoFactor: true;
+  twoFactorToken: string;
+  delivery: "email";
+  expiresIn: number;
+  message: string;
+}
+
+export interface TwoFactorVerifyRequest {
+  token: string;
+  code: string;
+}
+
+export interface DisableTwoFactorRequest {
+  currentPassword: string;
+}
+
 export interface UpdateUserProfileRequest {
   username?: string;
   email?: string;

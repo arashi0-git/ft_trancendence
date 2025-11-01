@@ -1,8 +1,19 @@
 import { FastifyInstance } from "fastify";
 import { UserService } from "../services/userService";
 import { AuthUtils } from "../utils/auth";
-import { CreateUserRequest, LoginRequest, AuthResponse } from "../types/user";
-import { authenticateToken } from "../middleware/auth";
+import {
+  CreateUserRequest,
+  LoginRequest,
+  AuthResponse,
+  TwoFactorChallengeResponse,
+  TwoFactorVerifyRequest,
+  DisableTwoFactorRequest,
+} from "../types/user";
+import { authenticateToken, optionalAuth } from "../middleware/auth";
+import {
+  TwoFactorAuthorizationError,
+  TwoFactorService,
+} from "../services/twoFactorService";
 
 export async function authRoutes(fastify: FastifyInstance) {
   fastify.post<{ Body: CreateUserRequest }>(
@@ -81,10 +92,27 @@ export async function authRoutes(fastify: FastifyInstance) {
         return reply.status(401).send({ error: "Invalid email or password" });
       }
 
-      const token = AuthUtils.generateToken(user);
+      if (user.two_factor_enabled) {
+        const challenge = await TwoFactorService.startChallenge(user, "login");
+
+        const challengeResponse: TwoFactorChallengeResponse = {
+          requiresTwoFactor: true,
+          twoFactorToken: challenge.token,
+          delivery: challenge.delivery,
+          expiresIn: challenge.expiresIn,
+          message: challenge.message,
+        };
+
+        return reply.send(challengeResponse);
+      }
+
+      const loggedInUser =
+        (await UserService.markUserLoggedIn(user.id)) ?? user;
+
+      const token = AuthUtils.generateToken(loggedInUser);
 
       const response: AuthResponse = {
-        user: UserService.toPublicUser(user),
+        user: UserService.toPublicUser(loggedInUser),
         token,
       };
 
@@ -94,6 +122,164 @@ export async function authRoutes(fastify: FastifyInstance) {
       return reply.status(500).send({ error: "Login failed" });
     }
   });
+
+  fastify.post(
+    "/2fa/setup",
+    { preHandler: authenticateToken },
+    async (request, reply) => {
+      try {
+        if (!request.user) {
+          return reply.status(401).send({ error: "User not authenticated" });
+        }
+
+        const user = await UserService.getUserById(request.user.id);
+        if (!user) {
+          return reply.status(404).send({ error: "User not found" });
+        }
+
+        if (user.two_factor_enabled) {
+          return reply
+            .status(400)
+            .send({ error: "Two-factor authentication is already enabled" });
+        }
+
+        const challenge = await TwoFactorService.startChallenge(user, "enable");
+
+        const response: TwoFactorChallengeResponse = {
+          requiresTwoFactor: true,
+          twoFactorToken: challenge.token,
+          delivery: challenge.delivery,
+          expiresIn: challenge.expiresIn,
+          message: challenge.message,
+        };
+
+        return reply.send(response);
+      } catch (error) {
+        fastify.log.error(error);
+        return reply
+          .status(500)
+          .send({ error: "Failed to start 2FA setup process" });
+      }
+    },
+  );
+
+  fastify.post<{ Body: DisableTwoFactorRequest }>(
+    "/2fa/disable",
+    { preHandler: authenticateToken },
+    async (request, reply) => {
+      try {
+        if (!request.user) {
+          return reply.status(401).send({ error: "User not authenticated" });
+        }
+
+        const { currentPassword } = request.body || {};
+        if (!currentPassword) {
+          return reply
+            .status(400)
+            .send({ error: "Current password is required" });
+        }
+
+        const user = await UserService.getUserById(request.user.id);
+        if (!user) {
+          return reply.status(404).send({ error: "User not found" });
+        }
+
+        if (!user.two_factor_enabled) {
+          return reply
+            .status(400)
+            .send({ error: "Two-factor authentication is not enabled" });
+        }
+
+        const passwordValid = await UserService.verifyUserPassword(
+          request.user.id,
+          currentPassword,
+        );
+
+        if (!passwordValid) {
+          return reply.status(401).send({ error: "Password is incorrect" });
+        }
+
+        const challenge = await TwoFactorService.startChallenge(
+          user,
+          "disable",
+        );
+
+        const response: TwoFactorChallengeResponse = {
+          requiresTwoFactor: true,
+          twoFactorToken: challenge.token,
+          delivery: challenge.delivery,
+          expiresIn: challenge.expiresIn,
+          message: challenge.message,
+        };
+
+        return reply.send(response);
+      } catch (error) {
+        fastify.log.error(error);
+        return reply
+          .status(500)
+          .send({ error: "Failed to start 2FA disable process" });
+      }
+    },
+  );
+
+  fastify.post<{ Body: TwoFactorVerifyRequest }>(
+    "/2fa/verify",
+    { preHandler: optionalAuth },
+    async (request, reply) => {
+      try {
+        const { token, code } = request.body || {};
+
+        if (!token || !code) {
+          return reply
+            .status(400)
+            .send({ error: "Verification token and code are required" });
+        }
+
+        const result = await TwoFactorService.verifyChallenge(
+          token,
+          code,
+          request.user?.id,
+        );
+
+        if (result.purpose === "login") {
+          const loggedInUser =
+            (await UserService.markUserLoggedIn(result.user.id)) ?? result.user;
+          const authToken = AuthUtils.generateToken(loggedInUser);
+
+          const response: AuthResponse = {
+            user: UserService.toPublicUser(loggedInUser),
+            token: authToken,
+          };
+
+          return reply.send(response);
+        }
+
+        if (!request.user || request.user.id !== result.user.id) {
+          return reply
+            .status(403)
+            .send({ error: "Not authorized to complete this action" });
+        }
+
+        return reply.send({
+          user: UserService.toPublicUser(result.user),
+          twoFactorEnabled: result.purpose === "enable",
+        });
+      } catch (error) {
+        if (error instanceof TwoFactorAuthorizationError) {
+          return reply.status(403).send({
+            error: error.message ?? "Not authorized to complete this action",
+          });
+        }
+        fastify.log.error(error);
+        return reply.status(400).send({
+          error:
+            error instanceof Error
+              ? error.message
+              : "Two-factor verification failed",
+        });
+      }
+    },
+  );
 
   fastify.get(
     "/me",

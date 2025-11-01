@@ -62,34 +62,31 @@ export async function optionalAuth(
       request.headers.authorization,
     );
 
-    if (token) {
-      const decoded = AuthUtils.verifyToken(token);
-      const user = await UserService.getUserById(decoded.id);
-
-      if (user) {
-        // Check token version for optional auth too
-        const userWithVersion = user as any;
-        if (
-          decoded.tokenVersion !== undefined &&
-          userWithVersion.token_version !== undefined
-        ) {
-          if (decoded.tokenVersion >= userWithVersion.token_version) {
-            request.user = {
-              id: decoded.id,
-              username: decoded.username,
-              email: decoded.email,
-            };
-          }
-        } else {
-          request.user = {
-            id: decoded.id,
-            username: decoded.username,
-            email: decoded.email,
-          };
-        }
-      }
+    if (!token) {
+      return;
     }
+
+    const decoded = AuthUtils.verifyToken(token);
+    const user = await UserService.getUserById(decoded.id);
+    if (!user) {
+      return;
+    }
+
+    const userWithVersion = user as any;
+    if (
+      decoded.tokenVersion !== undefined &&
+      userWithVersion.token_version !== undefined &&
+      decoded.tokenVersion < userWithVersion.token_version
+    ) {
+      return;
+    }
+
+    request.user = {
+      id: decoded.id,
+      username: decoded.username,
+      email: decoded.email,
+    };
   } catch (error) {
-    // Silently fail for optional auth
+    // Swallow errors for optional auth
   }
 }
