@@ -8,6 +8,10 @@ import type {
   FollowingListResponse,
   FollowUserResponse,
   FollowedUserSummary,
+  TwoFactorChallengeResponse,
+  AuthResult,
+  TwoFactorVerifyPayload,
+  TwoFactorStatusResponse,
 } from "../types/user";
 
 declare const __API_BASE_URL__: string | undefined;
@@ -99,7 +103,7 @@ export class AuthService {
     }
   }
 
-  static async login(credentials: LoginRequest): Promise<AuthResponse> {
+  static async login(credentials: LoginRequest): Promise<AuthResult> {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
@@ -115,6 +119,10 @@ export class AuthService {
         throw new Error(data.error || "Login failed");
       }
 
+      if (data.requiresTwoFactor) {
+        return data as TwoFactorChallengeResponse;
+      }
+
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
       }
@@ -122,6 +130,79 @@ export class AuthService {
       return data as AuthResponse;
     } catch (error) {
       console.error("Login error:", error);
+      throw error;
+    }
+  }
+
+  static async verifyTwoFactorCode(
+    payload: TwoFactorVerifyPayload,
+  ): Promise<AuthResponse | TwoFactorStatusResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/2fa/verify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...this.getAuthHeaders({ includeJson: false }),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Verification failed");
+      }
+
+      if ("token" in data && data.token) {
+        localStorage.setItem("auth_token", data.token);
+      }
+
+      return data as AuthResponse | TwoFactorStatusResponse;
+    } catch (error) {
+      console.error("Two-factor verification error:", error);
+      throw error;
+    }
+  }
+
+  static async requestTwoFactorSetup(): Promise<TwoFactorChallengeResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/2fa/setup`, {
+        method: "POST",
+        headers: this.getAuthHeaders({ includeJson: false }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to start 2FA setup");
+      }
+
+      return data as TwoFactorChallengeResponse;
+    } catch (error) {
+      console.error("Two-factor setup error:", error);
+      throw error;
+    }
+  }
+
+  static async requestTwoFactorDisable(
+    currentPassword: string,
+  ): Promise<TwoFactorChallengeResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/2fa/disable`, {
+        method: "POST",
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ currentPassword }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to start 2FA disable");
+      }
+
+      return data as TwoFactorChallengeResponse;
+    } catch (error) {
+      console.error("Two-factor disable error:", error);
       throw error;
     }
   }

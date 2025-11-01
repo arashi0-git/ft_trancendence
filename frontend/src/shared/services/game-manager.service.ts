@@ -50,6 +50,8 @@ export class GameManagerService {
         paddleColorHex: customizationSettings.paddleColor,
         paddleLength: customizationSettings.paddleLength,
         ballSize: customizationSettings.ballSize,
+        ballSpeed: customizationSettings.ballSpeed,
+        maxScore: customizationSettings.maxScore,
       }); // Pass the playerCount
 
       // AIモードの設定
@@ -126,6 +128,8 @@ export class GameManagerService {
             this.pongGame.setPaddleColor(settings.paddleColor);
             this.pongGame.setPaddleLength(settings.paddleLength);
             this.pongGame.setBallSize(settings.ballSize);
+            this.pongGame.setBallSpeed(settings.ballSpeed);
+            this.pongGame.setMaxScore(settings.maxScore);
           }
         },
       );

@@ -15,8 +15,22 @@ CREATE TABLE IF NOT EXISTS users (
     
     is_online BOOLEAN DEFAULT FALSE,
     last_login DATETIME DEFAULT CURRENT_TIMESTAMP,
-    token_version INTEGER DEFAULT 0
+    token_version INTEGER DEFAULT 0,
+    two_factor_enabled BOOLEAN DEFAULT FALSE
 );
+
+CREATE TABLE IF NOT EXISTS two_factor_challenges (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token TEXT UNIQUE NOT NULL,
+    code_hash TEXT NOT NULL,
+    purpose TEXT NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_two_factor_challenges_user ON two_factor_challenges(user_id);
 
 CREATE TABLE IF NOT EXISTS tournaments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

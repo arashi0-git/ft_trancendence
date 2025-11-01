@@ -3,9 +3,11 @@ import {
   LoginRequest,
   AuthResponse,
   UserProfile,
+  TwoFactorChallengeResponse,
 } from "../types/user";
 import { UserService } from "./userService";
 import { AuthUtils } from "../utils/auth";
+import { TwoFactorService } from "./twoFactorService";
 
 export class AuthService {
   static async register(userData: CreateUserRequest): Promise<AuthResponse> {
@@ -24,7 +26,9 @@ export class AuthService {
     }
   }
 
-  static async login(credentials: LoginRequest): Promise<AuthResponse | null> {
+  static async login(
+    credentials: LoginRequest,
+  ): Promise<AuthResponse | TwoFactorChallengeResponse | null> {
     const userRecord = await UserService.authenticateUser(
       credentials.email,
       credentials.password,
@@ -35,9 +39,26 @@ export class AuthService {
       return null;
     }
 
-    const token = AuthUtils.generateToken(userRecord);
-    const user = UserService.toPublicUser(userRecord);
-    await UserService.updateUserOnlineStatus(userRecord.id, true);
+    if (userRecord.two_factor_enabled) {
+      const challenge = await TwoFactorService.startChallenge(
+        userRecord,
+        "login",
+      );
+      console.info(`2FA challenge issued for user: ${userRecord.id}`);
+      return {
+        requiresTwoFactor: true,
+        twoFactorToken: challenge.token,
+        delivery: challenge.delivery,
+        expiresIn: challenge.expiresIn,
+        message: challenge.message,
+      };
+    }
+
+    const loggedIn =
+      (await UserService.markUserLoggedIn(userRecord.id)) ?? userRecord;
+
+    const token = AuthUtils.generateToken(loggedIn);
+    const user = UserService.toPublicUser(loggedIn);
     console.info(`User logged in successfully: ${userRecord.id}`);
     return { user, token };
   }

@@ -6,6 +6,7 @@ import multipart from "@fastify/multipart";
 import path from "path";
 import fs from "fs";
 import https from "https";
+import secureJsonParse from "secure-json-parse";
 import { initializeDatabase } from "./database/init";
 import { authRoutes } from "./routes/auth";
 import { userRoutes } from "./routes/user";
@@ -26,6 +27,33 @@ const fastify = Fastify({
       }
     : undefined,
 });
+
+// Allow empty JSON bodies (parsed as {}) for endpoints that don't require payloads.
+fastify.addContentTypeParser(
+  "application/json",
+  { parseAs: "string" },
+  (request, body, done) => {
+    try {
+      const raw = typeof body === "string" ? body : (body?.toString() ?? "");
+      const text = raw.trim();
+      if (text.length === 0) {
+        done(null, {});
+        return;
+      }
+      const parsed = secureJsonParse(text, undefined, {
+        protoAction: "remove",
+        constructorAction: "remove",
+      });
+      done(null, parsed);
+    } catch (error) {
+      const parseError = error as Error & { statusCode?: number };
+      parseError.name = "FastifyError";
+      parseError.message = "Invalid JSON payload";
+      parseError.statusCode = 400;
+      done(parseError, undefined);
+    }
+  },
+);
 
 // プラグインの登録
 async function registerPlugins() {
