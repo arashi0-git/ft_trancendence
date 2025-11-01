@@ -24,7 +24,7 @@ export class RegisterPage extends SpacePageBase {
       <div id="register-form-container">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-white">Create Account</h2>
-          <button id="back-to-home" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">Home</button>
+          <button id="back-to-home" class="bg-purple-400 hover:bg-purple-600 text-white px-4 py-2 rounded border border-purple-400">Home</button>
         </div>
         <!-- The registration form will be injected here by register.service.ts -->
       </div>

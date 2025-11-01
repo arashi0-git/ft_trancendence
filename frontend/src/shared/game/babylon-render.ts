@@ -12,11 +12,31 @@ import {
 } from "@babylonjs/core";
 import { GameState } from "../types/game";
 
+interface BabylonRenderOptions {
+  withBackground?: boolean;
+  fieldColorHex?: string;
+  ballColorHex?: string;
+  paddleColorHex?: string;
+  ballRadius?: number;
+}
+
+const DEFAULT_FIELD_COLOR_HEX = "#245224";
+const DEFAULT_BALL_COLOR_HEX = "#ffffff";
+const DEFAULT_PADDLE_COLOR_HEX = "#ffffff";
+const COLOR_HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
+const BASE_BALL_RADIUS_LOGICAL = 8;
+
+const isValidColorHex = (value: string | undefined): value is string =>
+  typeof value === "string" && COLOR_HEX_PATTERN.test(value);
+
 export class BabylonRender {
   private scene: Scene;
   private camera: ArcRotateCamera;
+  private readonly FIELD_WIDTH = 28;
   private paddle1Mesh!: Mesh;
   private paddle2Mesh!: Mesh;
+  private paddle3Mesh: Mesh | null = null;
+  private paddle4Mesh: Mesh | null = null;
   private ballMesh!: Mesh;
   private withBackground: boolean;
   private fieldMesh!: Mesh;
@@ -29,16 +49,32 @@ export class BabylonRender {
   private prevScore2 = -1;
   private gameWidth: number;
   private gameHeight: number;
+  private fieldColorHex: string;
+  private ballColorHex: string;
+  private paddleColorHex: string;
+  private currentBallRadius: number = BASE_BALL_RADIUS_LOGICAL;
 
   constructor(
     engine: Engine,
     gameWidth: number,
     gameHeight: number,
-    withBackground: boolean = false,
+    options: BabylonRenderOptions = {},
   ) {
     this.gameWidth = gameWidth;
     this.gameHeight = gameHeight;
-    this.withBackground = withBackground;
+    this.withBackground = options.withBackground ?? false;
+    this.fieldColorHex = isValidColorHex(options.fieldColorHex)
+      ? options.fieldColorHex
+      : DEFAULT_FIELD_COLOR_HEX;
+    this.ballColorHex = isValidColorHex(options.ballColorHex)
+      ? options.ballColorHex
+      : DEFAULT_BALL_COLOR_HEX;
+    this.paddleColorHex = isValidColorHex(options.paddleColorHex)
+      ? options.paddleColorHex
+      : DEFAULT_PADDLE_COLOR_HEX;
+    if (typeof options.ballRadius === "number" && options.ballRadius > 0) {
+      this.currentBallRadius = options.ballRadius;
+    }
     this.scene = new Scene(engine);
 
     // カメラを斜め上から見下ろす角度に設定（Pongらしい視点）
@@ -46,8 +82,8 @@ export class BabylonRender {
     this.camera = new ArcRotateCamera(
       "camera",
       -Math.PI / 2,
-      Math.PI / 3,
-      20,
+      Math.PI / 4, // より浅い角度でフィールドをアップに
+      22, // カメラを近づけてフィールドをアップ
       Vector3.Zero(),
       this.scene,
     );
@@ -87,15 +123,120 @@ export class BabylonRender {
     this.recreateCenterLine();
   }
 
+  public setFieldColor(fieldColorHex: string): void {
+    if (!isValidColorHex(fieldColorHex)) {
+      console.warn(
+        `BabylonRender: invalid field color '${fieldColorHex}' ignored.`,
+      );
+      return;
+    }
+
+    if (this.fieldColorHex === fieldColorHex) {
+      return;
+    }
+
+    this.fieldColorHex = fieldColorHex;
+    if (
+      this.fieldMesh?.material &&
+      this.fieldMesh.material instanceof StandardMaterial
+    ) {
+      this.applyFieldColor(this.fieldMesh.material);
+    }
+  }
+
+  private applyFieldColor(material: StandardMaterial): void {
+    const color = Color3.FromHexString(this.fieldColorHex);
+    material.diffuseColor = color;
+    material.emissiveColor = color.scale(0.25);
+  }
+
+  public setBallColor(ballColorHex: string): void {
+    if (!isValidColorHex(ballColorHex)) {
+      console.warn(
+        `BabylonRender: invalid ball color '${ballColorHex}' ignored.`,
+      );
+      return;
+    }
+
+    if (this.ballColorHex === ballColorHex) {
+      return;
+    }
+
+    this.ballColorHex = ballColorHex;
+    if (
+      this.ballMesh?.material &&
+      this.ballMesh.material instanceof StandardMaterial
+    ) {
+      this.applyBallColor(this.ballMesh.material);
+    }
+  }
+
+  private applyBallColor(material: StandardMaterial): void {
+    const color = Color3.FromHexString(this.ballColorHex);
+    material.diffuseColor = color;
+    material.emissiveColor = color.scale(0.4);
+  }
+
+  private updateBallMeshScale(radius: number): void {
+    if (!this.ballMesh) {
+      return;
+    }
+    const baseRadius = BASE_BALL_RADIUS_LOGICAL;
+    if (baseRadius <= 0) {
+      return;
+    }
+    this.currentBallRadius = radius;
+    const scaleFactor = Math.max(radius / baseRadius, 0.1);
+    this.ballMesh.scaling = new Vector3(scaleFactor, scaleFactor, scaleFactor);
+    const baseMeshRadius = 0.15; // half of the initial diameter (0.3)
+    this.ballMesh.position.y = baseMeshRadius * scaleFactor;
+  }
+
+  public setPaddleColor(paddleColorHex: string): void {
+    if (!isValidColorHex(paddleColorHex)) {
+      console.warn(
+        `BabylonRender: invalid paddle color '${paddleColorHex}' ignored.`,
+      );
+      return;
+    }
+
+    if (this.paddleColorHex === paddleColorHex) {
+      return;
+    }
+
+    this.paddleColorHex = paddleColorHex;
+    this.updatePaddleMaterials();
+  }
+
+  private applyPaddleColor(material: StandardMaterial): void {
+    const color = Color3.FromHexString(this.paddleColorHex);
+    material.diffuseColor = color;
+    material.emissiveColor = color.scale(0.3);
+  }
+
+  private updatePaddleMaterials(): void {
+    const paddleMeshes = [
+      this.paddle1Mesh,
+      this.paddle2Mesh,
+      this.paddle3Mesh,
+      this.paddle4Mesh,
+    ];
+    paddleMeshes.forEach((mesh) => {
+      if (mesh?.material instanceof StandardMaterial) {
+        this.applyPaddleColor(mesh.material);
+      }
+    });
+  }
+
   private recreateField() {
     // 既存のフィールドを削除
     if (this.fieldMesh) {
       this.fieldMesh.dispose(false, true);
     }
 
-    // 新しいサイズでフィールドを作成
+    // 新しいサイズでフィールドを作成（より大きなフィールド）
     const aspectRatio = this.gameWidth / this.gameHeight;
-    const fieldWidth = 16;
+    const fieldWidth = this.FIELD_WIDTH; // さらに大きく
     const fieldHeight = fieldWidth / aspectRatio;
 
     this.fieldMesh = MeshBuilder.CreateGround(
@@ -104,8 +245,7 @@ export class BabylonRender {
       this.scene,
     );
     const fieldMaterial = new StandardMaterial("fieldMaterial", this.scene);
-    fieldMaterial.diffuseColor = new Color3(0.2, 0.3, 0.2);
-    fieldMaterial.emissiveColor = new Color3(0.05, 0.1, 0.05);
+    this.applyFieldColor(fieldMaterial);
     this.fieldMesh.material = fieldMaterial;
   }
 
@@ -120,10 +260,83 @@ export class BabylonRender {
     this.createCenterLine();
   }
 
+  private createPaddleMesh(name: string, logicalPaddleHeight: number): Mesh {
+    const aspectRatio = this.gameWidth / this.gameHeight;
+    const fieldWidth = this.FIELD_WIDTH;
+    const fieldHeight = fieldWidth / aspectRatio;
+    const scaleY = fieldHeight / this.gameHeight;
+    const paddleDepth = logicalPaddleHeight * scaleY * 0.7; // パドルを30%短くする
+    const paddleMesh = MeshBuilder.CreateBox(
+      name,
+      { width: 0.2, height: 0.2, depth: paddleDepth },
+      this.scene,
+    );
+
+    const paddleMaterial = new StandardMaterial(`${name}Material`, this.scene);
+    this.applyPaddleColor(paddleMaterial);
+    paddleMesh.material = paddleMaterial;
+    paddleMesh.position.y = 0.1;
+    return paddleMesh;
+  }
+
+  public initializeScene(gameState: GameState): void {
+    this.paddle1Mesh?.dispose();
+    this.paddle2Mesh?.dispose();
+    this.paddle3Mesh?.dispose();
+    this.paddle4Mesh?.dispose();
+    this.ballMesh?.dispose();
+    this.scoreBoard1?.dispose();
+    this.scoreBoard2?.dispose();
+    this.recreateField();
+    this.recreateCenterLine();
+
+    // Creating paddles
+    this.paddle1Mesh = this.createPaddleMesh(
+      "paddle1",
+      gameState.player1.paddle.height,
+    );
+    this.paddle2Mesh = this.createPaddleMesh(
+      "paddle2",
+      gameState.player2.paddle.height,
+    );
+
+    if (gameState.player3 && gameState.player4) {
+      this.paddle3Mesh = this.createPaddleMesh(
+        "paddle3",
+        gameState.player3.paddle.height,
+      );
+      this.paddle4Mesh = this.createPaddleMesh(
+        "paddle4",
+        gameState.player4.paddle.height,
+      );
+    } else {
+      this.paddle3Mesh = null;
+      this.paddle4Mesh = null;
+    }
+    this.updatePaddleMaterials();
+
+    // creating ball (より大きく)
+    this.ballMesh = MeshBuilder.CreateSphere(
+      "ball",
+      { diameter: 0.5 }, // 0.3から0.5に増加
+      this.scene,
+    );
+    const ballMaterial = new StandardMaterial("ballMaterial", this.scene);
+    this.applyBallColor(ballMaterial);
+    this.ballMesh.material = ballMaterial;
+    this.ballMesh.position = new Vector3(0, 0.15, 0);
+    this.updateBallMeshScale(gameState.ball.radius);
+
+    this.createScoreBoards();
+    this.prevScore1 = -1;
+    this.prevScore2 = -1;
+    this.updateGameObjects(gameState);
+  }
+
   public createGameObjects() {
     // ゲームサイズに基づいてフィールドサイズを計算（アスペクト比を維持）
     const aspectRatio = this.gameWidth / this.gameHeight;
-    const fieldWidth = 16;
+    const fieldWidth = this.FIELD_WIDTH;
     const fieldHeight = fieldWidth / aspectRatio;
 
     this.fieldMesh = MeshBuilder.CreateGround(
@@ -132,8 +345,7 @@ export class BabylonRender {
       this.scene,
     );
     const fieldMaterial = new StandardMaterial("fieldMaterial", this.scene);
-    fieldMaterial.diffuseColor = new Color3(0.2, 0.3, 0.2); // 緑がかった色で見やすく
-    fieldMaterial.emissiveColor = new Color3(0.05, 0.1, 0.05); // 少し光らせる
+    this.applyFieldColor(fieldMaterial);
     this.fieldMesh.material = fieldMaterial;
 
     this.paddle1Mesh = MeshBuilder.CreateBox(
@@ -142,8 +354,7 @@ export class BabylonRender {
       this.scene,
     );
     const paddle1Material = new StandardMaterial("paddle1Material", this.scene);
-    paddle1Material.diffuseColor = new Color3(1, 1, 1);
-    paddle1Material.emissiveColor = new Color3(0.3, 0.3, 0.3); // より明るく光らせる
+    this.applyPaddleColor(paddle1Material);
     this.paddle1Mesh.material = paddle1Material;
     this.paddle1Mesh.position = new Vector3(-7, 0.1, 0);
 
@@ -153,23 +364,22 @@ export class BabylonRender {
       this.scene,
     );
     const paddle2Material = new StandardMaterial("paddle2Material", this.scene);
-    paddle2Material.diffuseColor = new Color3(1, 1, 1);
-    paddle2Material.emissiveColor = new Color3(0.3, 0.3, 0.3); // より明るく光らせる
+    this.applyPaddleColor(paddle2Material);
     this.paddle2Mesh.material = paddle2Material;
     this.paddle2Mesh.position = new Vector3(7, 0.1, 0);
+    this.updatePaddleMaterials();
 
     this.ballMesh = MeshBuilder.CreateSphere(
       "ball",
-      { diameter: 0.3 },
+      { diameter: 0.5 }, // より大きなボール
       this.scene,
     );
     const ballMaterial = new StandardMaterial("ballMaterial", this.scene);
-    ballMaterial.diffuseColor = new Color3(1, 1, 1);
-    ballMaterial.emissiveColor = new Color3(0.4, 0.4, 0.4); // ボールを特に明るく
+    this.applyBallColor(ballMaterial);
     this.ballMesh.material = ballMaterial;
-    this.ballMesh.position = new Vector3(0, 0.15, 0);
+    this.ballMesh.position = new Vector3(0, 0.15, 0); // Výchozí pozice
+    this.updateBallMeshScale(this.currentBallRadius);
 
-    // スコアボード作成
     this.createScoreBoards();
 
     // 中央線作成
@@ -179,7 +389,7 @@ export class BabylonRender {
   private createCenterLine() {
     // 中央線を点線で作成（動的なフィールドサイズに合わせて調整）
     const aspectRatio = this.gameWidth / this.gameHeight;
-    const fieldWidth = 16;
+    const fieldWidth = this.FIELD_WIDTH;
     const fieldHeight = fieldWidth / aspectRatio;
 
     const lineSegments = 8; // 点線の数
@@ -194,22 +404,15 @@ export class BabylonRender {
     for (let i = 0; i < lineSegments; i++) {
       const positionZ =
         startOffset + i * (segmentLength + gapLength) + segmentLength / 2;
-
       // フィールド範囲内かチェック
       if (Math.abs(positionZ) <= fieldHeight / 2 - segmentLength / 2) {
         // 各線分を作成
         const lineSegment = MeshBuilder.CreateBox(
           `centerLine${i}`,
-          {
-            width: 0.08,
-            height: 0.02,
-            depth: segmentLength,
-          },
+          { width: 0.08, height: 0.02, depth: segmentLength },
           this.scene,
         );
-
         lineSegment.position = new Vector3(0, 0.01, positionZ);
-
         const lineMaterial = new StandardMaterial(
           `centerLineMaterial${i}`,
           this.scene,
@@ -309,18 +512,18 @@ export class BabylonRender {
   }
 
   private createScoreBoards() {
-    // Player 1 スコアボード
+    // Player 1 スコアボード（より大きく）
     this.scoreBoard1 = MeshBuilder.CreatePlane(
       "scoreBoard1",
-      { width: 2, height: 1 },
+      { width: 3, height: 1.5 }, // サイズを1.5倍に
       this.scene,
     );
-    this.scoreBoard1.position = new Vector3(-4, 3, 0);
-    this.scoreBoard1.rotation.x = Math.PI / 6; // 少し下向きに傾ける
+    this.scoreBoard1.position = new Vector3(-6, 4, 0); // より外側、高い位置に
+    this.scoreBoard1.rotation.x = Math.PI / 5; // 少し下向きに傾ける
 
     this.scoreTexture1 = new DynamicTexture(
       "scoreTexture1",
-      { width: 256, height: 128 },
+      { width: 384, height: 192 }, // テクスチャサイズを1.5倍に
       this.scene,
     );
     const scoreMaterial1 = new StandardMaterial("scoreMaterial1", this.scene);
@@ -328,18 +531,18 @@ export class BabylonRender {
     scoreMaterial1.emissiveColor = new Color3(0.3, 0.3, 0.3); // 少し光らせる
     this.scoreBoard1.material = scoreMaterial1;
 
-    // Player 2 スコアボード
+    // Player 2 スコアボード（より大きく）
     this.scoreBoard2 = MeshBuilder.CreatePlane(
       "scoreBoard2",
-      { width: 2, height: 1 },
+      { width: 3, height: 1.5 }, // サイズを1.5倍に
       this.scene,
     );
-    this.scoreBoard2.position = new Vector3(4, 3, 0);
-    this.scoreBoard2.rotation.x = Math.PI / 6;
+    this.scoreBoard2.position = new Vector3(6, 4, 0); // より外側、高い位置に
+    this.scoreBoard2.rotation.x = Math.PI / 5;
 
     this.scoreTexture2 = new DynamicTexture(
       "scoreTexture2",
-      { width: 256, height: 128 },
+      { width: 384, height: 192 }, // テクスチャサイズを1.5倍に
       this.scene,
     );
     const scoreMaterial2 = new StandardMaterial("scoreMaterial2", this.scene);
@@ -358,7 +561,7 @@ export class BabylonRender {
       `Player 1\n${score1}`,
       null,
       null,
-      "bold 48px Arial",
+      "bold 64px Arial", // 48pxから64pxに増加
       "white",
       "transparent",
       true,
@@ -370,7 +573,7 @@ export class BabylonRender {
       `Player 2\n${score2}`,
       null,
       null,
-      "bold 48px Arial",
+      "bold 64px Arial", // 48pxから64pxに増加
       "white",
       "transparent",
       true,
@@ -378,14 +581,13 @@ export class BabylonRender {
   }
 
   public updateGameObjects(gameState: GameState) {
-    // 実際のゲームサイズに基づいてスケールを計算
     const aspectRatio = this.gameWidth / this.gameHeight;
-    const fieldWidth = 16;
+    const fieldWidth = this.FIELD_WIDTH;
     const fieldHeight = fieldWidth / aspectRatio;
     const scaleX = fieldWidth / this.gameWidth;
     const scaleY = fieldHeight / this.gameHeight;
 
-    // パドル位置更新（ゲームの中心を3D空間の原点に合わせる）
+    // Paddle 1
     this.paddle1Mesh.position.x =
       (gameState.player1.paddle.x - this.gameWidth / 2) * scaleX;
     this.paddle1Mesh.position.z =
@@ -394,6 +596,7 @@ export class BabylonRender {
         gameState.player1.paddle.height / 2) *
       scaleY;
 
+    // Paddle 2
     this.paddle2Mesh.position.x =
       (gameState.player2.paddle.x - this.gameWidth / 2) * scaleX;
     this.paddle2Mesh.position.z =
@@ -402,12 +605,29 @@ export class BabylonRender {
         gameState.player2.paddle.height / 2) *
       scaleY;
 
-    // ボール位置更新
+    // Paddle 3 and 4
+    if (this.paddle3Mesh && gameState.player3) {
+      this.paddle3Mesh.position.x =
+        (gameState.player3.paddle.x - this.gameWidth / 2) * scaleX; // Použij this.gameWidth
+      this.paddle3Mesh.position.z =
+        (this.gameHeight / 2 -
+          (gameState.player3.paddle.y + gameState.player3.paddle.height / 2)) *
+        scaleY; // Použij this.gameHeight
+    }
+    if (this.paddle4Mesh && gameState.player4) {
+      this.paddle4Mesh.position.x =
+        (gameState.player4.paddle.x - this.gameWidth / 2) * scaleX; // Použij this.gameWidth
+      this.paddle4Mesh.position.z =
+        (this.gameHeight / 2 -
+          (gameState.player4.paddle.y + gameState.player4.paddle.height / 2)) *
+        scaleY; // Použij this.gameHeight
+    }
+    // Ball
     this.ballMesh.position.x = (gameState.ball.x - this.gameWidth / 2) * scaleX;
-    this.ballMesh.position.z =
-      (this.gameHeight / 2 - gameState.ball.y) * scaleY;
+    this.ballMesh.position.z = (this.gameHeight / 2 - gameState.ball.y) * scaleY;
+    this.updateBallMeshScale(gameState.ball.radius);
 
-    // スコア表示は変更時のみ更新
+    // Score
     const { player1, player2 } = gameState.score;
     if (player1 !== this.prevScore1 || player2 !== this.prevScore2) {
       this.updateScoreDisplay(player1, player2);

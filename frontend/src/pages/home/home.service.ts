@@ -9,8 +9,8 @@ export class HomeService {
     this.navigate("/tournament");
   }
 
-  navigateToAiMode(): void {
-    this.navigate("/ai-mode");
+  navigateToGameSettings(): void {
+    this.navigate("/game-settings");
   }
 
   navigateToLogin(): void {

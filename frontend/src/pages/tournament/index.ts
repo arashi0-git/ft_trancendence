@@ -26,16 +26,13 @@ export class TournamentPage extends SpacePageBase {
     const title = this.service.getPageTitle();
 
     const content = `
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-white">${title}</h2>
+        <div class="flex justify-between items-center mb-2">
+          <h2 class="text-xl font-semibold text-white">${title}</h2>
           <div class="space-x-2">
             ${backButton}
           </div>
         </div>
-
-        <div id="tournament-content">
-            </div>
-
+        <div id="tournament-content"></div>
         <div id="game-over-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
             <div class="bg-gray-800 p-8 rounded-lg shadow-xl text-center border-2 border-green-500 max-w-sm w-full">
                 <h3 id="game-over-title" class="text-3xl font-bold text-white mb-4"></h3>

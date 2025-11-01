@@ -2,10 +2,16 @@ import { BaseGameService } from "../../shared/services/base-game.service";
 import { router } from "../../routes/router";
 
 export class QuickPlayService extends BaseGameService {
-  initializeGame(canvasId: string): void {
+  initializeGame(
+    canvasId: string,
+    playerCount: number,
+    aiPlayers?: { [key: string]: { difficulty: "easy" | "medium" | "hard" } },
+  ): void {
     this.gameManager.initializeGame({
       mode: "quick-play",
-      canvasId,
+      canvasId: canvasId,
+      playerCount: playerCount,
+      aiPlayers: aiPlayers,
       onGameEnd: (data: any) => this.handleGameEnd(data),
     });
   }
@@ -68,9 +74,10 @@ export class QuickPlayService extends BaseGameService {
     if (modal && winnerNameEl && finalScoreEl) {
       winnerNameEl.textContent = `Player ${data.winner}`;
       finalScoreEl.textContent = `${data.score1} - ${data.score2}`;
+      modal.classList.remove("hidden");
+
       startBtn?.classList.add("hidden");
       pauseBtn?.classList.add("hidden");
-      modal.classList.remove("hidden");
     } else {
       this.notificationService.success(`Player ${data.winner} wins! 🎉`);
     }
