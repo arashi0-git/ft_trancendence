@@ -22,6 +22,7 @@ export class PlayerRegistrationWithCountSelector {
   private config: PlayerRegistrationWithCountConfig | null = null;
   private playerRegistrationManager: PlayerRegistrationManager;
   private currentPlayerCount: number = 2;
+  private renderInProgress: boolean = false;
   private eventListeners: Array<{
     element: Element;
     type: string;
@@ -88,12 +89,14 @@ export class PlayerRegistrationWithCountSelector {
       <div class="flex space-x-4">
         <button
           id="back-button"
+          type="button"
           class="flex-1 bg-purple-400 hover:bg-purple-600 text-white py-2 px-4 rounded border border-purple-400 shadow-lg"
         >
           ${this.escapeHtml(config.backButtonText || "Back")}
         </button>
         <button
           id="start-button"
+          type="button"
           class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg"
           disabled
         >
@@ -102,8 +105,13 @@ export class PlayerRegistrationWithCountSelector {
       </div>
     `;
 
-    await this.renderPlayerRegistration();
-    this.attachEventListeners();
+    try {
+      await this.renderPlayerRegistration();
+      this.attachEventListeners();
+    } catch (error) {
+      console.error("Failed to render initial player registration:", error);
+      throw new Error("Failed to initialize player registration component");
+    }
   }
 
   private async renderPlayerRegistration(): Promise<void> {
@@ -138,10 +146,22 @@ export class PlayerRegistrationWithCountSelector {
         const newPlayerCount = parseInt(playerCountSelect.value, 10);
         if (
           !Number.isNaN(newPlayerCount) &&
-          newPlayerCount !== this.currentPlayerCount
+          newPlayerCount !== this.currentPlayerCount &&
+          !this.renderInProgress
         ) {
+          this.renderInProgress = true;
           this.currentPlayerCount = newPlayerCount;
-          await this.renderPlayerRegistration();
+          try {
+            await this.renderPlayerRegistration();
+          } catch (error) {
+            console.error("Failed to update player count:", error);
+            // エラーが発生した場合、プレイヤー数を元に戻す
+            this.currentPlayerCount =
+              parseInt(playerCountSelect.value, 10) === 2 ? 4 : 2;
+            playerCountSelect.value = this.currentPlayerCount.toString();
+          } finally {
+            this.renderInProgress = false;
+          }
         }
       });
     }
@@ -282,6 +302,7 @@ export class PlayerRegistrationWithCountSelector {
     });
     this.eventListeners = [];
     this.playerRegistrationManager.destroy();
+    this.renderInProgress = false;
     this.config = null;
   }
 }

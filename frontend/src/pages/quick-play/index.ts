@@ -18,9 +18,9 @@ export class QuickPlayPage extends SpacePageBase {
       new PlayerRegistrationWithCountSelector();
   }
 
-  render(): void {
+  async render(): Promise<void> {
     this.ensureBaseTemplate();
-    this.renderPlayerRegistrationView();
+    await this.renderPlayerRegistrationView();
     this.initializeSpaceBackground();
   }
 
@@ -195,9 +195,9 @@ export class QuickPlayPage extends SpacePageBase {
     } else {
       document
         .getElementById("quick-play-header-back")
-        ?.addEventListener("click", () => {
+        ?.addEventListener("click", async () => {
           this.service.cleanup();
-          this.renderPlayerRegistrationView();
+          await this.renderPlayerRegistrationView();
         });
     }
   }
