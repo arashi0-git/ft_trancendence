@@ -6,9 +6,16 @@ import type {
   FollowedUserSummary,
   TwoFactorChallengeResponse,
   TwoFactorVerifyPayload,
+  AuthResponse,
   TwoFactorStatusResponse,
 } from "../../shared/types/user";
 import { router } from "../../routes/router";
+
+function isTwoFactorStatusResponse(
+  payload: AuthResponse | TwoFactorStatusResponse,
+): payload is TwoFactorStatusResponse {
+  return typeof (payload as TwoFactorStatusResponse).user !== "undefined";
+}
 
 export class UserSettingsService {
   private currentUser: PublicUser | null = null;
@@ -127,6 +134,9 @@ export class UserSettingsService {
   ): Promise<TwoFactorStatusResponse> {
     try {
       const result = await AuthService.verifyTwoFactorCode(payload);
+      if (!isTwoFactorStatusResponse(result)) {
+        throw new Error("Unexpected response from 2FA verification");
+      }
       if (!result.user) {
         throw new Error("User data missing from 2FA verification response");
       }
