@@ -54,9 +54,16 @@ export class PongGame3D {
     Record<keyof GameEvents, Array<(...args: any[]) => void>>
   > = {};
   private isAiMode: boolean = false;
-  private aiPlayers: { player1: boolean; player2: boolean } = {
+  private aiPlayers: {
+    player1: boolean;
+    player2: boolean;
+    player3: boolean;
+    player4: boolean;
+  } = {
     player1: false,
     player2: false,
+    player3: false,
+    player4: false,
   }; // AIプレイヤー管理
   private animationId: number | null = null;
   private boundHandleResize: () => void;
@@ -249,6 +256,10 @@ export class PongGame3D {
     "KeyS",
     "KeyA",
     "KeyD",
+    "KeyR",
+    "KeyF",
+    "KeyI",
+    "KeyK",
   ];
 
   private keydownHandler = (e: KeyboardEvent) => {
@@ -278,16 +289,38 @@ export class PongGame3D {
   public setAiPlayers(aiPlayers: {
     player1?: boolean;
     player2?: boolean;
+    player3?: boolean;
+    player4?: boolean;
   }): void {
     this.aiPlayers.player1 = aiPlayers.player1 || false;
     this.aiPlayers.player2 = aiPlayers.player2 || false;
+    this.aiPlayers.player3 = aiPlayers.player3 || false;
+    this.aiPlayers.player4 = aiPlayers.player4 || false;
   }
 
-  public moveAiPaddle(deltaY: number, playerNumber: 1 | 2 = 2): void {
+  public moveAiPaddle(deltaY: number, playerNumber: 1 | 2 | 3 | 4 = 2): void {
     if (!this.isAiMode) return;
 
-    const player =
-      playerNumber === 1 ? this.gameState.player1 : this.gameState.player2;
+    let player: Player | null = null;
+    switch (playerNumber) {
+      case 1:
+        player = this.gameState.player1;
+        break;
+      case 2:
+        player = this.gameState.player2;
+        break;
+      case 3:
+        player = this.gameState.player3 || null;
+        break;
+      case 4:
+        player = this.gameState.player4 || null;
+        break;
+      default:
+        return;
+    }
+
+    if (!player) return;
+
     const paddle = player.paddle;
     const newY = paddle.y + deltaY;
 
@@ -360,13 +393,17 @@ export class PongGame3D {
       ) {
         p2.paddle.y += p2.paddle.speed;
       }
+    }
 
-      if (
-        this.playerCount === 4 &&
-        this.gameState.player3 &&
-        this.gameState.player4
-      ) {
-        const p3 = this.gameState.player3;
+    // 4人プレイの場合のPlayer 3と4の処理
+    if (
+      this.playerCount === 4 &&
+      this.gameState.player3 &&
+      this.gameState.player4
+    ) {
+      // Player 3の処理（AIでない場合のみキーボード入力を受け付ける）
+      const p3 = this.gameState.player3;
+      if (!this.aiPlayers.player3) {
         if (
           p3.keys.up &&
           this.keyState[p3.keys.up] &&
@@ -381,8 +418,11 @@ export class PongGame3D {
         ) {
           p3.paddle.y += p3.paddle.speed;
         }
+      }
 
-        const p4 = this.gameState.player4;
+      // Player 4の処理（AIでない場合のみキーボード入力を受け付ける）
+      const p4 = this.gameState.player4;
+      if (!this.aiPlayers.player4) {
         if (
           p4.keys.up &&
           this.keyState[p4.keys.up] &&

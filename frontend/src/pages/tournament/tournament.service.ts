@@ -2,27 +2,20 @@ import { GameManagerService } from "../../shared/services/game-manager.service";
 import { NotificationService } from "../../shared/services/notification.service";
 import { router } from "../../routes/router";
 import { TournamentDataService } from "../../shared/services/tournament-data.service";
-import { GameSetupUI } from "../../shared/components/game-setup-ui";
-import { PlayerRegistrationManager } from "../../shared/components/player-registration-manager";
+import { PlayerRegistrationWithCountSelector } from "../../shared/components/player-registration-with-count-selector";
 
-export type TournamentStep =
-  | "setup"
-  | "registration"
-  | "bracket"
-  | "match"
-  | "results";
+export type TournamentStep = "registration" | "bracket" | "match" | "results";
 
 /**
  * TournamentService - トーナメント機能の管理
  */
 export class TournamentService {
-  private currentStep: TournamentStep = "setup";
+  private currentStep: TournamentStep = "registration";
   private currentPath: string = "/tournament";
   private gameManager: GameManagerService;
   private tournamentData: TournamentDataService;
   private notificationService: NotificationService;
-  private gameSetupUI: GameSetupUI;
-  private playerRegistrationManager: PlayerRegistrationManager;
+  private playerRegistrationWithCountSelector: PlayerRegistrationWithCountSelector;
   private eventListeners: Array<{
     element: HTMLElement;
     event: string;
@@ -33,8 +26,8 @@ export class TournamentService {
     this.gameManager = new GameManagerService();
     this.tournamentData = TournamentDataService.getInstance();
     this.notificationService = NotificationService.getInstance();
-    this.gameSetupUI = new GameSetupUI();
-    this.playerRegistrationManager = new PlayerRegistrationManager();
+    this.playerRegistrationWithCountSelector =
+      new PlayerRegistrationWithCountSelector();
   }
 
   setCurrentPath(path: string): void {
@@ -44,8 +37,6 @@ export class TournamentService {
 
   private determineStepFromPath(path: string): void {
     if (path === "/tournament" || path === "/tournament/") {
-      this.currentStep = "setup";
-    } else if (path === "/tournament/registration") {
       this.currentStep = "registration";
     } else if (path === "/tournament/bracket") {
       this.currentStep = "bracket";
@@ -63,9 +54,6 @@ export class TournamentService {
     this.clearEventListeners();
 
     switch (this.currentStep) {
-      case "setup":
-        this.renderSetupView(container);
-        break;
       case "registration":
         await this.renderRegistrationView(container);
         break;
@@ -81,174 +69,59 @@ export class TournamentService {
     }
   }
 
-  private renderSetupView(container: HTMLElement): void {
-    const setupFormHtml = this.gameSetupUI.getTemplate({
-      showNameInput: true,
-      nameInputId: "tournament-name",
-      nameLabel: "Tournament Name",
-      namePlaceholder: "Enter tournament name",
-      nameDefaultValue: "Pong Tournament",
-      selectId: "player-count",
-      selectLabel: "Number of Players",
-      options: [
-        { value: "2", text: "2 Players" },
-        { value: "4", text: "4 Players" },
-        { value: "8", text: "8 Players" },
-      ],
-      buttonId: "create-tournament",
-      buttonText: "Create Tournament",
-
-      buttonClasses:
-        "w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded border border-blue-400 shadow-lg",
-    });
-
-    container.innerHTML = `
-      <div class="max-w-xs mx-auto flex flex-col items-center space-y-3">
-        ${setupFormHtml}
-        
-        </div>
-    `;
-
-    this.attachEventListenerSafely("create-tournament", "click", () =>
-      this.createTournament(),
-    );
-  }
-
-  private createTournament(): void {
-    const playerCountSelect = document.getElementById("player-count");
-    const tournamentNameInput = document.getElementById("tournament-name");
-
-    if (!playerCountSelect || !tournamentNameInput) {
-      console.error("Required tournament setup elements not found");
-      return;
-    }
-
-    const playerCount = parseInt(
-      (playerCountSelect as HTMLSelectElement).value,
-      10,
-    );
-    const tournamentName = (
-      tournamentNameInput as HTMLInputElement
-    ).value.trim();
-
-    if (!tournamentName) {
-      alert("トーナメント名を入力してください");
-      return;
-    }
-
-    this.tournamentData.createTournament(tournamentName, playerCount);
-    this.navigateToRegistration();
-  }
-
   private async renderRegistrationView(container: HTMLElement): Promise<void> {
-    const tournament = this.tournamentData.getCurrentTournament();
-    if (!tournament) {
-      this.navigateToSetup();
-      return;
-    }
-
-    const registrationContainer = document.createElement("div");
-    container.innerHTML = `
-      <div class="flex space-x-4">
-        <button
-          id="back-to-setup"
-          class="flex-1 bg-purple-400 hover:bg-purple-600 text-white py-2 px-4 rounded border border-purple-400 shadow-lg"
-        >
-          Back to Setup
-        </button>
-        <button
-          id="start-tournament"
-          class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg"
-          disabled
-        >
-          Start Tournament
-        </button>
-      </div>
-    `;
-
-    container.insertBefore(registrationContainer, container.firstChild);
-
     try {
-      await this.playerRegistrationManager.render({
-        container: registrationContainer,
-        playerCount: tournament.playerCount,
+      await this.playerRegistrationWithCountSelector.render({
+        container,
         title: "Player Registration",
-        subtitle: `Tournament: ${tournament.name} (${tournament.playerCount} players)`,
-        startButtonId: "start-tournament",
+        subtitle: "Tournament Setup",
+        showTournamentName: true,
+        tournamentNameValue: "Pong Tournament",
+        startButtonText: "Start Tournament",
+        backButtonText: "Back to Home",
         requireHumanPlayer: true,
+        onBack: () => {
+          router.navigate("/");
+        },
+        onSubmit: (data) => {
+          if (!data.tournamentName) {
+            this.notificationService.error("トーナメント名を入力してください");
+            return;
+          }
+
+          // トーナメントを作成
+          this.tournamentData.createTournament(
+            data.tournamentName,
+            data.playerCount,
+          );
+
+          // プレイヤー登録
+          data.playerSelections
+            .filter((selection) => selection !== null)
+            .forEach((selection) => {
+              if (selection) {
+                this.tournamentData.addPlayerFromSelection(selection);
+              }
+            });
+
+          // マッチ生成
+          try {
+            this.tournamentData.generateMatches();
+            this.navigateToBracket();
+          } catch (error) {
+            console.error("Error generating matches:", error);
+            this.notificationService.error("マッチ生成に失敗しました");
+          }
+        },
       });
     } catch (error) {
       console.error("Failed to render registration view:", error);
       this.notificationService.error("プレイヤー登録画面の表示に失敗しました");
-      this.navigateToSetup();
-      return;
-    }
-
-    this.attachEventListenerSafely("back-to-setup", "click", () => {
-      // セットアップ画面に戻る時はトーナメントデータをクリア
-      this.tournamentData.clearTournament();
-      this.navigateToSetup();
-    });
-
-    this.attachEventListenerSafely("start-tournament", "click", () =>
-      this.startTournament(),
-    );
-  }
-
-  private startTournament(): void {
-    console.log("Starting tournament...");
-
-    // バリデーションチェック
-    if (!this.playerRegistrationManager.isValid()) {
-      return;
-    }
-    const tournament = this.tournamentData.getCurrentTournament();
-    if (!tournament) {
-      console.error("No tournament found");
-      return;
-    }
-
-    // 既存のプレイヤーとマッチをクリアして新しく開始
-    tournament.players = [];
-    tournament.matches = [];
-    tournament.currentRound = 1;
-    tournament.status = "setup";
-
-    const playerSelections =
-      this.playerRegistrationManager.getPlayerSelections();
-    if (!playerSelections || !Array.isArray(playerSelections)) {
-      console.error("Invalid player selections");
-      this.notificationService.error("プレイヤー選択の取得に失敗しました");
-      return;
-    }
-    console.log("Found player selections:", playerSelections.length);
-
-    playerSelections.forEach((selection) => {
-      if (selection) {
-        console.log("Adding player:", selection);
-        this.tournamentData.addPlayerFromSelection(selection);
-      }
-    });
-
-    try {
-      console.log("Generating matches...");
-      this.tournamentData.generateMatches();
-      console.log("Matches generated, navigating to bracket...");
-      this.navigateToBracket();
-    } catch (error) {
-      console.error("Error generating matches:", error);
-      alert("Error starting tournament: " + (error as Error).message);
+      router.navigate("/");
     }
   }
 
   // Navigation methods
-  navigateToSetup(): void {
-    this.navigate("/tournament");
-  }
-
-  navigateToRegistration(): void {
-    this.navigate("/tournament/registration");
-  }
 
   navigateToBracket(): void {
     this.navigate("/tournament/bracket");
@@ -260,8 +133,6 @@ export class TournamentService {
 
   getPageTitle(): string {
     switch (this.currentStep) {
-      case "setup":
-        return "Tournament Setup";
       case "registration":
         return "Player Registration";
       case "bracket":
@@ -276,10 +147,7 @@ export class TournamentService {
   }
 
   getBackButtonTemplate(): string {
-    const backText =
-      this.currentStep === "setup" || this.currentStep === "registration"
-        ? "Home"
-        : "Back";
+    const backText = this.currentStep === "registration" ? "Home" : "Back";
     return `<button id="back-button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">${backText}</button>`;
   }
 
@@ -324,18 +192,18 @@ export class TournamentService {
       element.removeEventListener(event, handler);
     });
     this.eventListeners = [];
-    this.playerRegistrationManager.destroy();
   }
 
   cleanup(): void {
     this.clearEventListeners();
     this.gameManager.cleanup();
+    this.playerRegistrationWithCountSelector.destroy();
   }
 
   private renderBracketView(container: HTMLElement): void {
     const tournament = this.tournamentData.getCurrentTournament();
     if (!tournament) {
-      this.navigateToSetup();
+      router.navigate("/tournament");
       return;
     }
 
@@ -407,7 +275,7 @@ export class TournamentService {
 
     this.attachEventListenerSafely("new-tournament-btn", "click", () => {
       this.tournamentData.clearTournament();
-      this.navigateToSetup();
+      router.navigate("/tournament");
     });
   }
 
@@ -465,7 +333,7 @@ export class TournamentService {
     const winner = this.tournamentData.getTournamentWinner();
 
     if (!tournament || !winner) {
-      this.navigateToSetup();
+      router.navigate("/tournament");
       return;
     }
 
@@ -487,7 +355,7 @@ export class TournamentService {
 
     this.attachEventListenerSafely("new-tournament", "click", () => {
       this.tournamentData.clearTournament();
-      this.navigateToSetup();
+      router.navigate("/tournament");
     });
   }
 
@@ -532,11 +400,10 @@ export class TournamentService {
   handleBackNavigation(): void {
     switch (this.currentStep) {
       case "registration":
-        this.tournamentData.clearTournament();
         this.navigate("/");
         break;
       case "bracket":
-        this.navigateToRegistration();
+        router.navigate("/tournament");
         break;
       case "match":
         this.navigateToBracket();
