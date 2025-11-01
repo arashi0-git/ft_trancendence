@@ -16,17 +16,27 @@ interface PongGameOptions {
   paddleColorHex?: string;
   paddleLength?: PaddleLengthSetting;
   ballSize?: BallSizeSetting;
+  ballSpeed?: BallSpeedSetting;
+  maxScore?: number;
 }
 
 const DEFAULT_FIELD_COLOR_HEX = "#245224";
 const DEFAULT_BALL_COLOR_HEX = "#ffffff";
 const DEFAULT_PADDLE_COLOR_HEX = "#ffffff";
+const DEFAULT_MAX_SCORE = 5;
+const MIN_MAX_SCORE = 3;
+const MAX_MAX_SCORE = 10;
 const COLOR_HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
 const BASE_PADDLE_HEIGHT = 80;
 const BASE_BALL_RADIUS = 8;
+const BASE_BALL_SPEED = 11;
+const BASE_PADDLE_SPEED = 5;
+const INITIAL_BALL_SPEED_FACTOR = 0.5;
+const INITIAL_SERVE_SPEED = BASE_BALL_SPEED * INITIAL_BALL_SPEED_FACTOR;
 
 type PaddleLengthSetting = "short" | "normal" | "long";
 type BallSizeSetting = "small" | "normal" | "big";
+type BallSpeedSetting = "slow" | "normal" | "fast";
 
 const PADDLE_LENGTH_MULTIPLIERS: Record<PaddleLengthSetting, number> = {
   short: 0.5,
@@ -38,6 +48,12 @@ const BALL_SIZE_MULTIPLIERS: Record<BallSizeSetting, number> = {
   small: 0.75,
   normal: 1,
   big: 3,
+};
+
+const BALL_SPEED_MULTIPLIERS: Record<BallSpeedSetting, number> = {
+  slow: 0.6,
+  normal: 1,
+  fast: 1.2,
 };
 
 const isValidColorHex = (value: string | undefined): value is string =>
@@ -66,6 +82,9 @@ export class PongGame3D {
   private paddleColorHex: string;
   private paddleLengthSetting: PaddleLengthSetting;
   private ballSizeSetting: BallSizeSetting;
+  private ballSpeedSetting: BallSpeedSetting;
+  private maxScoreSetting: number;
+  private isBallAtFullSpeed: boolean = false;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -87,6 +106,8 @@ export class PongGame3D {
       : DEFAULT_PADDLE_COLOR_HEX;
     this.paddleLengthSetting = this.normalizePaddleLength(options.paddleLength);
     this.ballSizeSetting = this.normalizeBallSize(options.ballSize);
+    this.ballSpeedSetting = this.normalizeBallSpeed(options.ballSpeed);
+    this.maxScoreSetting = this.normalizeMaxScore(options.maxScore);
 
     // レスポンシブサイズを計算
     const { width, height } = this.calculateResponsiveSize();
@@ -95,10 +116,10 @@ export class PongGame3D {
       canvasHeight: height,
       paddleWidth: 10,
       paddleHeight: this.calculatePaddleHeight(this.paddleLengthSetting),
-      paddleSpeed: 5,
+      paddleSpeed: this.calculatePaddleSpeed(this.ballSpeedSetting),
       ballRadius: this.calculateBallRadius(this.ballSizeSetting),
-      ballSpeed: 11,
-      maxScore: 5,
+      ballSpeed: this.calculateBallSpeed(this.ballSpeedSetting),
+      maxScore: this.maxScoreSetting,
     };
 
     this.canvas.width = this.config.canvasWidth;
@@ -205,7 +226,7 @@ export class PongGame3D {
       radius: this.config.ballRadius,
       velocityX: 0,
       velocityY: 0,
-      speed: this.config.ballSpeed * 0.5,
+      speed: INITIAL_SERVE_SPEED,
     };
 
     const score: Score = {
@@ -223,6 +244,7 @@ export class PongGame3D {
       score,
       gameStatus: "waiting",
     };
+    this.isBallAtFullSpeed = false;
 
     this.renderer.initializeScene(this.gameState);
     this.setBallDirection(Math.random() > 0.5 ? 1 : -1, Math.random() * 2 - 1);
@@ -442,6 +464,7 @@ export class PongGame3D {
         ) {
           const paddleCenterX = p3.x + p3.width / 2;
           if (ball.x > paddleCenterX) {
+            this.ensureBallAtFullSpeed();
             ball.velocityX = Math.abs(ball.velocityX);
             ball.x = p3Right + ballRadius;
             const hitPos = (ball.y - (p3Top + p3.height / 2)) / (p3.height / 2);
@@ -450,6 +473,7 @@ export class PongGame3D {
             ball.velocityX = -Math.abs(ball.velocityX) * 0.8;
             ball.x = p3.x - ballRadius;
             ball.velocityY += (Math.random() - 0.5) * ball.speed * 0.2;
+            this.ensureBallAtFullSpeed();
           }
           return;
         }
@@ -469,6 +493,7 @@ export class PongGame3D {
       ) {
         const paddleCenterX = p1.x + p1.width / 2;
         if (ball.x > paddleCenterX) {
+          this.ensureBallAtFullSpeed();
           ball.velocityX = Math.abs(ball.velocityX);
           ball.x = p1Right + ballRadius;
           const hitPos = (ball.y - (p1Top + p1.height / 2)) / (p1.height / 2);
@@ -477,6 +502,7 @@ export class PongGame3D {
           ball.velocityX = -Math.abs(ball.velocityX) * 0.8;
           ball.x = p1.x - ballRadius;
           ball.velocityY += (Math.random() - 0.5) * ball.speed * 0.2;
+          this.ensureBallAtFullSpeed();
         }
         return;
       }
@@ -496,6 +522,7 @@ export class PongGame3D {
         ) {
           const paddleCenterX = p4.x + p4.width / 2;
           if (ball.x < paddleCenterX) {
+            this.ensureBallAtFullSpeed();
             ball.velocityX = -Math.abs(ball.velocityX);
             ball.x = p4Left - ballRadius;
             const hitPos = (ball.y - (p4Top + p4.height / 2)) / (p4.height / 2);
@@ -504,6 +531,7 @@ export class PongGame3D {
             ball.velocityX = Math.abs(ball.velocityX) * 0.8;
             ball.x = p4.x + p4.width + ballRadius;
             ball.velocityY += (Math.random() - 0.5) * ball.speed * 0.2;
+            this.ensureBallAtFullSpeed();
           }
           return;
         }
@@ -523,6 +551,7 @@ export class PongGame3D {
       ) {
         const paddleCenterX = p2.x + p2.width / 2;
         if (ball.x < paddleCenterX) {
+          this.ensureBallAtFullSpeed();
           ball.velocityX = -Math.abs(ball.velocityX);
           ball.x = p2Left - ballRadius;
           const hitPos = (ball.y - (p2Top + p2.height / 2)) / (p2.height / 2);
@@ -531,6 +560,7 @@ export class PongGame3D {
           ball.velocityX = Math.abs(ball.velocityX) * 0.8;
           ball.x = p2.x + p2.width + ballRadius;
           ball.velocityY += (Math.random() - 0.5) * ball.speed * 0.2;
+          this.ensureBallAtFullSpeed();
         }
         return;
       }
@@ -573,7 +603,8 @@ export class PongGame3D {
     const ball = this.gameState.ball;
     ball.x = this.config.canvasWidth / 2;
     ball.y = this.config.canvasHeight / 2;
-    ball.speed = this.config.ballSpeed * 0.5;
+    ball.speed = INITIAL_SERVE_SPEED;
+    this.isBallAtFullSpeed = false;
     this.setBallDirection(direction, Math.random() * 0.5 - 0.25);
   }
 
@@ -686,9 +717,55 @@ export class PongGame3D {
     return "normal";
   }
 
+  private normalizeBallSpeed(speed?: string | BallSpeedSetting): BallSpeedSetting {
+    if (speed === "slow" || speed === "normal" || speed === "fast") {
+      return speed;
+    }
+    return "normal";
+  }
+
+  private normalizeMaxScore(value?: number): number {
+    if (
+      typeof value === "number" &&
+      Number.isInteger(value) &&
+      value >= MIN_MAX_SCORE &&
+      value <= MAX_MAX_SCORE
+    ) {
+      return value;
+    }
+    return DEFAULT_MAX_SCORE;
+  }
+
   private calculateBallRadius(size: BallSizeSetting): number {
     const multiplier = BALL_SIZE_MULTIPLIERS[size] ?? 1;
     return Math.round(BASE_BALL_RADIUS * multiplier);
+  }
+
+  private calculateBallSpeed(speed: BallSpeedSetting): number {
+    const multiplier = BALL_SPEED_MULTIPLIERS[speed] ?? 1;
+    return BASE_BALL_SPEED * multiplier;
+  }
+
+  private calculatePaddleSpeed(speed: BallSpeedSetting): number {
+    const multiplier = BALL_SPEED_MULTIPLIERS[speed] ?? 1;
+    return BASE_PADDLE_SPEED * multiplier;
+  }
+
+  private ensureBallAtFullSpeed(): void {
+    if (this.isBallAtFullSpeed) {
+      return;
+    }
+
+    const ball = this.gameState.ball;
+    this.isBallAtFullSpeed = true;
+    ball.speed = this.config.ballSpeed;
+    const currentMagnitude = Math.hypot(ball.velocityX, ball.velocityY);
+    if (currentMagnitude > 0) {
+      const targetMagnitude = this.config.ballSpeed;
+      const scale = targetMagnitude / currentMagnitude;
+      ball.velocityX *= scale;
+      ball.velocityY *= scale;
+    }
   }
 
   private handleResize(): void {
@@ -887,6 +964,29 @@ export class PongGame3D {
 
     this.ballSizeSetting = normalized;
     this.config.ballRadius = this.calculateBallRadius(normalized);
+    this.resetGame();
+  }
+
+  public setBallSpeed(speed: BallSpeedSetting): void {
+    const normalized = this.normalizeBallSpeed(speed);
+    if (this.ballSpeedSetting === normalized) {
+      return;
+    }
+
+    this.ballSpeedSetting = normalized;
+    this.config.ballSpeed = this.calculateBallSpeed(normalized);
+    this.config.paddleSpeed = this.calculatePaddleSpeed(normalized);
+    this.resetGame();
+  }
+
+  public setMaxScore(maxScore: number): void {
+    const normalized = this.normalizeMaxScore(maxScore);
+    if (this.maxScoreSetting === normalized) {
+      return;
+    }
+
+    this.maxScoreSetting = normalized;
+    this.config.maxScore = normalized;
     this.resetGame();
   }
 }

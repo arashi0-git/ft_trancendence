@@ -1,5 +1,7 @@
 export type PaddleLengthOption = "short" | "normal" | "long";
 export type BallSizeOption = "small" | "normal" | "big";
+export type BallSpeedOption = "slow" | "normal" | "fast";
+export type MaxScoreOption = 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
 export interface GameCustomizationSettings {
   fieldColor: string;
@@ -7,6 +9,8 @@ export interface GameCustomizationSettings {
   paddleColor: string;
   paddleLength: PaddleLengthOption;
   ballSize: BallSizeOption;
+  ballSpeed: BallSpeedOption;
+  maxScore: MaxScoreOption;
 }
 
 type SettingsListener = (settings: GameCustomizationSettings) => void;
@@ -18,6 +22,8 @@ const DEFAULT_SETTINGS: GameCustomizationSettings = {
   paddleColor: "#ffffff", // default bright paddle color
   paddleLength: "normal",
   ballSize: "normal",
+  ballSpeed: "normal",
+  maxScore: 5,
 };
 
 const COLOR_HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
@@ -30,6 +36,14 @@ const BALL_SIZE_OPTIONS: readonly BallSizeOption[] = [
   "small",
   "normal",
   "big",
+];
+const BALL_SPEED_OPTIONS: readonly BallSpeedOption[] = [
+  "slow",
+  "normal",
+  "fast",
+];
+const MAX_SCORE_OPTIONS: readonly MaxScoreOption[] = [
+  3, 4, 5, 6, 7, 8, 9, 10,
 ];
 
 const isValidColorHex = (value: string | undefined | null): value is string =>
@@ -44,6 +58,16 @@ const isValidBallSize = (
   value: string | undefined | null,
 ): value is BallSizeOption =>
   typeof value === "string" && BALL_SIZE_OPTIONS.includes(value as BallSizeOption);
+
+const isValidBallSpeed = (
+  value: string | undefined | null,
+): value is BallSpeedOption =>
+  typeof value === "string" && BALL_SPEED_OPTIONS.includes(value as BallSpeedOption);
+
+const isValidMaxScore = (
+  value: number | undefined | null,
+): value is MaxScoreOption =>
+  typeof value === "number" && MAX_SCORE_OPTIONS.includes(value as MaxScoreOption);
 
 const isBrowserEnvironment = (): boolean =>
   typeof window !== "undefined" && typeof window.localStorage !== "undefined";
@@ -122,6 +146,44 @@ export class GameCustomizationService {
     this.notifyListeners();
   }
 
+  getBallSpeed(): BallSpeedOption {
+    return this.settings.ballSpeed;
+  }
+
+  setBallSpeed(speed: BallSpeedOption): void {
+    if (this.settings.ballSpeed === speed) {
+      return;
+    }
+    if (!BALL_SPEED_OPTIONS.includes(speed)) {
+      console.warn(
+        `GameCustomizationService: attempted to set invalid ball speed '${speed}'`,
+      );
+      return;
+    }
+    this.settings = { ...this.settings, ballSpeed: speed };
+    this.persistSettings();
+    this.notifyListeners();
+  }
+
+  getMaxScore(): MaxScoreOption {
+    return this.settings.maxScore;
+  }
+
+  setMaxScore(maxScore: MaxScoreOption): void {
+    if (this.settings.maxScore === maxScore) {
+      return;
+    }
+    if (!MAX_SCORE_OPTIONS.includes(maxScore)) {
+      console.warn(
+        `GameCustomizationService: attempted to set invalid max score '${maxScore}'`,
+      );
+      return;
+    }
+    this.settings = { ...this.settings, maxScore };
+    this.persistSettings();
+    this.notifyListeners();
+  }
+
   subscribe(listener: SettingsListener): () => void {
     this.listeners.push(listener);
     listener(this.settings);
@@ -137,7 +199,9 @@ export class GameCustomizationService {
       this.settings.ballColor === DEFAULT_SETTINGS.ballColor &&
       this.settings.paddleColor === DEFAULT_SETTINGS.paddleColor &&
       this.settings.paddleLength === DEFAULT_SETTINGS.paddleLength &&
-      this.settings.ballSize === DEFAULT_SETTINGS.ballSize
+      this.settings.ballSize === DEFAULT_SETTINGS.ballSize &&
+      this.settings.ballSpeed === DEFAULT_SETTINGS.ballSpeed &&
+      this.settings.maxScore === DEFAULT_SETTINGS.maxScore
     );
   }
 
@@ -199,8 +263,25 @@ export class GameCustomizationService {
       const ballSize = isValidBallSize(parsed.ballSize)
         ? parsed.ballSize
         : DEFAULT_SETTINGS.ballSize;
+      const legacyBallSpeed = parsed.ballSpeed;
+      const ballSpeed = isValidBallSpeed(legacyBallSpeed)
+        ? legacyBallSpeed
+        : legacyBallSpeed === "faster" || legacyBallSpeed === "double"
+          ? "fast"
+          : DEFAULT_SETTINGS.ballSpeed;
+      const maxScore = isValidMaxScore(parsed.maxScore)
+        ? parsed.maxScore
+        : DEFAULT_SETTINGS.maxScore;
 
-      return { fieldColor, ballColor, paddleColor, paddleLength, ballSize };
+      return {
+        fieldColor,
+        ballColor,
+        paddleColor,
+        paddleLength,
+        ballSize,
+        ballSpeed,
+        maxScore,
+      };
     } catch (error) {
       console.warn("GameCustomizationService: failed to load settings", error);
       return DEFAULT_SETTINGS;
