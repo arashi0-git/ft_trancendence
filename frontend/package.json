@@ -13,7 +13,6 @@
     "@babylonjs/loaders": "^6.49.0",
     "@babylonjs/materials": "^6.49.0",
     "autoprefixer": "^10.4.16",
-    "i18next": "^25.6.0",
     "i18next-browser-languagedetector": "^8.2.0",
     "i18next-http-backend": "^3.0.2",
     "postcss": "^8.4.32",
