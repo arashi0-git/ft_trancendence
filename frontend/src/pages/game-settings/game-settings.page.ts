@@ -1,5 +1,16 @@
 import { GameSettingsService } from "./game-settings.service";
 import { SpacePageBase } from "../../shared/components/space-page-base";
+import type {
+  BallSpeedOption,
+  MaxScoreOption,
+} from "../../shared/services/game-customization.service";
+
+const MAX_SCORE_OPTIONS = [3, 4, 5, 6, 7, 8, 9, 10] as const;
+const BALL_SPEED_OPTIONS = ["slow", "normal", "fast"] as const;
+const isMaxScoreOption = (value: number): value is MaxScoreOption =>
+  MAX_SCORE_OPTIONS.includes(value as MaxScoreOption);
+const isBallSpeedOption = (value: string): value is BallSpeedOption =>
+  BALL_SPEED_OPTIONS.includes(value as BallSpeedOption);
 
 export class GameSettingsPage extends SpacePageBase {
   private service: GameSettingsService;
@@ -22,7 +33,13 @@ export class GameSettingsPage extends SpacePageBase {
     const paddleColor = this.service.getPaddleColor();
     const paddleLength = this.service.getPaddleLength();
     const ballSize = this.service.getBallSize();
+    const ballSpeed = this.service.getBallSpeed();
+    const maxScore = this.service.getMaxScore();
     const isDefault = this.service.isUsingDefaults();
+    const maxScoreOptions = MAX_SCORE_OPTIONS.map(
+      (option) =>
+        `<option value="${option}" ${option === maxScore ? "selected" : ""}>${option} points</option>`,
+    ).join("");
     const content = `
       <div class="text-white text-center max-w-md mx-auto">
         <h2 class="text-2xl font-bold mb-4">Game Customization</h2>
@@ -86,6 +103,31 @@ export class GameSettingsPage extends SpacePageBase {
               </label>
             </div>
           </div>
+
+          <div class="bg-black bg-opacity-20 p-4 rounded-lg text-left">
+            <span class="text-lg block mb-3">Ball speed</span>
+            <div class="flex justify-around">
+              <label class="flex items-center space-x-2">
+                <input type="radio" name="ball-speed" value="slow" class="form-radio text-purple-500" ${ballSpeed === "slow" ? "checked" : ""}>
+                <span>🐌</span>
+              </label>
+              <label class="flex items-center space-x-2">
+                <input type="radio" name="ball-speed" value="normal" class="form-radio text-purple-500" ${ballSpeed === "normal" ? "checked" : ""}>
+                <span>🐇</span>
+              </label>
+              <label class="flex items-center space-x-2">
+                <input type="radio" name="ball-speed" value="fast" class="form-radio text-purple-500" ${ballSpeed === "fast" ? "checked" : ""}>
+                <span>🐎</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="bg-black bg-opacity-20 p-4 rounded-lg text-left">
+            <label for="max-score-select" class="text-lg block mb-3">Points to win</label>
+            <select id="max-score-select" class="w-full bg-black bg-opacity-40 border border-purple-500 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+              ${maxScoreOptions}
+            </select>
+          </div>
         </div>
 
         <button id="back-to-home" class="mt-8 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">
@@ -115,6 +157,12 @@ export class GameSettingsPage extends SpacePageBase {
     const ballSizeInputs = Array.from(
       document.querySelectorAll<HTMLInputElement>("input[name='ball-size']"),
     );
+    const ballSpeedInputs = Array.from(
+      document.querySelectorAll<HTMLInputElement>("input[name='ball-speed']"),
+    );
+    const maxScoreSelect = document.getElementById(
+      "max-score-select",
+    ) as HTMLSelectElement | null;
 
     if (fieldColorPicker) {
       fieldColorPicker.addEventListener("input", (event) => {
@@ -171,6 +219,27 @@ export class GameSettingsPage extends SpacePageBase {
       });
     });
 
+    ballSpeedInputs.forEach((input) => {
+      input.addEventListener("change", (event) => {
+        const target = event.target as HTMLInputElement;
+        if (target.checked && isBallSpeedOption(target.value)) {
+          this.service.updateBallSpeed(target.value);
+        }
+      });
+    });
+
+    if (maxScoreSelect) {
+      maxScoreSelect.addEventListener("change", (event) => {
+        const target = event.target as HTMLSelectElement;
+        const value = Number(target.value);
+        if (isMaxScoreOption(value)) {
+          this.service.updateMaxScore(value);
+        } else {
+          target.value = String(this.service.getMaxScore());
+        }
+      });
+    }
+
     this.unsubscribeSettings = this.service.subscribeToSettings((settings) => {
       if (fieldColorPicker && fieldColorPicker.value !== settings.fieldColor) {
         fieldColorPicker.value = settings.fieldColor;
@@ -190,6 +259,15 @@ export class GameSettingsPage extends SpacePageBase {
       ballSizeInputs.forEach((input) => {
         input.checked = input.value === settings.ballSize;
       });
+      ballSpeedInputs.forEach((input) => {
+        input.checked = input.value === settings.ballSpeed;
+      });
+      if (
+        maxScoreSelect &&
+        Number(maxScoreSelect.value) !== settings.maxScore
+      ) {
+        maxScoreSelect.value = String(settings.maxScore);
+      }
       if (defaultToggle) {
         defaultToggle.checked = this.service.isUsingDefaults();
       }
