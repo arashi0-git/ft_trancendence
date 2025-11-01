@@ -188,7 +188,7 @@ export class BabylonRender {
     this.currentBallRadius = radius;
     const scaleFactor = Math.max(radius / baseRadius, 0.1);
     this.ballMesh.scaling = new Vector3(scaleFactor, scaleFactor, scaleFactor);
-    const baseMeshRadius = 0.15; // half of the initial diameter (0.3)
+    const baseMeshRadius = 0.25; // half of the initial diameter (0.5)
     this.ballMesh.position.y = baseMeshRadius * scaleFactor;
   }
 
@@ -324,7 +324,7 @@ export class BabylonRender {
     const ballMaterial = new StandardMaterial("ballMaterial", this.scene);
     this.applyBallColor(ballMaterial);
     this.ballMesh.material = ballMaterial;
-    this.ballMesh.position = new Vector3(0, 0.15, 0);
+    this.ballMesh.position = new Vector3(0, 0.25, 0);
     this.updateBallMeshScale(gameState.ball.radius);
 
     this.createScoreBoards();
@@ -377,7 +377,7 @@ export class BabylonRender {
     const ballMaterial = new StandardMaterial("ballMaterial", this.scene);
     this.applyBallColor(ballMaterial);
     this.ballMesh.material = ballMaterial;
-    this.ballMesh.position = new Vector3(0, 0.15, 0); // Výchozí pozice
+    this.ballMesh.position = new Vector3(0, 0.25, 0); // Výchozí pozice
     this.updateBallMeshScale(this.currentBallRadius);
 
     this.createScoreBoards();

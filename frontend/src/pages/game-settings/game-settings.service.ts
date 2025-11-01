@@ -4,6 +4,8 @@ import {
   type GameCustomizationSettings,
   type PaddleLengthOption,
   type BallSizeOption,
+  type BallSpeedOption,
+  type MaxScoreOption,
 } from "../../shared/services/game-customization.service";
 
 export class GameSettingsService {
@@ -49,6 +51,22 @@ export class GameSettingsService {
 
   updateBallSize(size: BallSizeOption): void {
     gameCustomizationService.setBallSize(size);
+  }
+
+  getBallSpeed(): BallSpeedOption {
+    return gameCustomizationService.getBallSpeed();
+  }
+
+  updateBallSpeed(speed: BallSpeedOption): void {
+    gameCustomizationService.setBallSpeed(speed);
+  }
+
+  getMaxScore(): MaxScoreOption {
+    return gameCustomizationService.getMaxScore();
+  }
+
+  updateMaxScore(maxScore: MaxScoreOption): void {
+    gameCustomizationService.setMaxScore(maxScore);
   }
 
   resetToDefaults(): void {
