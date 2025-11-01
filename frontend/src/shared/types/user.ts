@@ -43,7 +43,6 @@ export interface TwoFactorVerifyPayload {
 
 export interface TwoFactorStatusResponse {
   user: PublicUser;
-  twoFactorEnabled: boolean;
 }
 
 export interface UpdateUserSettingsPayload {

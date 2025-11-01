@@ -48,9 +48,9 @@ export class AuthService {
       return {
         requiresTwoFactor: true,
         twoFactorToken: challenge.token,
-        delivery: "email",
-        expiresIn: 10 * 60,
-        message: "A verification code has been sent to your email address.",
+        delivery: challenge.delivery,
+        expiresIn: challenge.expiresIn,
+        message: challenge.message,
       };
     }
 

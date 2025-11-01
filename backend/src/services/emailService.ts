@@ -9,6 +9,9 @@ function buildTransport() {
   }
 
   const port = Number(SMTP_PORT);
+  if (isNaN(port) || port < 1 || port > 65535) {
+    throw new Error(`Invalid SMTP_PORT: ${SMTP_PORT}`);
+  }
   const secure =
     SMTP_SECURE !== undefined ? SMTP_SECURE === "true" : Number(port) === 465;
 

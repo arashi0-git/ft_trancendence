@@ -9,12 +9,29 @@ import { UserModel, UserWithoutPassword } from "../models/user";
 import { UserService } from "./userService";
 
 const CODE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const CODE_TTL_SECONDS = Math.floor(CODE_TTL_MS / 1000);
 const CODE_DIGITS = 6;
 
 function generateNumericCode(): string {
   const max = 10 ** CODE_DIGITS;
   const value = crypto.randomInt(0, max);
   return value.toString().padStart(CODE_DIGITS, "0");
+}
+
+const DELIVERY_METHOD = "email" as const;
+
+const CHALLENGE_MESSAGES: Record<TwoFactorPurpose, string> = {
+  login: "A verification code has been sent to your email address.",
+  enable:
+    "A verification code has been sent to your email. Enter it to finish enabling 2FA.",
+  disable: "Enter the verification code sent to your email to disable 2FA.",
+};
+
+export interface TwoFactorChallengeDetails {
+  token: string;
+  delivery: typeof DELIVERY_METHOD;
+  expiresIn: number;
+  message: string;
 }
 
 export class TwoFactorAuthorizationError extends Error {
@@ -28,7 +45,7 @@ export class TwoFactorService {
   static async startChallenge(
     user: UserWithoutPassword,
     purpose: TwoFactorPurpose,
-  ): Promise<{ token: string }> {
+  ): Promise<TwoFactorChallengeDetails> {
     const code = generateNumericCode();
     const codeHash = await bcrypt.hash(code, 10);
     const token = crypto.randomUUID();
@@ -55,7 +72,12 @@ export class TwoFactorService {
       challengeId,
     );
 
-    return { token };
+    return {
+      token,
+      delivery: DELIVERY_METHOD,
+      expiresIn: CODE_TTL_SECONDS,
+      message: CHALLENGE_MESSAGES[purpose],
+    };
   }
 
   static async verifyChallenge(

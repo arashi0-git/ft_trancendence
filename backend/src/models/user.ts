@@ -154,7 +154,7 @@ export class UserModel {
     enabled: boolean,
   ): Promise<void> {
     await db.run(
-      "UPDATE users SET two_factor_enabled = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      "UPDATE users SET two_factor_enabled = ?, token_version = token_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
       [enabled ? 1 : 0, id],
     );
   }

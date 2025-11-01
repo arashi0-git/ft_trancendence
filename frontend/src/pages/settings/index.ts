@@ -683,9 +683,14 @@ export class UserSettingsPage extends SpacePageBase {
       return;
     }
 
-    const minutes = Math.max(1, Math.round(expiresInSeconds / 60));
     if (this.twoFactorHelper) {
-      this.twoFactorHelper.textContent = `${message} (Expires in approximately ${minutes} minute${minutes === 1 ? "" : "s"}.)`;
+      if (expiresInSeconds < 60) {
+        const seconds = Math.max(1, expiresInSeconds);
+        this.twoFactorHelper.textContent = `${message} (Expires in approximately ${seconds} second${seconds === 1 ? "" : "s"}.)`;
+      } else {
+        const minutes = Math.round(expiresInSeconds / 60);
+        this.twoFactorHelper.textContent = `${message} (Expires in approximately ${minutes} minute${minutes === 1 ? "" : "s"}.)`;
+      }
     }
 
     if (this.twoFactorError) {

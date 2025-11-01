@@ -7,7 +7,7 @@ export interface TwoFactorChallengeRecord {
   user_id: number;
   token: string;
   code_hash: string;
-  purpose: string;
+  purpose: TwoFactorPurpose;
   expires_at: string;
   created_at: string;
 }

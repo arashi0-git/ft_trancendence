@@ -6,6 +6,7 @@ import multipart from "@fastify/multipart";
 import path from "path";
 import fs from "fs";
 import https from "https";
+import secureJsonParse from "secure-json-parse";
 import { initializeDatabase } from "./database/init";
 import { authRoutes } from "./routes/auth";
 import { userRoutes } from "./routes/user";
@@ -33,12 +34,17 @@ fastify.addContentTypeParser(
   { parseAs: "string" },
   (request, body, done) => {
     try {
-      const text = typeof body === "string" ? body : (body?.toString() ?? "");
-      if (text.trim().length === 0) {
+      const raw = typeof body === "string" ? body : (body?.toString() ?? "");
+      const text = raw.trim();
+      if (text.length === 0) {
         done(null, {});
         return;
       }
-      done(null, JSON.parse(text));
+      const parsed = secureJsonParse(text, undefined, {
+        protoAction: "remove",
+        constructorAction: "remove",
+      });
+      done(null, parsed);
     } catch (error) {
       const parseError = error as Error & { statusCode?: number };
       parseError.name = "FastifyError";

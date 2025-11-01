@@ -44,20 +44,20 @@ export async function runMigrations(): Promise<void> {
     for (const file of migrationFiles) {
       const executed = await db.get(
         "SELECT filename FROM migrations WHERE filename = ?",
-        [file],
+        [file]
       );
 
       if (!executed) {
         if (file === "001_add_two_factor.sql") {
           type TableInfo = { name: string };
-          const columns = db.all<TableInfo>("PRAGMA table_info(users)");
+          const columns = await db.all<TableInfo>("PRAGMA table_info(users)");
           const hasTwoFactorEnabled = columns.some(
-            (column) => column.name === "two_factor_enabled",
+            (column) => column.name === "two_factor_enabled"
           );
 
           if (hasTwoFactorEnabled) {
             console.log(
-              `Skipping migration ${file}; two_factor_enabled already present`,
+              `Skipping migration ${file}; two_factor_enabled already present`
             );
             await db.run("INSERT INTO migrations (filename) VALUES (?)", [
               file,

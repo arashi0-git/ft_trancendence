@@ -98,9 +98,9 @@ export async function authRoutes(fastify: FastifyInstance) {
         const challengeResponse: TwoFactorChallengeResponse = {
           requiresTwoFactor: true,
           twoFactorToken: challenge.token,
-          delivery: "email",
-          expiresIn: 10 * 60,
-          message: "A verification code has been sent to your email address.",
+          delivery: challenge.delivery,
+          expiresIn: challenge.expiresIn,
+          message: challenge.message,
         };
 
         return reply.send(challengeResponse);
@@ -148,10 +148,9 @@ export async function authRoutes(fastify: FastifyInstance) {
         const response: TwoFactorChallengeResponse = {
           requiresTwoFactor: true,
           twoFactorToken: challenge.token,
-          delivery: "email",
-          expiresIn: 10 * 60,
-          message:
-            "A verification code has been sent to your email. Enter it to finish enabling 2FA.",
+          delivery: challenge.delivery,
+          expiresIn: challenge.expiresIn,
+          message: challenge.message,
         };
 
         return reply.send(response);
@@ -208,10 +207,9 @@ export async function authRoutes(fastify: FastifyInstance) {
         const response: TwoFactorChallengeResponse = {
           requiresTwoFactor: true,
           twoFactorToken: challenge.token,
-          delivery: "email",
-          expiresIn: 10 * 60,
-          message:
-            "Enter the verification code sent to your email to disable 2FA.",
+          delivery: challenge.delivery,
+          expiresIn: challenge.expiresIn,
+          message: challenge.message,
         };
 
         return reply.send(response);
@@ -244,10 +242,12 @@ export async function authRoutes(fastify: FastifyInstance) {
         );
 
         if (result.purpose === "login") {
-          const authToken = AuthUtils.generateToken(result.user);
+          const loggedInUser =
+            (await UserService.markUserLoggedIn(result.user.id)) ?? result.user;
+          const authToken = AuthUtils.generateToken(loggedInUser);
 
           const response: AuthResponse = {
-            user: UserService.toPublicUser(result.user),
+            user: UserService.toPublicUser(loggedInUser),
             token: authToken,
           };
 
@@ -266,11 +266,9 @@ export async function authRoutes(fastify: FastifyInstance) {
         });
       } catch (error) {
         if (error instanceof TwoFactorAuthorizationError) {
-          return reply
-            .status(403)
-            .send({
-              error: error.message ?? "Not authorized to complete this action",
-            });
+          return reply.status(403).send({
+            error: error.message ?? "Not authorized to complete this action",
+          });
         }
         fastify.log.error(error);
         return reply.status(400).send({

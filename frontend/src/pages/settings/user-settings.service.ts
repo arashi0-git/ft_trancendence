@@ -125,11 +125,19 @@ export class UserSettingsService {
   async verifyTwoFactorCode(
     payload: TwoFactorVerifyPayload,
   ): Promise<TwoFactorStatusResponse> {
-    const result = await AuthService.verifyTwoFactorCode(payload);
-    if (!("twoFactorEnabled" in result)) {
-      throw new Error("Unexpected response from 2FA verification");
+    try {
+      const result = await AuthService.verifyTwoFactorCode(payload);
+      if (!("twoFactorEnabled" in result)) {
+        throw new Error("Unexpected response from 2FA verification");
+      }
+      if (!result.user) {
+        throw new Error("User data missing from 2FA verification response");
+      }
+      this.currentUser = result.user;
+      return result;
+    } catch (error) {
+      console.error("Failed to verify two-factor code:", error);
+      throw error;
     }
-    this.currentUser = result.user;
-    return result;
   }
 }

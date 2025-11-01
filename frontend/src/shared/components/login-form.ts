@@ -143,14 +143,14 @@ export class LoginForm {
   }
 
   private attachLoginListeners(): void {
-    const form = document.getElementById(
-      "login-form",
+    const form = this.container.querySelector(
+      "#login-form",
     ) as HTMLFormElement | null;
-    const showRegisterBtn = document.getElementById(
-      "show-register",
+    const showRegisterBtn = this.container.querySelector(
+      "#show-register",
     ) as HTMLButtonElement | null;
-    const showHomeBtn = document.getElementById(
-      "show-home",
+    const showHomeBtn = this.container.querySelector(
+      "#show-home",
     ) as HTMLButtonElement | null;
 
     if (!form || !showRegisterBtn || !showHomeBtn) {
@@ -166,11 +166,11 @@ export class LoginForm {
   }
 
   private attachTwoFactorListeners(): void {
-    const form = document.getElementById(
-      "twofactor-form",
+    const form = this.container.querySelector(
+      "#twofactor-form",
     ) as HTMLFormElement | null;
-    const cancelBtn = document.getElementById(
-      "twofactor-cancel",
+    const cancelBtn = this.container.querySelector(
+      "#twofactor-cancel",
     ) as HTMLButtonElement | null;
 
     if (!form || !cancelBtn) {
@@ -187,11 +187,11 @@ export class LoginForm {
 
     const form = event.target as HTMLFormElement;
     const formData = new FormData(form);
-    const submitBtn = document.getElementById(
-      "login-submit",
+    const submitBtn = this.container.querySelector(
+      "#login-submit",
     ) as HTMLButtonElement | null;
-    const errorDiv = document.getElementById(
-      "error-message",
+    const errorDiv = this.container.querySelector(
+      "#error-message",
     ) as HTMLDivElement | null;
 
     if (!submitBtn || !errorDiv) {
@@ -246,11 +246,11 @@ export class LoginForm {
 
     const form = event.target as HTMLFormElement;
     const formData = new FormData(form);
-    const submitBtn = document.getElementById(
-      "twofactor-submit",
+    const submitBtn = this.container.querySelector(
+      "#twofactor-submit",
     ) as HTMLButtonElement | null;
-    const errorDiv = document.getElementById(
-      "twofactor-error",
+    const errorDiv = this.container.querySelector(
+      "#twofactor-error",
     ) as HTMLDivElement | null;
 
     if (!submitBtn || !errorDiv) {
