@@ -1,11 +1,8 @@
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
-import {
-  TwoFactorChallengeModel,
-  TwoFactorPurpose,
-} from "../models/twoFactorChallenge";
+import { TwoFactorChallengeModel } from "../models/twoFactorChallenge";
 import { EmailService } from "./emailService";
-import { UserModel, UserWithoutPassword } from "../models/user";
+import { UserWithoutPassword } from "../models/user";
 import { UserService } from "./userService";
 
 const CODE_TTL_MS = 10 * 60 * 1000; // 10 minutes
@@ -20,12 +17,8 @@ function generateNumericCode(): string {
 
 const DELIVERY_METHOD = "email" as const;
 
-const CHALLENGE_MESSAGES: Record<TwoFactorPurpose, string> = {
-  login: "A verification code has been sent to your email address.",
-  enable:
-    "A verification code has been sent to your email. Enter it to finish enabling 2FA.",
-  disable: "Enter the verification code sent to your email to disable 2FA.",
-};
+const LOGIN_CHALLENGE_MESSAGE =
+  "A verification code has been sent to your email address.";
 
 export interface TwoFactorChallengeDetails {
   token: string;
@@ -34,17 +27,9 @@ export interface TwoFactorChallengeDetails {
   message: string;
 }
 
-export class TwoFactorAuthorizationError extends Error {
-  constructor(message = "Not authorized to complete this action") {
-    super(message);
-    this.name = "TwoFactorAuthorizationError";
-  }
-}
-
 export class TwoFactorService {
   static async startChallenge(
     user: UserWithoutPassword,
-    purpose: TwoFactorPurpose,
   ): Promise<TwoFactorChallengeDetails> {
     const code = generateNumericCode();
     const codeHash = await bcrypt.hash(code, 10);
@@ -55,7 +40,6 @@ export class TwoFactorService {
       userId: user.id,
       token,
       codeHash,
-      purpose,
       expiresAt,
     });
 
@@ -66,28 +50,42 @@ export class TwoFactorService {
       throw error;
     }
 
-    await TwoFactorChallengeModel.deleteByUserAndPurposeExcept(
-      user.id,
-      purpose,
-      challengeId,
-    );
+    await TwoFactorChallengeModel.deleteByUserExcept(user.id, challengeId);
 
     return {
       token,
       delivery: DELIVERY_METHOD,
       expiresIn: CODE_TTL_SECONDS,
-      message: CHALLENGE_MESSAGES[purpose],
+      message: LOGIN_CHALLENGE_MESSAGE,
     };
+  }
+
+  static async resendChallenge(
+    token: string,
+  ): Promise<TwoFactorChallengeDetails> {
+    await TwoFactorChallengeModel.deleteExpired();
+
+    const existing = await TwoFactorChallengeModel.findByToken(token);
+    if (!existing) {
+      throw new Error("Invalid or expired verification token");
+    }
+
+    if (existing.purpose !== "login") {
+      throw new Error("Only login challenges can be resent");
+    }
+
+    const user = await UserService.getUserById(existing.user_id);
+    if (!user) {
+      throw new Error("User not found for verification");
+    }
+
+    return this.startChallenge(user);
   }
 
   static async verifyChallenge(
     token: string,
     code: string,
-    actingUserId?: number,
-  ): Promise<
-    | { purpose: "login"; user: UserWithoutPassword }
-    | { purpose: "enable" | "disable"; user: UserWithoutPassword }
-  > {
+  ): Promise<UserWithoutPassword> {
     await TwoFactorChallengeModel.deleteExpired();
 
     const challenge = await TwoFactorChallengeModel.findByToken(token);
@@ -109,63 +107,13 @@ export class TwoFactorService {
 
     await TwoFactorChallengeModel.deleteById(challenge.id);
 
-    const userRecord = await UserModel.findById(challenge.user_id);
-    if (!userRecord) {
+    const loggedInUser =
+      (await UserService.markUserLoggedIn(challenge.user_id)) ?? null;
+
+    if (!loggedInUser) {
       throw new Error("User not found for verification");
     }
 
-    switch (challenge.purpose as TwoFactorPurpose) {
-      case "login": {
-        const refreshed = await UserService.markUserLoggedIn(userRecord.id);
-        if (!refreshed) {
-          throw new Error("Failed to refresh user after verification");
-        }
-        return { purpose: "login", user: refreshed };
-      }
-      case "enable": {
-        if (!actingUserId || actingUserId !== userRecord.id) {
-          throw new TwoFactorAuthorizationError();
-        }
-        await UserModel.setTwoFactorEnabled(userRecord.id, true);
-        const refreshed = await UserService.getUserById(userRecord.id);
-        if (!refreshed) {
-          throw new Error("Failed to refresh user after enabling 2FA");
-        }
-        return { purpose: "enable", user: refreshed };
-      }
-      case "disable": {
-        if (!actingUserId || actingUserId !== userRecord.id) {
-          throw new TwoFactorAuthorizationError();
-        }
-        await UserModel.setTwoFactorEnabled(userRecord.id, false);
-        const refreshed = await UserService.getUserById(userRecord.id);
-        if (!refreshed) {
-          throw new Error("Failed to refresh user after disabling 2FA");
-        }
-        return { purpose: "disable", user: refreshed };
-      }
-      default: {
-        throw new Error("Unsupported verification purpose");
-      }
-    }
-  }
-
-  static async cancelChallenges(
-    userId: number,
-    purpose?: TwoFactorPurpose,
-  ): Promise<void> {
-    if (purpose) {
-      await TwoFactorChallengeModel.deleteByUserAndPurpose(userId, purpose);
-      return;
-    }
-
-    await Promise.all(
-      ["login", "enable", "disable"].map((value) =>
-        TwoFactorChallengeModel.deleteByUserAndPurpose(
-          userId,
-          value as TwoFactorPurpose,
-        ),
-      ),
-    );
+    return loggedInUser;
   }
 }

@@ -1,13 +1,11 @@
 import { db } from "../database/connection";
 
-export type TwoFactorPurpose = "login" | "enable" | "disable";
-
 export interface TwoFactorChallengeRecord {
   id: number;
   user_id: number;
   token: string;
   code_hash: string;
-  purpose: TwoFactorPurpose;
+  purpose: "login";
   expires_at: string;
   created_at: string;
 }
@@ -17,7 +15,6 @@ export class TwoFactorChallengeModel {
     userId: number;
     token: string;
     codeHash: string;
-    purpose: TwoFactorPurpose;
     expiresAt: Date;
   }): Promise<number> {
     const result = await db.run(
@@ -27,7 +24,7 @@ export class TwoFactorChallengeModel {
         params.userId,
         params.token,
         params.codeHash,
-        params.purpose,
+        "login",
         params.expiresAt.toISOString(),
       ],
     );
@@ -51,24 +48,19 @@ export class TwoFactorChallengeModel {
     await db.run(`DELETE FROM two_factor_challenges WHERE id = ?`, [id]);
   }
 
-  static async deleteByUserAndPurpose(
-    userId: number,
-    purpose: TwoFactorPurpose,
-  ): Promise<void> {
-    await db.run(
-      `DELETE FROM two_factor_challenges WHERE user_id = ? AND purpose = ?`,
-      [userId, purpose],
-    );
+  static async deleteByUser(userId: number): Promise<void> {
+    await db.run(`DELETE FROM two_factor_challenges WHERE user_id = ?`, [
+      userId,
+    ]);
   }
 
-  static async deleteByUserAndPurposeExcept(
+  static async deleteByUserExcept(
     userId: number,
-    purpose: TwoFactorPurpose,
     excludeId: number,
   ): Promise<void> {
     await db.run(
-      `DELETE FROM two_factor_challenges WHERE user_id = ? AND purpose = ? AND id != ?`,
-      [userId, purpose, excludeId],
+      `DELETE FROM two_factor_challenges WHERE user_id = ? AND id != ?`,
+      [userId, excludeId],
     );
   }
 

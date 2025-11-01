@@ -40,10 +40,7 @@ export class AuthService {
     }
 
     if (userRecord.two_factor_enabled) {
-      const challenge = await TwoFactorService.startChallenge(
-        userRecord,
-        "login",
-      );
+      const challenge = await TwoFactorService.startChallenge(userRecord);
       console.info(`2FA challenge issued for user: ${userRecord.id}`);
       return {
         requiresTwoFactor: true,

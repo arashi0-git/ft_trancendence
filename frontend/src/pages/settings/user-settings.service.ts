@@ -4,18 +4,9 @@ import type {
   PublicUser,
   UpdateUserSettingsPayload,
   FollowedUserSummary,
-  TwoFactorChallengeResponse,
-  TwoFactorVerifyPayload,
-  AuthResponse,
   TwoFactorStatusResponse,
 } from "../../shared/types/user";
 import { router } from "../../routes/router";
-
-function isTwoFactorStatusResponse(
-  payload: AuthResponse | TwoFactorStatusResponse,
-): payload is TwoFactorStatusResponse {
-  return typeof (payload as TwoFactorStatusResponse).user !== "undefined";
-}
 
 export class UserSettingsService {
   private currentUser: PublicUser | null = null;
@@ -116,34 +107,32 @@ export class UserSettingsService {
     }
   }
 
-  async startTwoFactorSetup(): Promise<TwoFactorChallengeResponse> {
-    const challenge = await AuthService.requestTwoFactorSetup();
-    return challenge;
-  }
-
-  async startTwoFactorDisable(
-    currentPassword: string,
-  ): Promise<TwoFactorChallengeResponse> {
-    const challenge =
-      await AuthService.requestTwoFactorDisable(currentPassword);
-    return challenge;
-  }
-
-  async verifyTwoFactorCode(
-    payload: TwoFactorVerifyPayload,
-  ): Promise<TwoFactorStatusResponse> {
+  async enableTwoFactor(): Promise<TwoFactorStatusResponse> {
     try {
-      const result = await AuthService.verifyTwoFactorCode(payload);
-      if (!isTwoFactorStatusResponse(result)) {
-        throw new Error("Unexpected response from 2FA verification");
-      }
+      const result = await AuthService.enableTwoFactor();
       if (!result.user) {
-        throw new Error("User data missing from 2FA verification response");
+        throw new Error("User data missing from enable 2FA response");
       }
       this.currentUser = result.user;
       return result;
     } catch (error) {
-      console.error("Failed to verify two-factor code:", error);
+      console.error("Failed to enable two-factor:", error);
+      throw error;
+    }
+  }
+
+  async disableTwoFactor(
+    currentPassword: string,
+  ): Promise<TwoFactorStatusResponse> {
+    try {
+      const result = await AuthService.disableTwoFactor(currentPassword);
+      if (!result.user) {
+        throw new Error("User data missing from disable 2FA response");
+      }
+      this.currentUser = result.user;
+      return result;
+    } catch (error) {
+      console.error("Failed to disable two-factor:", error);
       throw error;
     }
   }
