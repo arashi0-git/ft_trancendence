@@ -31,20 +31,14 @@ const transport = buildTransport();
 export class EmailService {
   static async sendTwoFactorCode(to: string, code: string): Promise<void> {
     if (!transport) {
-      console.warn(
-        "[EmailService] SMTP not configured; two-factor code:",
-        code,
-      );
-      return;
+      throw new Error("Email service not configured");
     }
 
     const fromAddress = SMTP_FROM || SMTP_USER;
     if (!fromAddress) {
-      console.warn(
-        "[EmailService] SMTP_FROM/SMTP_USER missing; unable to send email. Code:",
-        code,
+      throw new Error(
+        "Email service not configured: SMTP_FROM or SMTP_USER missing",
       );
-      return;
     }
 
     await transport.sendMail({

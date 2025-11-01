@@ -19,8 +19,8 @@ export class TwoFactorChallengeModel {
     codeHash: string;
     purpose: TwoFactorPurpose;
     expiresAt: Date;
-  }): Promise<void> {
-    await db.run(
+  }): Promise<number> {
+    const result = await db.run(
       `INSERT INTO two_factor_challenges (user_id, token, code_hash, purpose, expires_at)
        VALUES (?, ?, ?, ?, ?)`,
       [
@@ -31,6 +31,10 @@ export class TwoFactorChallengeModel {
         params.expiresAt.toISOString(),
       ],
     );
+
+    return typeof result.lastInsertRowid === "bigint"
+      ? Number(result.lastInsertRowid)
+      : result.lastInsertRowid;
   }
 
   static async findByToken(
@@ -54,6 +58,17 @@ export class TwoFactorChallengeModel {
     await db.run(
       `DELETE FROM two_factor_challenges WHERE user_id = ? AND purpose = ?`,
       [userId, purpose],
+    );
+  }
+
+  static async deleteByUserAndPurposeExcept(
+    userId: number,
+    purpose: TwoFactorPurpose,
+    excludeId: number,
+  ): Promise<void> {
+    await db.run(
+      `DELETE FROM two_factor_challenges WHERE user_id = ? AND purpose = ? AND id != ?`,
+      [userId, purpose, excludeId],
     );
   }
 

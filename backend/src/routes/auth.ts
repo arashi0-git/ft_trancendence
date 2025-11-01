@@ -10,7 +10,10 @@ import {
   DisableTwoFactorRequest,
 } from "../types/user";
 import { authenticateToken, optionalAuth } from "../middleware/auth";
-import { TwoFactorService } from "../services/twoFactorService";
+import {
+  TwoFactorAuthorizationError,
+  TwoFactorService,
+} from "../services/twoFactorService";
 
 export async function authRoutes(fastify: FastifyInstance) {
   fastify.post<{ Body: CreateUserRequest }>(
@@ -234,7 +237,11 @@ export async function authRoutes(fastify: FastifyInstance) {
             .send({ error: "Verification token and code are required" });
         }
 
-        const result = await TwoFactorService.verifyChallenge(token, code);
+        const result = await TwoFactorService.verifyChallenge(
+          token,
+          code,
+          request.user?.id,
+        );
 
         if (result.purpose === "login") {
           const authToken = AuthUtils.generateToken(result.user);
@@ -258,6 +265,13 @@ export async function authRoutes(fastify: FastifyInstance) {
           twoFactorEnabled: result.purpose === "enable",
         });
       } catch (error) {
+        if (error instanceof TwoFactorAuthorizationError) {
+          return reply
+            .status(403)
+            .send({
+              error: error.message ?? "Not authorized to complete this action",
+            });
+        }
         fastify.log.error(error);
         return reply.status(400).send({
           error:

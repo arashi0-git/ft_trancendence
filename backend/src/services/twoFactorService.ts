@@ -17,6 +17,13 @@ function generateNumericCode(): string {
   return value.toString().padStart(CODE_DIGITS, "0");
 }
 
+export class TwoFactorAuthorizationError extends Error {
+  constructor(message = "Not authorized to complete this action") {
+    super(message);
+    this.name = "TwoFactorAuthorizationError";
+  }
+}
+
 export class TwoFactorService {
   static async startChallenge(
     user: UserWithoutPassword,
@@ -27,8 +34,7 @@ export class TwoFactorService {
     const token = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + CODE_TTL_MS);
 
-    await TwoFactorChallengeModel.deleteByUserAndPurpose(user.id, purpose);
-    await TwoFactorChallengeModel.create({
+    const challengeId = await TwoFactorChallengeModel.create({
       userId: user.id,
       token,
       codeHash,
@@ -36,7 +42,18 @@ export class TwoFactorService {
       expiresAt,
     });
 
-    await EmailService.sendTwoFactorCode(user.email, code);
+    try {
+      await EmailService.sendTwoFactorCode(user.email, code);
+    } catch (error) {
+      await TwoFactorChallengeModel.deleteById(challengeId);
+      throw error;
+    }
+
+    await TwoFactorChallengeModel.deleteByUserAndPurposeExcept(
+      user.id,
+      purpose,
+      challengeId,
+    );
 
     return { token };
   }
@@ -44,6 +61,7 @@ export class TwoFactorService {
   static async verifyChallenge(
     token: string,
     code: string,
+    actingUserId?: number,
   ): Promise<
     | { purpose: "login"; user: UserWithoutPassword }
     | { purpose: "enable" | "disable"; user: UserWithoutPassword }
@@ -83,6 +101,9 @@ export class TwoFactorService {
         return { purpose: "login", user: refreshed };
       }
       case "enable": {
+        if (!actingUserId || actingUserId !== userRecord.id) {
+          throw new TwoFactorAuthorizationError();
+        }
         await UserModel.setTwoFactorEnabled(userRecord.id, true);
         const refreshed = await UserService.getUserById(userRecord.id);
         if (!refreshed) {
@@ -91,6 +112,9 @@ export class TwoFactorService {
         return { purpose: "enable", user: refreshed };
       }
       case "disable": {
+        if (!actingUserId || actingUserId !== userRecord.id) {
+          throw new TwoFactorAuthorizationError();
+        }
         await UserModel.setTwoFactorEnabled(userRecord.id, false);
         const refreshed = await UserService.getUserById(userRecord.id);
         if (!refreshed) {
