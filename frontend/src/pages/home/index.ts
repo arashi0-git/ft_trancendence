@@ -1,6 +1,5 @@
 import { HomeService } from "./home.service";
 import { SpacePageBase } from "../../shared/components/space-page-base";
-import { translate } from "../../i18n";
 
 export class HomePage extends SpacePageBase {
   private service: HomeService;
@@ -18,29 +17,21 @@ export class HomePage extends SpacePageBase {
   }
 
   private getTemplate(): string {
-    const intro = translate("home.intro");
-    const quickPlay = translate("home.quickPlay");
-    const quickPlayDescription = translate("home.quickPlayDescription");
-    const tournament = translate("home.tournament");
-    const tournamentDescription = translate("home.tournamentDescription");
-    const gameSettings = translate("home.gameSettings");
-    const gameSettingsDescription = translate("home.gameSettingsDescription");
-
     const content = `
-        <p class="text-center text-gray-300 mb-6">${intro}</p>
+        <p class="text-center text-gray-300 mb-6">Choose how you want to play Pong!</p>
         
         <div class="space-y-4 mb-6">
           <button id="quick-play-btn" class="w-full bg-blue-400 hover:bg-blue-500 text-white py-3 px-4 rounded border border-blue-400 shadow-lg">
             <div class="text-center">
-              <div class="font-semibold text-lg">${quickPlay}</div>
-              <div class="text-sm opacity-90">${quickPlayDescription}</div>
+              <div class="font-semibold text-lg">🎮 Quick Play</div>
+              <div class="text-sm opacity-90">2 or 4 Players </div>
             </div>
           </button>
           
           <button id="tournament-play-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded border border-blue-600 shadow-lg">
             <div class="text-center">
-              <div class="font-semibold text-lg">${tournament}</div>
-              <div class="text-sm opacity-90">${tournamentDescription}</div>
+              <div class="font-semibold text-lg">🏆 Tournament</div>
+              <div class="text-sm opacity-90">2-4-8 Players</div>
             </div>
           </button>
           
@@ -49,8 +40,8 @@ export class HomePage extends SpacePageBase {
 
         <button id="game-settings-btn" class="w-full bg-blue-200 hover:bg-blue-300 text-black py-3 px-4 rounded border border-blue-200 shadow-lg">
             <div class="text-center">
-              <div class="font-semibold text-lg">${gameSettings}</div>
-              <div class="text-sm opacity-90">${gameSettingsDescription}</div>
+              <div class="font-semibold text-lg">⚙️ Game Settings</div>
+              <div class="text-sm opacity-90">Customize your game</div>
             </div>
           </button>
           </div>

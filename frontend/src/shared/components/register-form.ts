@@ -1,98 +1,70 @@
 import { AuthService } from "../services/auth-service";
 import type { CreateUserRequest, PublicUser } from "../types/user";
-import { onLanguageChange, translate } from "../../i18n";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const USERNAME_MIN_LENGTH = 3;
-const USERNAME_MAX_LENGTH = 20;
-const PASSWORD_MIN_LENGTH = 6;
 
 export class RegisterForm {
   private abortController: AbortController;
   private onRegisterSuccess: (user: PublicUser) => void = () => {};
   private onShowLogin: () => void = () => {};
   private onShowHome: () => void = () => {};
-  private unsubscribeLanguageChange?: () => void;
 
   constructor(private container: HTMLElement) {
     this.abortController = new AbortController();
     this.render();
-    this.unsubscribeLanguageChange = onLanguageChange(() => {
-      this.abortController.abort();
-      this.abortController = new AbortController();
-      this.render();
-    });
   }
 
   private render(): void {
-    const title = translate("register.form.title");
-    const usernameLabel = translate("register.form.usernameLabel");
-    const usernamePlaceholder = translate("register.form.usernamePlaceholder");
-    const emailLabel = translate("register.form.emailLabel");
-    const emailPlaceholder = translate("register.form.emailPlaceholder");
-    const passwordLabel = translate("register.form.passwordLabel");
-    const passwordPlaceholder = translate("register.form.passwordPlaceholder");
-    const passwordHint = translate("register.form.passwordHint");
-    const confirmPasswordLabel = translate(
-      "register.form.confirmPasswordLabel",
-    );
-    const confirmPasswordPlaceholder = translate(
-      "register.form.confirmPasswordPlaceholder",
-    );
-    const submitLabel = translate("register.form.submit");
-    const showLoginLabel = translate("register.form.showLogin");
-    const showHomeLabel = translate("register.form.showHome");
-
     this.container.innerHTML = `
       <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold mb-4 text-center">${title}</h2>
+        <h2 class="text-2xl font-bold mb-4 text-center">Create an Account</h2>
         <form id="register-form" class="space-y-4">
           <div>
-            <label for="username" class="block text-sm font-medium text-gray-700">${usernameLabel}</label>
+            <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
             <input
               type="text"
               id="username"
               name="username"
               required
-              minlength="${USERNAME_MIN_LENGTH}"
-              maxlength="${USERNAME_MAX_LENGTH}"
+              minlength="3"
+              maxlength="20"
               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="${usernamePlaceholder}"
+              placeholder="Choose a username"
             >
           </div>
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">${emailLabel}</label>
+            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
             <input
               type="email"
               id="email"
               name="email"
               required
               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="${emailPlaceholder}"
+              placeholder="you@example.com"
             >
           </div>
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700">${passwordLabel}</label>
+            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
             <input
               type="password"
               id="password"
               name="password"
               required
-              minlength="${PASSWORD_MIN_LENGTH}"
+              minlength="6"
               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="${passwordPlaceholder}"
+              placeholder="Enter a secure password"
             >
-            <p class="text-xs text-gray-500 mt-1">${passwordHint}</p>
+            <p class="text-xs text-gray-500 mt-1">At least 6 characters.</p>
           </div>
           <div>
-            <label for="confirm-password" class="block text-sm font-medium text-gray-700">${confirmPasswordLabel}</label>
+            <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
             <input
               type="password"
               id="confirm-password"
               name="confirm-password"
               required
               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="${confirmPasswordPlaceholder}"
+              placeholder="Re-enter your password"
             >
           </div>
           <div id="register-error-message" class="hidden text-red-600 text-sm"></div>
@@ -102,21 +74,21 @@ export class RegisterForm {
               id="register-submit"
               class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              ${submitLabel}
+              Create account
             </button>
             <button
               type="button"
               id="show-login"
               class="w-full bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-700"
             >
-              ${showLoginLabel}
+              Already have an account? Sign in
             </button>
             <button
               type="button"
               id="register-show-home"
               class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
-              ${showHomeLabel}
+              Back to Home
             </button>
           </div>
         </form>
@@ -193,10 +165,7 @@ export class RegisterForm {
     }
 
     submitBtn.disabled = true;
-    const submittingLabel = translate("register.form.status.submitting");
-    const submitLabel = translate("register.form.submit");
-    const genericError = translate("register.form.errors.generic");
-    submitBtn.textContent = submittingLabel;
+    submitBtn.textContent = "Creating account...";
 
     const payload: CreateUserRequest = {
       username,
@@ -209,12 +178,12 @@ export class RegisterForm {
       this.onRegisterSuccess(response.user);
     } catch (error) {
       const message =
-        error instanceof Error && error.message ? error.message : genericError;
+        error instanceof Error ? error.message : "Registration failed";
       errorDiv.textContent = message;
       errorDiv.classList.remove("hidden");
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = submitLabel;
+      submitBtn.textContent = "Create account";
     }
   }
 
@@ -225,31 +194,23 @@ export class RegisterForm {
     confirmPassword: string,
   ): string | null {
     if (!username || !email || !password || !confirmPassword) {
-      return translate("register.form.errors.allRequired");
+      return "All fields are required.";
     }
 
-    if (
-      username.length < USERNAME_MIN_LENGTH ||
-      username.length > USERNAME_MAX_LENGTH
-    ) {
-      return translate("register.form.errors.usernameLength", {
-        min: USERNAME_MIN_LENGTH,
-        max: USERNAME_MAX_LENGTH,
-      });
+    if (username.length < 3 || username.length > 20) {
+      return "Username must be between 3 and 20 characters.";
     }
 
     if (!emailRegex.test(email)) {
-      return translate("register.form.errors.emailInvalid");
+      return "Please enter a valid email address.";
     }
 
-    if (password.length < PASSWORD_MIN_LENGTH) {
-      return translate("register.form.errors.passwordLength", {
-        min: PASSWORD_MIN_LENGTH,
-      });
+    if (password.length < 6) {
+      return "Password must be at least 6 characters long.";
     }
 
     if (password !== confirmPassword) {
-      return translate("register.form.errors.passwordMismatch");
+      return "Passwords do not match.";
     }
 
     return null;
@@ -257,8 +218,6 @@ export class RegisterForm {
 
   destroy(): void {
     this.abortController.abort();
-    this.unsubscribeLanguageChange?.();
-    this.unsubscribeLanguageChange = undefined;
     this.container.innerHTML = "";
   }
 
