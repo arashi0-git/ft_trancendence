@@ -1,5 +1,6 @@
 import { GameSettingsService } from "./game-settings.service";
 import { SpacePageBase } from "../../shared/components/space-page-base";
+import { translate } from "../../i18n";
 import type {
   BallSpeedOption,
   MaxScoreOption,
@@ -36,76 +37,99 @@ export class GameSettingsPage extends SpacePageBase {
     const ballSpeed = this.service.getBallSpeed();
     const maxScore = this.service.getMaxScore();
     const isDefault = this.service.isUsingDefaults();
-    const maxScoreOptions = MAX_SCORE_OPTIONS.map(
-      (option) =>
-        `<option value="${option}" ${option === maxScore ? "selected" : ""}>${option} points</option>`,
-    ).join("");
+    const title = translate("gameSettings.title");
+    const description = translate("gameSettings.description");
+    const defaultLabel = translate("gameSettings.defaultLabel");
+    const fieldColorLabel = translate("gameSettings.fieldColor");
+    const ballColorLabel = translate("gameSettings.ballColor");
+    const paddleColorLabel = translate("gameSettings.paddleColor");
+    const paddleLengthLabel = translate("gameSettings.paddleLength");
+    const paddleLengthOptions = {
+      short: translate("gameSettings.paddleLengthOptions.short"),
+      normal: translate("gameSettings.paddleLengthOptions.normal"),
+      long: translate("gameSettings.paddleLengthOptions.long"),
+    };
+    const ballSizeLabel = translate("gameSettings.ballSize");
+    const ballSizeOptions = {
+      small: translate("gameSettings.ballSizeOptions.small"),
+      normal: translate("gameSettings.ballSizeOptions.normal"),
+      big: translate("gameSettings.ballSizeOptions.big"),
+    };
+    const ballSpeedLabel = translate("gameSettings.ballSpeed");
+    const pointsToWinLabel = translate("gameSettings.pointsToWin");
+    const maxScoreOptions = MAX_SCORE_OPTIONS.map((option) => {
+      const optionLabel = translate("gameSettings.pointsOption", {
+        count: option,
+      });
+      return `<option value="${option}" ${option === maxScore ? "selected" : ""}>${optionLabel}</option>`;
+    }).join("");
+    const homeLabel = translate("navigation.home");
     const content = `
       <div class="text-white text-center max-w-md mx-auto">
-        <h2 class="text-2xl font-bold mb-4">Game Customization</h2>
+        <h2 class="text-2xl font-bold mb-4">${title}</h2>
         <p class="mb-6 text-gray-300">
-          Changes made here will apply to all game modes
+          ${description}
         </p>
 
         <div class="space-y-4">
           <div class="flex justify-between items-center bg-black bg-opacity-20 p-4 rounded-lg">
-            <label for="power-ups-toggle" class="text-lg">Default</label>
+            <label for="power-ups-toggle" class="text-lg">${defaultLabel}</label>
             <input type="checkbox" id="power-ups-toggle" class="form-checkbox h-6 w-6 text-yellow-500 rounded focus:ring-yellow-400" ${isDefault ? "checked" : ""}>
           </div>
 
           <div class="flex justify-between items-center bg-black bg-opacity-20 p-4 rounded-lg">
-            <label for="field-color-picker" class="text-lg">Background color</label>
+            <label for="field-color-picker" class="text-lg">${fieldColorLabel}</label>
             <input type="color" id="field-color-picker" value="${fieldColor}" class="w-12 h-10 p-0 border-0 rounded">
           </div>
 
           <div class="flex justify-between items-center bg-black bg-opacity-20 p-4 rounded-lg">
-            <label for="ball-color-picker" class="text-lg">Ball color</label>
+            <label for="ball-color-picker" class="text-lg">${ballColorLabel}</label>
             <input type="color" id="ball-color-picker" value="${ballColor}" class="w-12 h-10 p-0 border-0 rounded">
           </div>
 
           <div class="flex justify-between items-center bg-black bg-opacity-20 p-4 rounded-lg">
-            <label for="paddle-color-picker" class="text-lg">Paddle color</label>
+            <label for="paddle-color-picker" class="text-lg">${paddleColorLabel}</label>
             <input type="color" id="paddle-color-picker" value="${paddleColor}" class="w-12 h-10 p-0 border-0 rounded">
           </div>
 
           <div class="bg-black bg-opacity-20 p-4 rounded-lg text-left">
-            <span class="text-lg block mb-3">Paddle length</span>
+            <span class="text-lg block mb-3">${paddleLengthLabel}</span>
             <div class="flex justify-around">
               <label class="flex items-center space-x-2">
                 <input type="radio" name="paddle-length" value="short" class="form-radio text-purple-500" ${paddleLength === "short" ? "checked" : ""}>
-                <span>Short</span>
+                <span>${paddleLengthOptions.short}</span>
               </label>
               <label class="flex items-center space-x-2">
                 <input type="radio" name="paddle-length" value="normal" class="form-radio text-purple-500" ${paddleLength === "normal" ? "checked" : ""}>
-                <span>Normal</span>
+                <span>${paddleLengthOptions.normal}</span>
               </label>
               <label class="flex items-center space-x-2">
                 <input type="radio" name="paddle-length" value="long" class="form-radio text-purple-500" ${paddleLength === "long" ? "checked" : ""}>
-                <span>Long</span>
+                <span>${paddleLengthOptions.long}</span>
               </label>
             </div>
           </div>
 
           <div class="bg-black bg-opacity-20 p-4 rounded-lg text-left">
-            <span class="text-lg block mb-3">Ball size</span>
+            <span class="text-lg block mb-3">${ballSizeLabel}</span>
             <div class="flex justify-around">
               <label class="flex items-center space-x-2">
                 <input type="radio" name="ball-size" value="small" class="form-radio text-purple-500" ${ballSize === "small" ? "checked" : ""}>
-                <span>Small</span>
+                <span>${ballSizeOptions.small}</span>
               </label>
               <label class="flex items-center space-x-2">
                 <input type="radio" name="ball-size" value="normal" class="form-radio text-purple-500" ${ballSize === "normal" ? "checked" : ""}>
-                <span>Normal</span>
+                <span>${ballSizeOptions.normal}</span>
               </label>
               <label class="flex items-center space-x-2">
                 <input type="radio" name="ball-size" value="big" class="form-radio text-purple-500" ${ballSize === "big" ? "checked" : ""}>
-                <span>Big</span>
+                <span>${ballSizeOptions.big}</span>
               </label>
             </div>
           </div>
 
           <div class="bg-black bg-opacity-20 p-4 rounded-lg text-left">
-            <span class="text-lg block mb-3">Ball speed</span>
+            <span class="text-lg block mb-3">${ballSpeedLabel}</span>
             <div class="flex justify-around">
               <label class="flex items-center space-x-2">
                 <input type="radio" name="ball-speed" value="slow" class="form-radio text-purple-500" ${ballSpeed === "slow" ? "checked" : ""}>
@@ -123,7 +147,7 @@ export class GameSettingsPage extends SpacePageBase {
           </div>
 
           <div class="bg-black bg-opacity-20 p-4 rounded-lg text-left">
-            <label for="max-score-select" class="text-lg block mb-3">Points to win</label>
+            <label for="max-score-select" class="text-lg block mb-3">${pointsToWinLabel}</label>
             <select id="max-score-select" class="w-full bg-black bg-opacity-40 border border-purple-500 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
               ${maxScoreOptions}
             </select>
@@ -131,7 +155,7 @@ export class GameSettingsPage extends SpacePageBase {
         </div>
 
         <button id="back-to-home" class="mt-8 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">
-          Home
+          ${homeLabel}
         </button>
       </div>
     `;
@@ -152,7 +176,9 @@ export class GameSettingsPage extends SpacePageBase {
       "power-ups-toggle",
     ) as HTMLInputElement | null;
     const paddleLengthInputs = Array.from(
-      document.querySelectorAll<HTMLInputElement>("input[name='paddle-length']"),
+      document.querySelectorAll<HTMLInputElement>(
+        "input[name='paddle-length']",
+      ),
     );
     const ballSizeInputs = Array.from(
       document.querySelectorAll<HTMLInputElement>("input[name='ball-size']"),
