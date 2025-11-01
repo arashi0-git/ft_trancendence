@@ -11,6 +11,7 @@ import {
   DynamicTexture,
 } from "@babylonjs/core";
 import { GameState } from "../types/game";
+import { onLanguageChange, translate } from "../../i18n";
 
 interface BabylonRenderOptions {
   withBackground?: boolean;
@@ -47,6 +48,21 @@ export class BabylonRender {
   private scoreTexture2!: DynamicTexture;
   private prevScore1 = -1;
   private prevScore2 = -1;
+  private lastScore1 = 0;
+  private lastScore2 = 0;
+  private unsubscribeLanguageChange?: () => void;
+  private readonly handleLanguageChange = () => {
+    if (!this.scoreTexture1 || !this.scoreTexture2) {
+      return;
+    }
+    const score1 = this.lastScore1;
+    const score2 = this.lastScore2;
+    this.prevScore1 = -1;
+    this.prevScore2 = -1;
+    this.updateScoreDisplay(score1, score2);
+    this.prevScore1 = score1;
+    this.prevScore2 = score2;
+  };
   private gameWidth: number;
   private gameHeight: number;
   private fieldColorHex: string;
@@ -552,13 +568,22 @@ export class BabylonRender {
 
     // 初期スコア表示
     this.updateScoreDisplay(0, 0);
+
+    if (!this.unsubscribeLanguageChange) {
+      this.unsubscribeLanguageChange = onLanguageChange(
+        this.handleLanguageChange,
+      );
+    }
   }
 
   private updateScoreDisplay(score1: number, score2: number) {
+    const player1Label = translate("game.scoreboard.player1");
+    const player2Label = translate("game.scoreboard.player2");
+
     // Player 1 スコア更新
     this.scoreTexture1.clear();
     this.scoreTexture1.drawText(
-      `Player 1\n${score1}`,
+      `${player1Label}\n${score1}`,
       null,
       null,
       "bold 64px Arial", // 48pxから64pxに増加
@@ -570,7 +595,7 @@ export class BabylonRender {
     // Player 2 スコア更新
     this.scoreTexture2.clear();
     this.scoreTexture2.drawText(
-      `Player 2\n${score2}`,
+      `${player2Label}\n${score2}`,
       null,
       null,
       "bold 64px Arial", // 48pxから64pxに増加
@@ -578,6 +603,9 @@ export class BabylonRender {
       "transparent",
       true,
     );
+
+    this.lastScore1 = score1;
+    this.lastScore2 = score2;
   }
 
   public updateGameObjects(gameState: GameState) {
@@ -624,11 +652,14 @@ export class BabylonRender {
     }
     // Ball
     this.ballMesh.position.x = (gameState.ball.x - this.gameWidth / 2) * scaleX;
-    this.ballMesh.position.z = (this.gameHeight / 2 - gameState.ball.y) * scaleY;
+    this.ballMesh.position.z =
+      (this.gameHeight / 2 - gameState.ball.y) * scaleY;
     this.updateBallMeshScale(gameState.ball.radius);
 
     // Score
     const { player1, player2 } = gameState.score;
+    this.lastScore1 = player1;
+    this.lastScore2 = player2;
     if (player1 !== this.prevScore1 || player2 !== this.prevScore2) {
       this.updateScoreDisplay(player1, player2);
       this.prevScore1 = player1;
@@ -648,5 +679,7 @@ export class BabylonRender {
     this.centerLineSegments = [];
 
     this.scene.dispose();
+    this.unsubscribeLanguageChange?.();
+    this.unsubscribeLanguageChange = undefined;
   }
 }

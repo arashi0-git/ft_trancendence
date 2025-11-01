@@ -1,5 +1,6 @@
 import { TournamentService } from "./tournament.service";
 import { SpacePageBase } from "../../shared/components/space-page-base";
+import { translate } from "../../i18n";
 
 export class TournamentPage extends SpacePageBase {
   private service: TournamentService;
@@ -24,6 +25,7 @@ export class TournamentPage extends SpacePageBase {
   private getTemplate(): string {
     const backButton = this.service.getBackButtonTemplate();
     const title = this.service.getPageTitle();
+    const continueLabel = translate("tournament.buttons.continue");
 
     const content = `
         <div class="flex justify-between items-center mb-2">
@@ -38,7 +40,7 @@ export class TournamentPage extends SpacePageBase {
                 <h3 id="game-over-title" class="text-3xl font-bold text-white mb-4"></h3>
                 <p id="game-over-message" class="text-xl text-gray-300 mb-6"></p>
                 <button id="game-over-continue-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
-                    Continue
+                    ${continueLabel}
                 </button>
             </div>
         </div>

@@ -1,5 +1,6 @@
 import type { PlayerOption } from "../types/tournament";
 import { AuthService } from "../services/auth-service";
+import { translate } from "../../i18n";
 
 export class PlayerSelector {
   private container: HTMLElement;
@@ -49,40 +50,53 @@ export class PlayerSelector {
     this.destroy();
 
     const playerOptions = await this.getPlayerOptions();
+    const labelText = translate("playerSelector.label", {
+      index: this.playerIndex,
+    });
+    const selectPlaceholder = translate("playerSelector.selectPlaceholder");
+    const customOptionText = translate("playerSelector.customOption");
+    const aiDifficultyLabel = translate("playerSelector.aiDifficulty");
+    const difficultyLabels = {
+      easy: translate("playerSelector.difficulty.easy"),
+      medium: translate("playerSelector.difficulty.medium"),
+      hard: translate("playerSelector.difficulty.hard"),
+    };
+    const customAliasLabel = translate("playerSelector.customAlias");
+    const customPlaceholder = translate("playerSelector.customPlaceholder");
 
     this.container.innerHTML = `
       <div class="player-selector">
-        <label class="block text-sm font-medium text-white mb-1">Player ${this.playerIndex}</label>
+        <label class="block text-sm font-medium text-white mb-1">${labelText}</label>
         <div class="relative">
           <select id="player-${this.playerIndex}-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
-            <option value="">Select player or AI</option>
+            <option value="">${selectPlaceholder}</option>
             ${playerOptions
               .map(
                 (option) =>
                   `<option value="${this.escapeHtml(option.id)}" data-is-ai="${option.isAI}" data-ai-difficulty="${this.escapeHtml(option.aiDifficulty || "")}" data-user-id="${option.userId || ""}">${this.escapeHtml(option.displayName)}</option>`,
               )
               .join("")}
-            <option value="custom">Enter custom alias</option>
+            <option value="custom">${this.escapeHtml(customOptionText)}</option>
           </select>
         </div>
         
         <!-- AI難易度選択 -->
         <div id="ai-difficulty-${this.playerIndex}" class="mt-2 hidden">
-          <label class="block text-sm font-medium text-white mb-1">AI Difficulty</label>
+          <label class="block text-sm font-medium text-white mb-1">${aiDifficultyLabel}</label>
           <div class="flex space-x-2">
-            <button type="button" class="ai-difficulty-btn px-3 py-1 text-xs rounded border" data-difficulty="easy">Easy</button>
-            <button type="button" class="ai-difficulty-btn px-3 py-1 text-xs rounded border" data-difficulty="medium">Medium</button>
-            <button type="button" class="ai-difficulty-btn px-3 py-1 text-xs rounded border" data-difficulty="hard">Hard</button>
+            <button type="button" class="ai-difficulty-btn px-3 py-1 text-xs rounded border" data-difficulty="easy">${difficultyLabels.easy}</button>
+            <button type="button" class="ai-difficulty-btn px-3 py-1 text-xs rounded border" data-difficulty="medium">${difficultyLabels.medium}</button>
+            <button type="button" class="ai-difficulty-btn px-3 py-1 text-xs rounded border" data-difficulty="hard">${difficultyLabels.hard}</button>
           </div>
         </div>
         
         <!-- カスタムエイリアス入力 -->
         <div id="custom-alias-${this.playerIndex}" class="mt-2 hidden">
-          <label class="block text-sm font-medium text-white mb-1">Custom Alias</label>
+          <label class="block text-sm font-medium text-white mb-1">${customAliasLabel}</label>
           <input
             type="text"
             id="custom-alias-input-${this.playerIndex}"
-            placeholder="Enter custom alias"
+            placeholder="${this.escapeHtml(customPlaceholder)}"
             maxlength="20"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           >
@@ -102,7 +116,9 @@ export class PlayerSelector {
         const user = await AuthService.getCurrentUser();
         options.push({
           id: `user-${user.id}`,
-          displayName: `${user.username} (You)`,
+          displayName: translate("playerSelector.currentUser", {
+            username: user.username,
+          }),
           isAI: false,
           userId: user.id,
         });
@@ -114,7 +130,7 @@ export class PlayerSelector {
     // AIオプションを1つだけ追加
     options.push({
       id: "ai",
-      displayName: "AI",
+      displayName: translate("playerSelector.aiOption"),
       isAI: true,
       aiDifficulty: "medium", // デフォルト難易度
     });
@@ -157,7 +173,7 @@ export class PlayerSelector {
 
           this.currentSelection = {
             id: value,
-            displayName: `AI Player ${this.playerIndex} (Medium)`, // 枠ごとに一意な表示名
+            displayName: this.getAIDisplayName("medium"),
             isAI: true,
             aiDifficulty: "medium",
           };
@@ -195,7 +211,7 @@ export class PlayerSelector {
 
         if (this.currentSelection?.isAI) {
           this.currentSelection.aiDifficulty = difficulty;
-          this.currentSelection.displayName = `AI Player ${this.playerIndex} (${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)})`;
+          this.currentSelection.displayName = this.getAIDisplayName(difficulty);
           this.onSelectionChange?.(this.currentSelection);
         }
       });
@@ -233,6 +249,17 @@ export class PlayerSelector {
         btn.classList.add("bg-gray-200", "text-gray-700");
         btn.classList.remove("bg-blue-500", "text-white");
       }
+    });
+  }
+
+  private getDifficultyLabel(difficulty: "easy" | "medium" | "hard"): string {
+    return translate(`playerSelector.difficulty.${difficulty}`);
+  }
+
+  private getAIDisplayName(difficulty: "easy" | "medium" | "hard"): string {
+    return translate("playerSelector.aiDisplayName", {
+      index: this.playerIndex,
+      difficulty: this.getDifficultyLabel(difficulty),
     });
   }
 

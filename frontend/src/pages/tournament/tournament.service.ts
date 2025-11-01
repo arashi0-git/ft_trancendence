@@ -4,6 +4,7 @@ import { router } from "../../routes/router";
 import { TournamentDataService } from "../../shared/services/tournament-data.service";
 import { GameSetupUI } from "../../shared/components/game-setup-ui";
 import { PlayerRegistrationManager } from "../../shared/components/player-registration-manager";
+import { translate } from "../../i18n";
 
 export type TournamentStep =
   | "setup"
@@ -85,19 +86,17 @@ export class TournamentService {
     const setupFormHtml = this.gameSetupUI.getTemplate({
       showNameInput: true,
       nameInputId: "tournament-name",
-      nameLabel: "Tournament Name",
-      namePlaceholder: "Enter tournament name",
-      nameDefaultValue: "Pong Tournament",
+      nameLabel: translate("tournament.setup.nameLabel"),
+      namePlaceholder: translate("tournament.setup.namePlaceholder"),
+      nameDefaultValue: translate("tournament.setup.nameDefault"),
       selectId: "player-count",
-      selectLabel: "Number of Players",
-      options: [
-        { value: "2", text: "2 Players" },
-        { value: "4", text: "4 Players" },
-        { value: "8", text: "8 Players" },
-      ],
+      selectLabel: translate("tournament.setup.playerCountLabel"),
+      options: [2, 4, 8].map((count) => ({
+        value: String(count),
+        text: translate("tournament.setup.playerOption", { count }),
+      })),
       buttonId: "create-tournament",
-      buttonText: "Create Tournament",
-
+      buttonText: translate("tournament.buttons.create"),
       buttonClasses:
         "w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded border border-blue-400 shadow-lg",
     });
@@ -132,7 +131,7 @@ export class TournamentService {
     ).value.trim();
 
     if (!tournamentName) {
-      alert("トーナメント名を入力してください");
+      alert(translate("tournament.setup.missingName"));
       return;
     }
 
@@ -147,6 +146,16 @@ export class TournamentService {
       return;
     }
 
+    const backToSetupLabel = translate("tournament.buttons.backToSetup");
+    const startTournamentLabel = translate(
+      "tournament.buttons.startTournament",
+    );
+    const registrationTitle = translate("tournament.registration.title");
+    const registrationSubtitle = translate("tournament.registration.subtitle", {
+      name: tournament.name,
+      count: tournament.playerCount,
+    });
+
     const registrationContainer = document.createElement("div");
     container.innerHTML = `
       <div class="flex space-x-4">
@@ -154,14 +163,14 @@ export class TournamentService {
           id="back-to-setup"
           class="flex-1 bg-purple-400 hover:bg-purple-600 text-white py-2 px-4 rounded border border-purple-400 shadow-lg"
         >
-          Back to Setup
+          ${backToSetupLabel}
         </button>
         <button
           id="start-tournament"
           class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg"
           disabled
         >
-          Start Tournament
+          ${startTournamentLabel}
         </button>
       </div>
     `;
@@ -172,14 +181,16 @@ export class TournamentService {
       await this.playerRegistrationManager.render({
         container: registrationContainer,
         playerCount: tournament.playerCount,
-        title: "Player Registration",
-        subtitle: `Tournament: ${tournament.name} (${tournament.playerCount} players)`,
+        title: registrationTitle,
+        subtitle: registrationSubtitle,
         startButtonId: "start-tournament",
         requireHumanPlayer: true,
       });
     } catch (error) {
       console.error("Failed to render registration view:", error);
-      this.notificationService.error("プレイヤー登録画面の表示に失敗しました");
+      this.notificationService.error(
+        translate("tournament.registration.error"),
+      );
       this.navigateToSetup();
       return;
     }
@@ -218,7 +229,9 @@ export class TournamentService {
       this.playerRegistrationManager.getPlayerSelections();
     if (!playerSelections || !Array.isArray(playerSelections)) {
       console.error("Invalid player selections");
-      this.notificationService.error("プレイヤー選択の取得に失敗しました");
+      this.notificationService.error(
+        translate("tournament.errors.playerSelection"),
+      );
       return;
     }
     console.log("Found player selections:", playerSelections.length);
@@ -237,7 +250,11 @@ export class TournamentService {
       this.navigateToBracket();
     } catch (error) {
       console.error("Error generating matches:", error);
-      alert("Error starting tournament: " + (error as Error).message);
+      alert(
+        translate("tournament.errors.startTournament", {
+          message: (error as Error).message,
+        }),
+      );
     }
   }
 
@@ -261,25 +278,25 @@ export class TournamentService {
   getPageTitle(): string {
     switch (this.currentStep) {
       case "setup":
-        return "Tournament Setup";
+        return translate("tournament.titles.setup");
       case "registration":
-        return "Player Registration";
+        return translate("tournament.titles.registration");
       case "bracket":
-        return "Tournament Bracket";
+        return translate("tournament.titles.bracket");
       case "match":
-        return "Tournament Match";
+        return translate("tournament.titles.match");
       case "results":
-        return "Tournament Results";
+        return translate("tournament.titles.results");
       default:
-        return "Tournament Mode";
+        return translate("tournament.titles.mode");
     }
   }
 
   getBackButtonTemplate(): string {
     const backText =
       this.currentStep === "setup" || this.currentStep === "registration"
-        ? "Home"
-        : "Back";
+        ? translate("tournament.buttons.home")
+        : translate("tournament.buttons.back");
     return `<button id="back-button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">${backText}</button>`;
   }
 
@@ -341,30 +358,42 @@ export class TournamentService {
 
     // 現在のラウンドのマッチのみ表示
     const currentRoundMatches = this.tournamentData.getCurrentRoundMatches();
+    const unknownPlayerLabel = translate("tournament.bracket.unknownPlayer");
+    const vsLabel = translate("tournament.bracket.vs");
+    const playLabel = translate("tournament.buttons.playMatch");
+    const playingLabel = translate("tournament.buttons.playing");
+    const newTournamentLabel = translate("tournament.buttons.newTournament");
+
     const matchesHtml = currentRoundMatches
       .map((match) => {
         const player1 = this.tournamentData.getPlayer(match.player1Id);
         const player2 = this.tournamentData.getPlayer(match.player2Id);
+        const player1Name = this.escapeHtml(
+          player1?.alias || unknownPlayerLabel,
+        );
+        const player2Name = this.escapeHtml(
+          player2?.alias || unknownPlayerLabel,
+        );
 
         return `
         <div class="bg-black bg-opacity-30 p-4 rounded border border-cyan-400 border-opacity-50">
           <div class="flex justify-between items-center">
             <div class="text-center flex-1">
-              <div class="font-semibold text-white">${this.escapeHtml(player1?.alias || "Unknown")}</div>
+              <div class="font-semibold text-white">${player1Name}</div>
               ${match.score ? `<div class="text-sm text-gray-600">${match.score.player1}</div>` : ""}
             </div>
-            <div class="mx-4 text-gray-300">VS</div>
+            <div class="mx-4 text-gray-300">${vsLabel}</div>
             <div class="text-center flex-1">
-              <div class="font-semibold text-white">${this.escapeHtml(player2?.alias || "Unknown")}</div>
+              <div class="font-semibold text-white">${player2Name}</div>
               ${match.score ? `<div class="text-sm text-gray-600">${match.score.player2}</div>` : ""}
             </div>
             <div class="ml-4">
               ${
                 match.status === "pending"
-                  ? `<button data-match-id="${match.id}" class="play-match-btn bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">Play</button>`
+                  ? `<button data-match-id="${match.id}" class="play-match-btn bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">${playLabel}</button>`
                   : match.status === "completed"
                     ? `<span class="text-green-600 font-semibold">✓</span>`
-                    : `<span class="text-blue-600">Playing...</span>`
+                    : `<span class="text-blue-600">${playingLabel}</span>`
               }
             </div>
           </div>
@@ -376,11 +405,16 @@ export class TournamentService {
     const totalPlayers = tournament.players.length;
     const remainingPlayers = currentRoundMatches.length * 2;
     const roundName = this.getRoundName(tournament.currentRound, totalPlayers);
+    const heading = translate("tournament.bracket.heading");
+    const remainingText = translate("tournament.bracket.remaining", {
+      roundName,
+      count: remainingPlayers,
+    });
 
     container.innerHTML = `
       <div class="text-center mb-4">
-        <h3 class="text-xl font-bold">Current Bracket</h3>
-        <p class="text-gray-300">${roundName} (${remainingPlayers} players remaining)</p>
+        <h3 class="text-xl font-bold">${heading}</h3>
+        <p class="text-gray-300">${remainingText}</p>
       </div>
       
       <div class="space-y-4 mb-6">
@@ -389,7 +423,7 @@ export class TournamentService {
       
       <div class="text-center">
         <button id="new-tournament-btn" class="bg-purple-400 hover:bg-purple-600 text-white px-6 py-2 rounded">
-          New Tournament
+          ${newTournamentLabel}
         </button>
       </div>
     `;
@@ -422,25 +456,48 @@ export class TournamentService {
 
     const player1 = this.tournamentData.getPlayer(match.player1Id);
     const player2 = this.tournamentData.getPlayer(match.player2Id);
+    const player1Display =
+      player1?.alias ||
+      translate("tournament.match.playerDefault", { index: 1 });
+    const player2Display =
+      player2?.alias ||
+      translate("tournament.match.playerDefault", { index: 2 });
+    const player1Name = this.escapeHtml(player1Display);
+    const player2Name = this.escapeHtml(player2Display);
+    const heading = translate("tournament.match.heading", {
+      player1: player1Name,
+      player2: player2Name,
+    });
+    const matchIdSafe = this.escapeHtml(matchId);
+    const details = translate("tournament.match.details", { id: matchIdSafe });
+    const startMatchLabel = translate("tournament.buttons.startMatch");
+    const pauseLabel = translate("tournament.buttons.pause");
+    const resetLabel = translate("tournament.buttons.reset");
+    const controlsLeft = translate("tournament.match.controlsLeft", {
+      player: player1Name,
+    });
+    const controlsRight = translate("tournament.match.controlsRight", {
+      player: player2Name,
+    });
 
     container.innerHTML = `
       <!-- コンパクトなヘッダー -->
       <div class="text-center mb-2">
-        <h3 class="text-lg font-medium text-white">${this.escapeHtml(player1?.alias || "Player 1")} vs ${this.escapeHtml(player2?.alias || "Player 2")}</h3>
-        <p class="text-sm text-gray-400">Match ${this.escapeHtml(matchId)} - First to 5 points wins</p>
+        <h3 class="text-lg font-medium text-white">${heading}</h3>
+        <p class="text-sm text-gray-400">${details}</p>
       </div>
 
       <!-- コンパクトなボタン -->
       <div class="mb-2 text-center">
         <div class="space-x-2">
           <button id="start-tournament-game" class="bg-green-500 hover:bg-green-600 text-white px-4 py-1 text-sm rounded">
-            Start Match
+            ${startMatchLabel}
           </button>
           <button id="pause-tournament-game" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-1 text-sm rounded" disabled>
-            Pause
+            ${pauseLabel}
           </button>
           <button id="reset-tournament-game" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 text-sm rounded">
-            Reset
+            ${resetLabel}
           </button>
         </div>
       </div>
@@ -452,8 +509,8 @@ export class TournamentService {
       
       <!-- コンパクトなコントロール説明 -->
       <div class="text-center text-xs text-gray-400">
-        <p><strong>${this.escapeHtml(player1?.alias || "Player 1")}:</strong> W/S (Up/Down), A/D (Left/Right)</p>
-        <p><strong>${this.escapeHtml(player2?.alias || "Player 2")}:</strong> ↑/↓ (Up/Down), ←/→ (Left/Right)</p>
+        <p>${controlsLeft}</p>
+        <p>${controlsRight}</p>
       </div>
     `;
 
@@ -469,17 +526,29 @@ export class TournamentService {
       return;
     }
 
+    const title = translate("tournament.results.title");
+    const winnerText = translate("tournament.results.winner", {
+      name: this.escapeHtml(winner.alias),
+    });
+    const recordText = translate("tournament.results.record", {
+      wins: winner.wins,
+      losses: winner.losses,
+    });
+    const newTournamentLabel = translate(
+      "tournament.buttons.startNewTournament",
+    );
+
     container.innerHTML = `
       <div class="text-center">
-        <h3 class="text-2xl font-bold mb-4 text-white">🏆 Tournament Complete!</h3>
+        <h3 class="text-2xl font-bold mb-4 text-white">${title}</h3>
         <div class="bg-yellow-50 bg-opacity-10 p-6 rounded-lg mb-6 border border-yellow-400">
-          <h4 class="text-xl font-semibold text-yellow-300">Winner: ${this.escapeHtml(winner.alias)}</h4>
-          <p class="text-yellow-200">Wins: ${winner.wins} | Losses: ${winner.losses}</p>
+          <h4 class="text-xl font-semibold text-yellow-300">${winnerText}</h4>
+          <p class="text-yellow-200">${recordText}</p>
         </div>
         
         <div class="space-y-2">
           <button id="new-tournament" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded">
-            Start New Tournament
+            ${newTournamentLabel}
           </button>
         </div>
       </div>
@@ -495,13 +564,13 @@ export class TournamentService {
     const totalRounds = Math.log2(totalPlayers);
 
     if (currentRound === totalRounds) {
-      return "Final";
+      return translate("tournament.rounds.final");
     } else if (currentRound === totalRounds - 1) {
-      return "Semi-Final";
+      return translate("tournament.rounds.semiFinal");
     } else if (currentRound === totalRounds - 2) {
-      return "Quarter-Final";
+      return translate("tournament.rounds.quarterFinal");
     } else {
-      return `Round ${currentRound}`;
+      return translate("tournament.rounds.round", { number: currentRound });
     }
   }
 
@@ -649,15 +718,25 @@ export class TournamentService {
       this.tournamentData.completeMatch(matchId, winnerId, score);
 
       const winnerPlayer = this.tournamentData.getPlayer(winnerId);
-      const winnerAlias = winnerPlayer?.alias || "Player";
-      const modalTitle = winner === 1 ? "Player 1 Wins!" : "Player 2 Wins!";
-      const modalMessage = `${winnerAlias} wins the match ${score.player1} - ${score.player2}!`;
+      const winnerAlias =
+        winnerPlayer?.alias ||
+        translate("tournament.match.playerDefault", { index: winner });
+      const modalTitle = translate("tournament.modal.playerWins", {
+        index: winner,
+      });
+      const modalMessage = translate("tournament.modal.matchResult", {
+        player: this.escapeHtml(winnerAlias),
+        score1: score.player1,
+        score2: score.player2,
+      });
 
       this.showGameOverModal(modalTitle, modalMessage, () => {
         console.log("Continue button clicked. Checking tournament state...");
         if (this.tournamentData.isTournamentComplete()) {
           console.log("Tournament completed, navigating to results.");
-          this.notificationService.success("Tournament completed! 🏆");
+          this.notificationService.success(
+            translate("tournament.notifications.tournamentComplete"),
+          );
           this.navigateToResults();
         } else if (this.tournamentData.canAdvanceToNextRound()) {
           console.log("Advancing to next round.");
@@ -668,8 +747,14 @@ export class TournamentService {
             const tournament = this.tournamentData.getCurrentTournament();
             const roundName = tournament
               ? this.getRoundName(currentRound || 1, tournament.players.length)
-              : `Round ${currentRound}`;
-            this.notificationService.info(`${roundName} begins! 🥊`);
+              : translate("tournament.rounds.round", {
+                  number: currentRound,
+                });
+            this.notificationService.info(
+              translate("tournament.notifications.roundBegins", {
+                roundName,
+              }),
+            );
           }
           this.navigateToBracket();
         } else {
@@ -691,7 +776,7 @@ export class TournamentService {
     } catch (error) {
       console.error("Error in handleMatchEnd:", error);
       this.notificationService.error(
-        "A critical error occurred while saving the match.",
+        translate("tournament.errors.criticalMatch"),
       );
       this.navigateToBracket();
     }

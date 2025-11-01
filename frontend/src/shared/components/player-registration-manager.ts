@@ -1,5 +1,6 @@
 import { PlayerSelector } from "./player-selector";
 import type { PlayerOption } from "../types/tournament";
+import { translate } from "../../i18n";
 
 export interface PlayerRegistrationConfig {
   container: HTMLElement;
@@ -144,13 +145,15 @@ export class PlayerRegistrationManager {
 
     // エラーメッセージの優先順位
     if (missingPlayers > 0) {
-      return `${missingPlayers}人のプレイヤーが選択されていません`;
+      return translate("playerRegistration.missingPlayers", {
+        count: missingPlayers,
+      });
     }
     if (hasDuplicateNames) {
-      return "プレイヤー名が重複しています";
+      return translate("playerRegistration.duplicateNames");
     }
     if (this.config?.requireHumanPlayer && !hasHumanPlayer) {
-      return "少なくとも1人は人間プレイヤーを選択してください";
+      return translate("playerRegistration.requireHuman");
     }
 
     return null;
