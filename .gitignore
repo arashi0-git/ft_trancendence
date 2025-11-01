@@ -22,6 +22,9 @@ database/
 *.sqlite
 *.sqlite3
 
+backend/database/transcendence.db*
+
+
 # SSL Certificates (security - never commit private keys)
 ssl/
 *.pem

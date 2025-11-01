@@ -1,14 +1,15 @@
 import { AuthService } from "../services/auth-service";
 import type {
   AuthResponse,
+  AuthResult,
   LoginRequest,
   PublicUser,
   TwoFactorChallengeResponse,
+  TwoFactorStatusResponse,
 } from "../types/user";
 
 export class LoginForm {
   private container: HTMLElement;
-  private pendingCredentials: LoginRequest | null = null;
   private twoFactorChallenge: TwoFactorChallengeResponse | null = null;
 
   private onLoginSuccessCallback: (user: PublicUser) => void = (user) => {
@@ -210,8 +211,7 @@ export class LoginForm {
     try {
       const response = await AuthService.login(loginData);
 
-      if ("requiresTwoFactor" in response && response.requiresTwoFactor) {
-        this.pendingCredentials = loginData;
+      if (this.isTwoFactorChallenge(response)) {
         this.twoFactorChallenge = response;
         this.renderTwoFactorView();
         return;
@@ -269,8 +269,8 @@ export class LoginForm {
         code,
       });
 
-      if ("user" in result && "token" in result) {
-        this.handleLoginSuccess(result as AuthResponse);
+      if (this.isAuthResponse(result)) {
+        this.handleLoginSuccess(result);
         return;
       }
 
@@ -294,9 +294,20 @@ export class LoginForm {
   }
 
   private resetTwoFactorFlow(): void {
-    this.pendingCredentials = null;
     this.twoFactorChallenge = null;
     this.renderLoginView();
+  }
+
+  private isTwoFactorChallenge(
+    result: AuthResult,
+  ): result is TwoFactorChallengeResponse {
+    return "requiresTwoFactor" in result && result.requiresTwoFactor === true;
+  }
+
+  private isAuthResponse(
+    result: AuthResult | TwoFactorStatusResponse,
+  ): result is AuthResponse {
+    return "token" in result && "user" in result;
   }
 
   public setOnLoginSuccess(callback: (user: PublicUser) => void): void {
