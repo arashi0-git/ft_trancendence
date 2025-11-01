@@ -32,6 +32,10 @@ export interface TwoFactorVerifyRequest {
   code: string;
 }
 
+export interface TwoFactorResendRequest {
+  token: string;
+}
+
 export interface DisableTwoFactorRequest {
   currentPassword: string;
 }

@@ -5,12 +5,12 @@ import type {
   LoginRequest,
   PublicUser,
   TwoFactorChallengeResponse,
-  TwoFactorStatusResponse,
 } from "../types/user";
 
 export class LoginForm {
   private container: HTMLElement;
   private twoFactorChallenge: TwoFactorChallengeResponse | null = null;
+  private twoFactorMode: "email" | "app" = "email";
 
   private onLoginSuccessCallback: (user: PublicUser) => void = (user) => {
     console.log("User logged in:", user);
@@ -92,10 +92,27 @@ export class LoginForm {
     this.container.innerHTML = `
       <div class="bg-white p-6 rounded-lg shadow-md">
         <h2 class="text-2xl font-bold mb-4 text-center">Two-Factor Verification</h2>
-        <p id="twofactor-message" class="text-sm text-gray-600 mb-4"></p>
+        <p id="twofactor-hint" class="text-sm text-gray-500 mb-2"></p>
+        <p
+          id="twofactor-feedback"
+          class="hidden text-sm text-green-600 mb-4"
+          role="status"
+        ></p>
         <form id="twofactor-form" class="space-y-4">
-          <div>
-            <label for="twofactor-code" class="block text-sm font-medium text-gray-700">Verification Code</label>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label
+                for="twofactor-code"
+                class="text-sm font-medium text-gray-700">
+                Verification Code
+              </label>
+              <button
+                type="button"
+                id="twofactor-resend"
+                class="text-blue-600 hover:text-blue-700 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white text-sm">
+                Resend email code
+              </button>
+            </div>
             <input
               type="text"
               id="twofactor-code"
@@ -104,21 +121,26 @@ export class LoginForm {
               maxlength="6"
               required
               inputmode="numeric"
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 tracking-widest text-center"
+              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 tracking-widest text-center"
               placeholder="123456"
             >
           </div>
           <div id="twofactor-error" class="hidden text-red-600 text-sm"></div>
           <div class="space-y-2">
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               id="twofactor-submit"
               class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Verify Code
             </button>
-            <button 
-              type="button" 
+            <button
+              type="button"
+              id="twofactor-switch-mode"
+              class="w-full bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-700"
+            ></button>
+            <button
+              type="button"
               id="twofactor-cancel"
               class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
@@ -129,17 +151,47 @@ export class LoginForm {
       </div>
     `;
 
-    const message =
-      this.twoFactorChallenge?.message ||
-      "Enter the verification code sent to your email.";
-    const messageElement = this.container.querySelector(
-      "#twofactor-message",
+    const isAppMode = this.twoFactorMode === "app";
+    const hintElement = this.container.querySelector(
+      "#twofactor-hint",
     ) as HTMLParagraphElement | null;
-    if (messageElement) {
-      messageElement.textContent = message;
+    if (hintElement) {
+      hintElement.textContent = isAppMode
+        ? "If you set up an authenticator app, open it to generate a fresh 6-digit code."
+        : "Check your inbox for the 6-digit code we just emailed you.";
+    }
+
+    const feedbackElement = this.container.querySelector(
+      "#twofactor-feedback",
+    ) as HTMLParagraphElement | null;
+    if (feedbackElement) {
+      feedbackElement.classList.add("hidden");
+      feedbackElement.textContent = "";
+    }
+
+    const resendButton = this.container.querySelector(
+      "#twofactor-resend",
+    ) as HTMLButtonElement | null;
+    if (resendButton) {
+      resendButton.disabled = isAppMode;
+      resendButton.textContent = "Resend email code";
+    }
+
+    const switchButton = this.container.querySelector(
+      "#twofactor-switch-mode",
+    ) as HTMLButtonElement | null;
+    if (switchButton) {
+      switchButton.textContent = isAppMode
+        ? "Back to email verification"
+        : "Can't get the email code? Try app authentication";
     }
 
     this.attachTwoFactorListeners();
+  }
+
+  private toggleTwoFactorMode(): void {
+    this.twoFactorMode = this.twoFactorMode === "email" ? "app" : "email";
+    this.renderTwoFactorView();
   }
 
   private attachLoginListeners(): void {
@@ -172,6 +224,12 @@ export class LoginForm {
     const cancelBtn = this.container.querySelector(
       "#twofactor-cancel",
     ) as HTMLButtonElement | null;
+    const switchModeBtn = this.container.querySelector(
+      "#twofactor-switch-mode",
+    ) as HTMLButtonElement | null;
+    const resendBtn = this.container.querySelector(
+      "#twofactor-resend",
+    ) as HTMLButtonElement | null;
 
     if (!form || !cancelBtn) {
       console.error("Two-factor form elements not found");
@@ -180,6 +238,8 @@ export class LoginForm {
 
     form.addEventListener("submit", (e) => this.handleTwoFactorSubmit(e));
     cancelBtn.addEventListener("click", () => this.resetTwoFactorFlow());
+    switchModeBtn?.addEventListener("click", () => this.toggleTwoFactorMode());
+    resendBtn?.addEventListener("click", () => this.handleTwoFactorResend());
   }
 
   private async handleLoginSubmit(event: Event): Promise<void> {
@@ -220,6 +280,7 @@ export class LoginForm {
 
       if (this.isTwoFactorChallenge(response)) {
         this.twoFactorChallenge = response;
+        this.twoFactorMode = "email";
         this.renderTwoFactorView();
         return;
       }
@@ -233,6 +294,70 @@ export class LoginForm {
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = "Login";
+    }
+  }
+
+  private async handleTwoFactorResend(): Promise<void> {
+    if (!this.twoFactorChallenge?.twoFactorToken) {
+      console.error("Cannot resend code without an active challenge");
+      return;
+    }
+
+    const resendBtn = this.container.querySelector(
+      "#twofactor-resend",
+    ) as HTMLButtonElement | null;
+    const feedbackElement = this.container.querySelector(
+      "#twofactor-feedback",
+    ) as HTMLParagraphElement | null;
+    const errorDiv = this.container.querySelector(
+      "#twofactor-error",
+    ) as HTMLDivElement | null;
+
+    if (errorDiv) {
+      errorDiv.classList.add("hidden");
+      errorDiv.textContent = "";
+    }
+
+    if (feedbackElement) {
+      feedbackElement.classList.add("hidden");
+      feedbackElement.classList.remove("text-red-600");
+      feedbackElement.classList.add("text-green-600");
+      feedbackElement.textContent = "";
+    }
+
+    if (resendBtn) {
+      resendBtn.disabled = true;
+      resendBtn.textContent = "Resending...";
+    }
+
+    try {
+      const challenge = await AuthService.resendTwoFactorCode(
+        this.twoFactorChallenge.twoFactorToken,
+      );
+      this.twoFactorChallenge = challenge;
+      if (feedbackElement) {
+        feedbackElement.textContent =
+          "We sent another verification code to your email.";
+        feedbackElement.classList.remove("hidden");
+        feedbackElement.classList.remove("text-red-600");
+        feedbackElement.classList.add("text-green-600");
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to resend verification code.";
+      if (feedbackElement) {
+        feedbackElement.textContent = message;
+        feedbackElement.classList.remove("hidden");
+        feedbackElement.classList.remove("text-green-600");
+        feedbackElement.classList.add("text-red-600");
+      }
+    } finally {
+      if (resendBtn) {
+        resendBtn.disabled = false;
+        resendBtn.textContent = "Resend email code";
+      }
     }
   }
 
@@ -261,8 +386,12 @@ export class LoginForm {
     errorDiv.classList.add("hidden");
 
     const code = ((formData.get("code") as string) || "").trim();
+    const invalidCodeMessage =
+      this.twoFactorMode === "app"
+        ? "Enter the 6-digit code from your authenticator app"
+        : "Enter the 6-digit code from your email";
     if (!/^\d{6}$/.test(code)) {
-      errorDiv.textContent = "Enter the 6-digit code from your email";
+      errorDiv.textContent = invalidCodeMessage;
       errorDiv.classList.remove("hidden");
       return;
     }
@@ -276,14 +405,7 @@ export class LoginForm {
         code,
       });
 
-      if (this.isAuthResponse(result)) {
-        this.handleLoginSuccess(result);
-        return;
-      }
-
-      // Unexpected payload for login flow
-      errorDiv.textContent = "Unexpected response while verifying code.";
-      errorDiv.classList.remove("hidden");
+      this.handleLoginSuccess(result);
     } catch (error) {
       console.error("Two-factor verification failed:", error);
       errorDiv.textContent =
@@ -302,6 +424,7 @@ export class LoginForm {
 
   private resetTwoFactorFlow(): void {
     this.twoFactorChallenge = null;
+    this.twoFactorMode = "email";
     this.renderLoginView();
   }
 
@@ -309,12 +432,6 @@ export class LoginForm {
     result: AuthResult,
   ): result is TwoFactorChallengeResponse {
     return "requiresTwoFactor" in result && result.requiresTwoFactor === true;
-  }
-
-  private isAuthResponse(
-    result: AuthResult | TwoFactorStatusResponse,
-  ): result is AuthResponse {
-    return "token" in result && "user" in result;
   }
 
   public setOnLoginSuccess(callback: (user: PublicUser) => void): void {
