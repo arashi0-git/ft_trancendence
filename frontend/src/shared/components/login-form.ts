@@ -100,19 +100,19 @@ export class LoginForm {
         ></p>
         <form id="twofactor-form" class="space-y-4">
           <div class="space-y-2">
-            <label
-              for="twofactor-code"
-              class="flex items-center justify-between text-sm font-medium text-gray-700"
-            >
-              <span>Verification Code</span>
+            <div class="flex items-center justify-between">
+              <label
+                for="twofactor-code"
+                class="text-sm font-medium text-gray-700">
+                Verification Code
+              </label>
               <button
                 type="button"
                 id="twofactor-resend"
-                class="text-blue-600 hover:text-blue-700 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white"
-              >
+                class="text-blue-600 hover:text-blue-700 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white text-sm">
                 Resend email code
               </button>
-            </label>
+            </div>
             <input
               type="text"
               id="twofactor-code"
@@ -298,12 +298,6 @@ export class LoginForm {
   }
 
   private async handleTwoFactorResend(): Promise<void> {
-    if (this.twoFactorMode !== "email") {
-      this.twoFactorMode = "email";
-      this.renderTwoFactorView();
-      return;
-    }
-
     if (!this.twoFactorChallenge?.twoFactorToken) {
       console.error("Cannot resend code without an active challenge");
       return;

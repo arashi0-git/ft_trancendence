@@ -107,9 +107,11 @@ export class UserSettingsService {
     }
   }
 
-  async enableTwoFactor(): Promise<TwoFactorStatusResponse> {
+  async enableTwoFactor(
+    currentPassword: string,
+  ): Promise<TwoFactorStatusResponse> {
     try {
-      const result = await AuthService.enableTwoFactor();
+      const result = await AuthService.enableTwoFactor(currentPassword);
       if (!result.user) {
         throw new Error("User data missing from enable 2FA response");
       }
