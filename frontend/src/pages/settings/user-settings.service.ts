@@ -127,9 +127,6 @@ export class UserSettingsService {
   ): Promise<TwoFactorStatusResponse> {
     try {
       const result = await AuthService.verifyTwoFactorCode(payload);
-      if (!("twoFactorEnabled" in result)) {
-        throw new Error("Unexpected response from 2FA verification");
-      }
       if (!result.user) {
         throw new Error("User data missing from 2FA verification response");
       }
