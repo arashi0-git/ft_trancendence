@@ -11,6 +11,8 @@ export interface GameConfig {
   aiPlayers?: {
     player1?: { difficulty: "easy" | "medium" | "hard" };
     player2?: { difficulty: "easy" | "medium" | "hard" };
+    player3?: { difficulty: "easy" | "medium" | "hard" };
+    player4?: { difficulty: "easy" | "medium" | "hard" };
   };
   onGameEnd?: (data: {
     winner: number;
@@ -26,6 +28,8 @@ export class GameManagerService {
   private customizationUnsubscribe: (() => void) | null = null;
   private aiPlayer1: AiPlayer | null = null;
   private aiPlayer2: AiPlayer | null = null;
+  private aiPlayer3: AiPlayer | null = null;
+  private aiPlayer4: AiPlayer | null = null;
 
   initializeGame(config: GameConfig): void {
     try {
@@ -69,12 +73,26 @@ export class GameManagerService {
             `Created AI Player 2 with difficulty: ${config.aiPlayers.player2.difficulty}`,
           );
         }
+        if (config.aiPlayers.player3) {
+          this.aiPlayer3 = new AiPlayer(config.aiPlayers.player3.difficulty, 3);
+          console.log(
+            `Created AI Player 3 with difficulty: ${config.aiPlayers.player3.difficulty}`,
+          );
+        }
+        if (config.aiPlayers.player4) {
+          this.aiPlayer4 = new AiPlayer(config.aiPlayers.player4.difficulty, 4);
+          console.log(
+            `Created AI Player 4 with difficulty: ${config.aiPlayers.player4.difficulty}`,
+          );
+        }
         // AIプレイヤーがいる場合はAIモードを有効にする
         this.pongGame.setAiMode(true);
         // AIプレイヤー情報を設定
         this.pongGame.setAiPlayers({
           player1: !!config.aiPlayers.player1,
           player2: !!config.aiPlayers.player2,
+          player3: !!config.aiPlayers.player3,
+          player4: !!config.aiPlayers.player4,
         });
       }
 
@@ -135,6 +153,12 @@ export class GameManagerService {
     if (this.aiPlayer2) {
       this.aiPlayer2.start(this);
     }
+    if (this.aiPlayer3) {
+      this.aiPlayer3.start(this);
+    }
+    if (this.aiPlayer4) {
+      this.aiPlayer4.start(this);
+    }
   }
 
   pauseGame(): void {
@@ -149,6 +173,12 @@ export class GameManagerService {
     }
     if (this.aiPlayer2) {
       this.aiPlayer2.pause();
+    }
+    if (this.aiPlayer3) {
+      this.aiPlayer3.pause();
+    }
+    if (this.aiPlayer4) {
+      this.aiPlayer4.pause();
     }
   }
 
@@ -165,6 +195,12 @@ export class GameManagerService {
     if (this.aiPlayer2) {
       this.aiPlayer2.reset();
     }
+    if (this.aiPlayer3) {
+      this.aiPlayer3.reset();
+    }
+    if (this.aiPlayer4) {
+      this.aiPlayer4.reset();
+    }
   }
 
   getGameState() {
@@ -179,6 +215,14 @@ export class GameManagerService {
     if (this.aiPlayer2) {
       this.aiPlayer2.cleanup();
       this.aiPlayer2 = null;
+    }
+    if (this.aiPlayer3) {
+      this.aiPlayer3.cleanup();
+      this.aiPlayer3 = null;
+    }
+    if (this.aiPlayer4) {
+      this.aiPlayer4.cleanup();
+      this.aiPlayer4 = null;
     }
     if (this.pongGame) {
       this.pongGame.destroy();
@@ -204,7 +248,7 @@ export class GameManagerService {
     return this.currentConfig?.mode || null;
   }
 
-  moveAiPaddle(deltaY: number, playerNumber: 1 | 2 = 2): void {
+  moveAiPaddle(deltaY: number, playerNumber: 1 | 2 | 3 | 4 = 2): void {
     if (!this.pongGame) {
       throw new Error("Game not initialized");
     }

@@ -26,19 +26,19 @@ export class AiPlayer {
   private isActive: boolean = false;
   private isMoving: boolean = false;
   private currentDirection: "up" | "down" | "none" = "none";
-  private playerNumber: 1 | 2;
+  private playerNumber: 1 | 2 | 3 | 4;
 
   private readonly difficultyConfigs: Record<AiDifficulty, AiConfig> = {
     easy: {
-      reactionTime: 500, // 反応を遅く
-      predictionAccuracy: 0.4, // 予測精度を下げる
-      missRate: 0.5, // ミス率を上げる
+      reactionTime: 400, // 反応を遅く
+      predictionAccuracy: 0.6, // 予測精度を下げる
+      missRate: 0.3, // ミス率を上げる
       updateInterval: 1000, // 更新間隔 1秒
     },
     medium: {
       reactionTime: 300, // 適度な反応時間
-      predictionAccuracy: 0.65, // 適度な予測精度
-      missRate: 0.25, // 適度なミス率
+      predictionAccuracy: 0.7, // 適度な予測精度
+      missRate: 0.15, // 適度なミス率
       updateInterval: 1000, // 更新間隔 1秒
     },
     hard: {
@@ -49,7 +49,10 @@ export class AiPlayer {
     },
   };
 
-  constructor(difficulty: AiDifficulty = "medium", playerNumber: 1 | 2 = 2) {
+  constructor(
+    difficulty: AiDifficulty = "medium",
+    playerNumber: 1 | 2 | 3 | 4 = 2,
+  ) {
     this.config = this.difficultyConfigs[difficulty];
     this.playerNumber = playerNumber;
   }

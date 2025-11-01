@@ -72,7 +72,7 @@ export const initI18n = async (): Promise<void> => {
   });
 };
 
-export const translate = (key: string, options?: TOptions | string): string =>
+export const translate = (key: string, options?: TOptions): string =>
   i18next.t(key, options);
 
 export const getCurrentLanguage = (): SupportedLanguage =>
