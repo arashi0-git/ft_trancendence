@@ -15,7 +15,8 @@
     "test": "jest --config config/jest.config.mjs",
     "test:coverage": "jest --config config/jest.config.mjs --coverage --runInBand",
     "test:watch": "jest --config config/jest.config.mjs --watch",
-    "pr-comments": "./pr_comments_to_md.sh"
+    "pr-comments": "./pr_comments_to_md.sh",
+    "postinstall": "npx lefthook install"
   },
   "keywords": [],
   "author": "",
