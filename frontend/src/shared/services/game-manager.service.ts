@@ -94,6 +94,7 @@ export class GameManagerService {
           player3: !!config.aiPlayers.player3,
           player4: !!config.aiPlayers.player4,
         });
+        this.pongGame.setGameManager(this);
       }
 
       // イベントハンドラーの設定
@@ -253,6 +254,13 @@ export class GameManagerService {
       throw new Error("Game not initialized");
     }
     this.pongGame.moveAiPaddle(deltaY, playerNumber);
+  }
+
+  public notifyAiPlayersOfBallReset(): void {
+    this.aiPlayer1?.onBallReset();
+    this.aiPlayer2?.onBallReset();
+    this.aiPlayer3?.onBallReset();
+    this.aiPlayer4?.onBallReset();
   }
 
   getCanvasSize(): { width: number; height: number } | null {
