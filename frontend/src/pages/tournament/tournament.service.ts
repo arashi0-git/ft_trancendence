@@ -49,6 +49,7 @@ export class TournamentService {
   private t: Record<string, any>;
   private contentContainer: HTMLElement | null = null;
   private cachedGameOverModal: GameOverModalElements | null = null;
+  private unsubscribeLanguageChange: (() => void) | null = null;
   private eventListeners: Array<{
     element: HTMLElement;
     event: string;
@@ -76,7 +77,9 @@ export class TournamentService {
       match: this.renderMatchView.bind(this),
       results: this.renderResultsView.bind(this),
     };
-    onLanguageChange(this.handleLanguageChange.bind(this));
+    this.unsubscribeLanguageChange = onLanguageChange(
+      this.handleLanguageChange.bind(this),
+    );
   }
 
   setCurrentPath(path: string): void {
@@ -451,6 +454,8 @@ export class TournamentService {
     this.clearEventListeners();
     this.gameManager.cleanup();
     this.playerRegistrationWithCountSelector.destroy();
+    this.unsubscribeLanguageChange?.();
+    this.unsubscribeLanguageChange = null;
     this.contentContainer = null;
     this.cachedGameOverModal = null;
   }

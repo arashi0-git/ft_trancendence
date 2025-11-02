@@ -10,10 +10,11 @@ import {
 
 export class AppHeader {
   private container: HTMLElement;
+  private unsubscribeLanguage?: () => void;
 
   constructor(container: HTMLElement) {
     this.container = container;
-    onLanguageChange(this.render.bind(this));
+    this.unsubscribeLanguage = onLanguageChange(this.render.bind(this));
   }
 
   render(): void {
@@ -150,5 +151,8 @@ export class AppHeader {
     `;
   }
 
-  destroy(): void {}
+  destroy(): void {
+    this.unsubscribeLanguage?.();
+    this.unsubscribeLanguage = undefined;
+  }
 }
