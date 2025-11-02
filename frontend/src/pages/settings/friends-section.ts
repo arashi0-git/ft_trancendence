@@ -10,6 +10,10 @@ export class FriendsSection {
   private friendForm: HTMLElement | null = null;
   private friendInput: HTMLInputElement | null = null;
   private friendsListContainer: HTMLElement | null = null;
+  private boundFriendClickHandler: ((e: Event) => void) | null = null;
+  private boundFriendKeydownHandler: ((e: KeyboardEvent) => void) | null = null;
+  private boundFriendsListClickHandler: ((e: Event) => Promise<void>) | null =
+    null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -58,14 +62,22 @@ export class FriendsSection {
       return;
     }
 
-    this.friendForm.addEventListener("click", (e) => this.handleFriendClick(e));
-    this.friendInput.addEventListener("keydown", (e) =>
-      this.handleFriendKeydown(e),
+    this.boundFriendClickHandler = (e) => this.handleFriendClick(e);
+    this.boundFriendKeydownHandler = (e) => this.handleFriendKeydown(e);
+    this.boundFriendsListClickHandler = (e) => this.handleFriendsClick(e);
+
+    this.friendForm.addEventListener("click", this.boundFriendClickHandler);
+    this.friendInput.addEventListener(
+      "keydown",
+      this.boundFriendKeydownHandler,
     );
 
-    this.friendsListContainer?.addEventListener("click", (e) =>
-      this.handleFriendsClick(e),
-    );
+    if (this.friendsListContainer && this.boundFriendsListClickHandler) {
+      this.friendsListContainer.addEventListener(
+        "click",
+        this.boundFriendsListClickHandler,
+      );
+    }
   }
 
   private renderFriendsLoading(): string {
@@ -310,10 +322,32 @@ export class FriendsSection {
   }
 
   destroy(): void {
+    if (this.friendForm && this.boundFriendClickHandler) {
+      this.friendForm.removeEventListener(
+        "click",
+        this.boundFriendClickHandler,
+      );
+    }
+    if (this.friendInput && this.boundFriendKeydownHandler) {
+      this.friendInput.removeEventListener(
+        "keydown",
+        this.boundFriendKeydownHandler,
+      );
+    }
+    if (this.friendsListContainer && this.boundFriendsListClickHandler) {
+      this.friendsListContainer.removeEventListener(
+        "click",
+        this.boundFriendsListClickHandler,
+      );
+    }
+
     this.friends = [];
     this.friendsLoaded = false;
     this.friendForm = null;
     this.friendInput = null;
     this.friendsListContainer = null;
+    this.boundFriendClickHandler = null;
+    this.boundFriendKeydownHandler = null;
+    this.boundFriendsListClickHandler = null;
   }
 }

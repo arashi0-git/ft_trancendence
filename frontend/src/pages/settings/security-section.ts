@@ -18,6 +18,11 @@ export class SecuritySection {
     | null = null;
   private onUserUpdate: (user: PublicUser) => void;
   private onEmailRestore: () => void;
+  private listeners: Array<{
+    element: HTMLElement;
+    event: string;
+    handler: EventListener;
+  }> = [];
 
   constructor(
     container: HTMLElement,
@@ -30,6 +35,7 @@ export class SecuritySection {
   }
 
   render(user: PublicUser): void {
+    this.removeListeners();
     this.user = user;
     const twoFactorStatus = user.two_factor_enabled
       ? "Two-factor authentication is <strong>enabled</strong>. Your account is protected with an extra layer of security."
@@ -101,12 +107,27 @@ export class SecuritySection {
   }
 
   private attachListeners(): void {
-    document
-      .getElementById("enable-2fa-btn")
-      ?.addEventListener("click", () => this.handleTwoFactorEnable());
-    document
-      .getElementById("disable-2fa-btn")
-      ?.addEventListener("click", () => this.handleTwoFactorDisable());
+    const enableBtn = document.getElementById("enable-2fa-btn");
+    const disableBtn = document.getElementById("disable-2fa-btn");
+
+    if (enableBtn) {
+      const handler: EventListener = () => this.handleTwoFactorEnable();
+      enableBtn.addEventListener("click", handler);
+      this.listeners.push({ element: enableBtn, event: "click", handler });
+    }
+
+    if (disableBtn) {
+      const handler: EventListener = () => this.handleTwoFactorDisable();
+      disableBtn.addEventListener("click", handler);
+      this.listeners.push({ element: disableBtn, event: "click", handler });
+    }
+  }
+
+  private removeListeners(): void {
+    this.listeners.forEach(({ element, event, handler }) => {
+      element.removeEventListener(event, handler);
+    });
+    this.listeners = [];
   }
 
   private async handleTwoFactorEnable(): Promise<void> {
@@ -147,6 +168,7 @@ export class SecuritySection {
         if (result.user) {
           this.onUserUpdate(result.user);
         }
+        this.setTwoFactorButtonsDisabled(false);
       }
     } catch (error) {
       const message =
@@ -196,6 +218,7 @@ export class SecuritySection {
         if (result.user) {
           this.onUserUpdate(result.user);
         }
+        this.setTwoFactorButtonsDisabled(false);
       }
     } catch (error) {
       const message =
@@ -259,23 +282,34 @@ export class SecuritySection {
       throw new Error("Two-factor challenge missing.");
     }
 
-    const result = await AuthService.verifyTwoFactorCode({
-      token: this.activeTwoFactorChallenge.twoFactorToken,
-      code,
-    });
+    try {
+      const result = await AuthService.verifyTwoFactorCode({
+        token: this.activeTwoFactorChallenge.twoFactorToken,
+        code,
+      });
 
-    this.hideTwoFactorDialog();
+      this.hideTwoFactorDialog();
 
-    if (result.user) {
-      this.onUserUpdate(result.user);
-    }
+      if (result.user) {
+        this.onUserUpdate(result.user);
+      }
 
-    if (this.pendingTwoFactorCallback) {
-      this.pendingTwoFactorCallback(result);
-    } else {
-      NotificationService.getInstance().success(
-        "Two-factor verification complete.",
-      );
+      if (this.pendingTwoFactorCallback) {
+        this.pendingTwoFactorCallback(result);
+      } else {
+        NotificationService.getInstance().success(
+          "Two-factor verification complete.",
+        );
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Verification failed. Please try again.";
+      NotificationService.getInstance().error(message);
+      this.twoFactorComponent?.showFeedback(message, "error");
+      this.twoFactorComponent?.resetCode();
+      this.twoFactorComponent?.focus();
     }
   }
 
@@ -401,6 +435,7 @@ export class SecuritySection {
   }
 
   destroy(): void {
+    this.removeListeners();
     this.twoFactorComponent?.destroy();
     this.twoFactorComponent = null;
     this.activeTwoFactorChallenge = null;

@@ -46,21 +46,53 @@ export async function userRoutes(fastify: FastifyInstance) {
 
           if (normalizedEmail !== user.email.toLowerCase()) {
             const { email: _unused, ...updatesWithoutEmail } = payload;
-            const result = await UserService.updateUserSettings(
-              request.user.id,
-              updatesWithoutEmail,
-            );
 
-            const challenge = await TwoFactorService.startChallenge(
-              user,
-              "email_change",
-              {
-                payload: { email: normalizedEmail },
-                deliveryEmail: normalizedEmail,
-                messageOverride:
-                  TwoFactorService.buildEmailChangeMessage(normalizedEmail),
-              },
-            );
+            if (
+              Object.prototype.hasOwnProperty.call(
+                updatesWithoutEmail,
+                "currentPassword",
+              ) ||
+              Object.prototype.hasOwnProperty.call(
+                updatesWithoutEmail,
+                "newPassword",
+              )
+            ) {
+              return reply.status(400).send({
+                error:
+                  "Password changes cannot be combined with an email change that requires verification.",
+              });
+            }
+
+            let challenge;
+            try {
+              challenge = await TwoFactorService.startChallenge(
+                user,
+                "email_change",
+                {
+                  payload: { email: normalizedEmail },
+                  deliveryEmail: normalizedEmail,
+                  messageOverride:
+                    TwoFactorService.buildEmailChangeMessage(normalizedEmail),
+                },
+              );
+            } catch (challengeError) {
+              throw challengeError;
+            }
+
+            let resultUser = user;
+            let resultToken: string | undefined;
+
+            if (Object.keys(updatesWithoutEmail).length > 0) {
+              const updateResult = await UserService.updateUserSettings(
+                request.user.id,
+                updatesWithoutEmail,
+              );
+              resultUser = updateResult.user;
+              resultToken = updateResult.token;
+            } else {
+              resultUser =
+                (await UserService.getUserById(request.user.id)) ?? user;
+            }
 
             return reply.send({
               requiresTwoFactor: true,
@@ -70,8 +102,8 @@ export async function userRoutes(fastify: FastifyInstance) {
               message: challenge.message,
               purpose: challenge.purpose,
               destination: challenge.destination,
-              user: result.user,
-              token: result.token,
+              user: resultUser,
+              token: resultToken,
             });
           }
         }

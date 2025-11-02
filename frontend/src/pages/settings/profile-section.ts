@@ -12,6 +12,15 @@ export class ProfileSection {
     this.container = container;
   }
 
+  private escapeHtml(unsafe: string): string {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
   render(user: PublicUser): void {
     this.user = user;
     const sanitizedProfileUrl = (user.profile_image_url ?? "").trim();
@@ -57,7 +66,7 @@ export class ProfileSection {
             type="text"
             id="username"
             name="username"
-            value="${user.username}"
+            value="${this.escapeHtml(user.username)}"
             class="w-full bg-gray-900/70 border border-cyan-500/30 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
             autocomplete="username"
           />
@@ -69,7 +78,7 @@ export class ProfileSection {
             type="email"
             id="email"
             name="email"
-            value="${user.email}"
+            value="${this.escapeHtml(user.email)}"
             class="w-full bg-gray-900/70 border border-cyan-500/30 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
             autocomplete="email"
           />
