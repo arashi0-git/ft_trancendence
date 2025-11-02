@@ -13,6 +13,79 @@ import {
 import { AuthUtils } from "../utils/auth";
 
 export class UserService {
+  private static normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
+  }
+
+  private static validateEmailFormat(email: string): void {
+    if (email.length === 0) {
+      throw new Error("Email cannot be empty");
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new Error("Invalid email format");
+    }
+  }
+
+  static async validateEmailChange(
+    currentUser: UserWithoutPassword,
+    candidateEmail: string,
+  ): Promise<string> {
+    const normalized = this.normalizeEmail(candidateEmail);
+    this.validateEmailFormat(normalized);
+
+    if (normalized === currentUser.email.toLowerCase()) {
+      return normalized;
+    }
+
+    const userWithSameEmail = await UserModel.findByEmail(normalized);
+    if (userWithSameEmail && userWithSameEmail.id !== currentUser.id) {
+      throw new Error("Email is already in use");
+    }
+
+    return normalized;
+  }
+
+  static async applyEmailChange(
+    userId: number,
+    newEmail: string,
+  ): Promise<UserWithoutPassword> {
+    const existingUser = await UserModel.findById(userId);
+    if (!existingUser) {
+      throw new Error("User not found");
+    }
+
+    const currentUser = stripPassword(existingUser);
+    const normalizedEmail = await this.validateEmailChange(
+      currentUser,
+      newEmail,
+    );
+
+    if (normalizedEmail !== currentUser.email.toLowerCase()) {
+      await UserModel.updateProfile(userId, { email: normalizedEmail });
+    }
+
+    const updatedUser = await this.getUserById(userId);
+    if (!updatedUser) {
+      throw new Error("User not found after email update");
+    }
+
+    return updatedUser;
+  }
+
+  static async setTwoFactorEnabledStatus(
+    userId: number,
+    enabled: boolean,
+  ): Promise<UserWithoutPassword> {
+    await UserModel.setTwoFactorEnabled(userId, enabled);
+    const updatedUser = await this.getUserById(userId);
+    if (!updatedUser) {
+      throw new Error("User not found after updating two-factor status");
+    }
+    return updatedUser;
+  }
+
   static toPublicUser(user: UserWithoutPassword): UserProfile {
     return toPublicUser(user);
   }
@@ -36,17 +109,17 @@ export class UserService {
       });
 
       return stripPassword(newUser);
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message.includes("UNIQUE constraint failed")) {
-          // Fallback for race conditions
-          if (error.message.includes("users.email")) {
-            throw new Error("User with this email already exists");
-          } else if (error.message.includes("users.username")) {
-            throw new Error("User with this username already exists");
-          } else {
-            throw new Error("User with this email or username already exists");
-          }
+    } catch (error: unknown) {
+      if (
+        error instanceof Error &&
+        error.message.includes("UNIQUE constraint failed") // Fallback for race conditions
+      ) {
+        if (error.message.includes("users.email")) {
+          throw new Error("User with this email already exists");
+        } else if (error.message.includes("users.username")) {
+          throw new Error("User with this username already exists");
+        } else {
+          throw new Error("User with this email or username already exists");
         }
       }
       throw error;
@@ -119,6 +192,8 @@ export class UserService {
       throw new Error("User not found");
     }
 
+    const existingUserWithoutPassword = stripPassword(existingUser);
+
     const profileUpdates: Partial<
       Record<"username" | "email" | "profile_image_url", string | null>
     > = {};
@@ -146,25 +221,11 @@ export class UserService {
     }
 
     if (typeof updates.email === "string") {
-      const trimmedEmail = updates.email.trim().toLowerCase();
-
-      if (trimmedEmail.length === 0) {
-        throw new Error("Email cannot be empty");
-      }
-
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(trimmedEmail)) {
-        throw new Error("Invalid email format");
-      }
-
-      if (trimmedEmail !== existingUser.email.toLowerCase()) {
-        const userWithSameEmail = await UserModel.findByEmail(trimmedEmail);
-        if (userWithSameEmail && userWithSameEmail.id !== id) {
-          throw new Error("Email is already in use");
-        }
-      }
-
-      profileUpdates.email = trimmedEmail;
+      const normalizedEmail = await this.validateEmailChange(
+        existingUserWithoutPassword,
+        updates.email,
+      );
+      profileUpdates.email = normalizedEmail;
     }
 
     if (updates.profile_image_url !== undefined) {
@@ -190,20 +251,21 @@ export class UserService {
     }
 
     if (Object.keys(profileUpdates).length === 0) {
-      return stripPassword(existingUser);
+      return existingUserWithoutPassword;
     }
 
     try {
       await UserModel.updateProfile(id, profileUpdates);
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message.includes("UNIQUE constraint failed")) {
-          if (error.message.includes("users.username")) {
-            throw new Error("Username is already taken");
-          }
-          if (error.message.includes("users.email")) {
-            throw new Error("Email is already in use");
-          }
+    } catch (error: unknown) {
+      if (
+        error instanceof Error &&
+        error.message.includes("UNIQUE constraint failed")
+      ) {
+        if (error.message.includes("users.username")) {
+          throw new Error("Username is already taken");
+        }
+        if (error.message.includes("users.email")) {
+          throw new Error("Email is already in use");
         }
       }
       throw error;

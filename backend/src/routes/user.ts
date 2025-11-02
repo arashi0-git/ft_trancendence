@@ -8,6 +8,7 @@ import fs from "fs";
 import crypto from "crypto";
 import "@fastify/multipart";
 import sharp from "sharp";
+import { TwoFactorService } from "../services/twoFactorService";
 
 const AVATAR_UPLOAD_DIR = path.join(process.cwd(), "uploads", "avatars");
 const ALLOWED_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp"]);
@@ -23,9 +24,88 @@ export async function userRoutes(fastify: FastifyInstance) {
           return reply.status(401).send({ error: "User not authenticated" });
         }
 
+        const payload: UpdateUserSettingsRequest = {
+          ...(request.body || {}),
+        };
+
+        const user = await UserService.getUserById(request.user.id);
+        if (!user) {
+          return reply.status(404).send({ error: "User not found" });
+        }
+
+        const emailCandidate =
+          typeof payload.email === "string" ? payload.email : undefined;
+        const requiresEmailTwoFactor =
+          Boolean(emailCandidate) && user.two_factor_enabled;
+
+        if (requiresEmailTwoFactor) {
+          const normalizedEmail = await UserService.validateEmailChange(
+            user,
+            emailCandidate as string,
+          );
+
+          if (normalizedEmail !== user.email.toLowerCase()) {
+            const { email: _unused, ...updatesWithoutEmail } = payload;
+
+            if (
+              Object.prototype.hasOwnProperty.call(
+                updatesWithoutEmail,
+                "currentPassword",
+              ) ||
+              Object.prototype.hasOwnProperty.call(
+                updatesWithoutEmail,
+                "newPassword",
+              )
+            ) {
+              return reply.status(400).send({
+                error:
+                  "Password changes cannot be combined with an email change that requires verification.",
+              });
+            }
+
+            const challenge = await TwoFactorService.startChallenge(
+              user,
+              "email_change",
+              {
+                payload: { email: normalizedEmail },
+                deliveryEmail: normalizedEmail,
+                messageOverride:
+                  TwoFactorService.buildEmailChangeMessage(normalizedEmail),
+              },
+            );
+
+            let resultUser = user;
+            let resultToken: string | undefined;
+
+            if (Object.keys(updatesWithoutEmail).length > 0) {
+              const updateResult = await UserService.updateUserSettings(
+                request.user.id,
+                updatesWithoutEmail,
+              );
+              resultUser = updateResult.user;
+              resultToken = updateResult.token;
+            } else {
+              resultUser =
+                (await UserService.getUserById(request.user.id)) ?? user;
+            }
+
+            return reply.send({
+              requiresTwoFactor: true,
+              twoFactorToken: challenge.token,
+              delivery: challenge.delivery,
+              expiresIn: challenge.expiresIn,
+              message: challenge.message,
+              purpose: challenge.purpose,
+              destination: challenge.destination,
+              user: resultUser,
+              token: resultToken,
+            });
+          }
+        }
+
         const result = await UserService.updateUserSettings(
           request.user.id,
-          request.body || {},
+          payload,
         );
 
         return reply.send(result);

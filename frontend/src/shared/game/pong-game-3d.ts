@@ -9,6 +9,7 @@ import {
   GameEvents,
 } from "../types/game";
 import { BabylonRender } from "./babylon-render";
+import { GameManagerService } from "../services/game-manager.service";
 
 interface PongGameOptions {
   fieldColorHex?: string;
@@ -29,8 +30,8 @@ const MAX_MAX_SCORE = 10;
 const COLOR_HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
 const BASE_PADDLE_HEIGHT = 80;
 const BASE_BALL_RADIUS = 8;
-const BASE_BALL_SPEED = 11;
-const BASE_PADDLE_SPEED = 5;
+const BASE_BALL_SPEED = 9;
+const BASE_PADDLE_SPEED = 6;
 const INITIAL_BALL_SPEED_FACTOR = 0.5;
 const INITIAL_SERVE_SPEED = BASE_BALL_SPEED * INITIAL_BALL_SPEED_FACTOR;
 
@@ -85,6 +86,7 @@ export class PongGame3D {
     player3: false,
     player4: false,
   }; // AIプレイヤー管理
+  private gameManager: GameManagerService | null = null;
   private animationId: number | null = null;
   private boundHandleResize: () => void;
   private playerCount: number;
@@ -322,6 +324,10 @@ export class PongGame3D {
     this.aiPlayers.player2 = aiPlayers.player2 || false;
     this.aiPlayers.player3 = aiPlayers.player3 || false;
     this.aiPlayers.player4 = aiPlayers.player4 || false;
+  }
+
+  public setGameManager(gameManager: GameManagerService): void {
+    this.gameManager = gameManager;
   }
 
   public moveAiPaddle(deltaY: number, playerNumber: 1 | 2 | 3 | 4 = 2): void {
@@ -650,6 +656,8 @@ export class PongGame3D {
     ball.speed = INITIAL_SERVE_SPEED;
     this.isBallAtFullSpeed = false;
     this.setBallDirection(direction, Math.random() * 0.5 - 0.25);
+
+    this.gameManager?.notifyAiPlayersOfBallReset();
   }
 
   private endGame(winner: number): void {

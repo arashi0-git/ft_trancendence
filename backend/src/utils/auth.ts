@@ -2,18 +2,18 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { UserWithoutPassword } from "../models/user";
 
-interface JWTPayload {
-  id: number;
-  username: string;
-  email: string;
-  tokenVersion?: number;
-}
-
 const JWT_SECRET = process.env.JWT_SECRET || "";
 if (!JWT_SECRET) {
   throw new Error("JWT_SECRET must be set");
 }
 const SALT_ROUNDS = 12;
+
+export interface AuthTokenPayload extends jwt.JwtPayload {
+  id: number;
+  username: string;
+  email: string;
+  tokenVersion?: number;
+}
 
 export class AuthUtils {
   static async hashPassword(password: string): Promise<string> {
@@ -40,9 +40,25 @@ export class AuthUtils {
     );
   }
 
-  static verifyToken(token: string): JWTPayload {
+  static verifyToken(token: string): AuthTokenPayload {
     try {
-      return jwt.verify(token, JWT_SECRET) as JWTPayload;
+      const decoded = jwt.verify(token, JWT_SECRET);
+
+      if (typeof decoded === "string") {
+        throw new Error("Invalid token payload");
+      }
+
+      const payload = decoded as AuthTokenPayload;
+
+      if (
+        typeof payload.id !== "number" ||
+        typeof payload.username !== "string" ||
+        typeof payload.email !== "string"
+      ) {
+        throw new Error("Invalid token payload");
+      }
+
+      return payload;
     } catch (error) {
       throw new Error("Invalid token");
     }

@@ -60,16 +60,16 @@ export class AppHeader {
     window.headerLogout = async () => {
       try {
         await AuthService.logout();
-        NotificationService.getInstance().success("ログアウトしました");
+        NotificationService.getInstance().success("Logged out successfully");
         router.navigate("/");
       } catch (error) {
         console.error("Logout failed:", error);
         const errorMessage =
           error instanceof Error
             ? error.message
-            : "ログアウト処理でエラーが発生しました";
+            : "An error occurred during logout";
         NotificationService.getInstance().error(
-          `ログアウトエラー: ${errorMessage}`,
+          `Logout error: ${errorMessage}`,
         );
         router.navigate("/");
       }

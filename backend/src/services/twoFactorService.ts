@@ -1,6 +1,10 @@
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
-import { TwoFactorChallengeModel } from "../models/twoFactorChallenge";
+import {
+  TwoFactorChallengeModel,
+  TwoFactorChallengeRecord,
+  TwoFactorPurpose,
+} from "../models/twoFactorChallenge";
 import { EmailService } from "./emailService";
 import { UserWithoutPassword } from "../models/user";
 import { UserService } from "./userService";
@@ -17,47 +21,119 @@ function generateNumericCode(): string {
 
 const DELIVERY_METHOD = "email" as const;
 
-const LOGIN_CHALLENGE_MESSAGE =
-  "A verification code has been sent to your email address.";
+const PURPOSE_MESSAGES: Record<TwoFactorPurpose, string> = {
+  login: "A verification code has been sent to your email address.",
+  enable_2fa:
+    "Enter the verification code we emailed you to turn on two-factor authentication.",
+  disable_2fa:
+    "Enter the verification code we emailed you to disable two-factor authentication.",
+  email_change:
+    "Enter the verification code we emailed you to confirm your email change.",
+};
 
 export interface TwoFactorChallengeDetails {
   token: string;
   delivery: typeof DELIVERY_METHOD;
+  destination?: string;
   expiresIn: number;
   message: string;
+  purpose: TwoFactorPurpose;
+}
+
+function serializePayload(payload?: unknown): string | null {
+  if (payload === undefined || payload === null) {
+    return null;
+  }
+
+  try {
+    return JSON.stringify(payload);
+  } catch (error) {
+    throw new Error(
+      `Failed to serialize two-factor challenge payload: ${String(error)}`,
+    );
+  }
+}
+
+function parsePayload<T>(payload: string | null): T | null {
+  if (!payload) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(payload) as T;
+  } catch (error) {
+    throw new Error(
+      `Invalid two-factor challenge payload data: ${String(error)}`,
+    );
+  }
 }
 
 export class TwoFactorService {
+  private static buildDetails(
+    token: string,
+    purpose: TwoFactorPurpose,
+    overrides?: { message?: string; destination?: string },
+  ): TwoFactorChallengeDetails {
+    return {
+      token,
+      purpose,
+      delivery: DELIVERY_METHOD,
+      expiresIn: CODE_TTL_SECONDS,
+      message: overrides?.message ?? PURPOSE_MESSAGES[purpose],
+      destination: overrides?.destination,
+    };
+  }
+
   static async startChallenge(
     user: UserWithoutPassword,
+    purpose: TwoFactorPurpose,
+    options?: {
+      payload?: unknown;
+      deliveryEmail?: string;
+      messageOverride?: string;
+    },
   ): Promise<TwoFactorChallengeDetails> {
     const code = generateNumericCode();
     const codeHash = await bcrypt.hash(code, 10);
     const token = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + CODE_TTL_MS);
+    const deliveryEmail =
+      typeof options?.deliveryEmail === "string"
+        ? options.deliveryEmail
+        : user.email;
 
     const challengeId = await TwoFactorChallengeModel.create({
       userId: user.id,
       token,
       codeHash,
+      purpose,
       expiresAt,
+      payload: serializePayload(options?.payload),
     });
 
     try {
-      await EmailService.sendTwoFactorCode(user.email, code);
+      await EmailService.sendTwoFactorCode(deliveryEmail, code);
     } catch (error) {
       await TwoFactorChallengeModel.deleteById(challengeId);
       throw error;
     }
 
-    await TwoFactorChallengeModel.deleteByUserExcept(user.id, challengeId);
+    await TwoFactorChallengeModel.deleteByUserExcept(
+      user.id,
+      challengeId,
+      purpose,
+    );
 
-    return {
-      token,
-      delivery: DELIVERY_METHOD,
-      expiresIn: CODE_TTL_SECONDS,
-      message: LOGIN_CHALLENGE_MESSAGE,
-    };
+    return this.buildDetails(token, purpose, {
+      message: options?.messageOverride,
+      destination: deliveryEmail,
+    });
+  }
+
+  static async startLoginChallenge(
+    user: UserWithoutPassword,
+  ): Promise<TwoFactorChallengeDetails> {
+    return this.startChallenge(user, "login");
   }
 
   static async resendChallenge(
@@ -70,22 +146,35 @@ export class TwoFactorService {
       throw new Error("Invalid or expired verification token");
     }
 
-    if (existing.purpose !== "login") {
-      throw new Error("Only login challenges can be resent");
-    }
-
     const user = await UserService.getUserById(existing.user_id);
     if (!user) {
       throw new Error("User not found for verification");
     }
 
-    return this.startChallenge(user);
+    const payload = parsePayload<{ email?: string }>(existing.payload);
+    const deliveryEmail =
+      existing.purpose === "email_change" && payload?.email
+        ? payload.email
+        : user.email;
+    const messageOverride =
+      existing.purpose === "email_change" && payload?.email
+        ? this.buildEmailChangeMessage(payload.email)
+        : undefined;
+
+    return this.startChallenge(user, existing.purpose, {
+      payload: payload ?? undefined,
+      deliveryEmail,
+      messageOverride,
+    });
   }
 
   static async verifyChallenge(
     token: string,
     code: string,
-  ): Promise<UserWithoutPassword> {
+  ): Promise<{
+    challenge: TwoFactorChallengeRecord;
+    user: UserWithoutPassword;
+  }> {
     await TwoFactorChallengeModel.deleteExpired();
 
     const challenge = await TwoFactorChallengeModel.findByToken(token);
@@ -107,13 +196,19 @@ export class TwoFactorService {
 
     await TwoFactorChallengeModel.deleteById(challenge.id);
 
-    const loggedInUser =
-      (await UserService.markUserLoggedIn(challenge.user_id)) ?? null;
-
-    if (!loggedInUser) {
+    const user = await UserService.getUserById(challenge.user_id);
+    if (!user) {
       throw new Error("User not found for verification");
     }
 
-    return loggedInUser;
+    return { challenge, user };
+  }
+
+  static parsePayload<T>(payload: string | null): T | null {
+    return parsePayload<T>(payload);
+  }
+
+  static buildEmailChangeMessage(newEmail: string): string {
+    return `We emailed a verification code to ${newEmail}. Enter it to confirm your new email address.`;
   }
 }

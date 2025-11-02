@@ -36,13 +36,13 @@ export class AiPlayer {
       updateInterval: 1000, // 更新間隔 1秒
     },
     medium: {
-      reactionTime: 300, // 適度な反応時間
+      reactionTime: 200, // 適度な反応時間
       predictionAccuracy: 0.7, // 適度な予測精度
       missRate: 0.15, // 適度なミス率
       updateInterval: 1000, // 更新間隔 1秒
     },
     hard: {
-      reactionTime: 200, // 速い反応（無理ゲーを避ける）
+      reactionTime: 100, // 速い反応（無理ゲーを避ける）
       predictionAccuracy: 0.8, // 高い予測精度（完璧ではない）
       missRate: 0.1, // 低いミス率（たまにミス）
       updateInterval: 1000, // 更新間隔 1秒
@@ -62,12 +62,29 @@ export class AiPlayer {
     this.gameManager = gameManager;
     this.isActive = true;
     this.startUpdateLoop();
+    this.updateAI();
   }
 
   pause(): void {
     this.isActive = false;
     this.stopUpdateLoop();
     this.clearReactionTimer();
+  }
+
+  public onBallReset(): void {
+    if (!this.isActive || !this.gameManager) return;
+
+    const gameState = this.gameManager.getGameState();
+    if (!gameState || gameState.gameStatus !== "playing") return;
+
+    const currentPlayer =
+      this.playerNumber === 1 ? gameState.player1 : gameState.player2;
+
+    const predictedPosition = this.predictBallPosition(gameState);
+    this.targetY = predictedPosition.y - currentPlayer.paddle.height / 2;
+
+    this.clearReactionTimer();
+    this.executeMovement();
   }
 
   stop(): void {
