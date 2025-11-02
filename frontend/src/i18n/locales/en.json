@@ -1,0 +1,264 @@
+{
+  "common": {
+    "language": "🌐 Language",
+    "submit": "Submit",
+    "cancel": "Cancel"
+  },
+  "navigation": {
+    "home": "Home",
+    "settings": "Settings",
+    "logout": "Log out"
+  },
+  "auth": {
+    "loginTitle": "Sign in",
+    "registerTitle": "Create account"
+  },
+  "home": {
+    "intro": "Choose how you want to play Pong!",
+    "quickPlay": "🎮 Quick Play",
+    "quickPlayDescription": "2 or 4 Players",
+    "tournament": "🏆 Tournament",
+    "tournamentDescription": "2-4-8 Players",
+    "gameSettings": "⚙️ Game Settings",
+    "gameSettingsDescription": "Customize your game"
+  },
+  "header": {
+    "title": "ft_transcendence",
+    "settings": "Settings",
+    "logout": "Logout",
+    "login": "Login",
+    "language": "🌐 Language",
+    "logoutSuccess": "Logged out successfully",
+    "logoutError": "Logout error: {{message}}",
+    "logoutErrorFallback": "An error occurred during logout"
+  },
+  "quickPlay": {
+    "pageTitleSetup": "Quick Play Setup",
+    "pageTitleRegistration": "Player Registration",
+    "pageTitleGame": "Quick Play - Pong",
+    "homeButton": "Home",
+    "backToRegistration": "Back to Registration",
+    "startGame": "Start Game",
+    "pauseGame": "Pause",
+    "resetGame": "Reset",
+    "gameFinished": "Game finished!",
+    "winner": "Winner",
+    "finalScore": "Final Score",
+    "resetGameButton": "Reset Game",
+    "selectPlayers": "Number of Players",
+    "playerOption": "{{count}} Players",
+    "next": "Next",
+    "backToSetup": "Back to Setup",
+    "startGameButton": "Start Game",
+    "registrationTitle": "Player Registration",
+    "registrationSubtitle": "Quick Play ({{count}} players)",
+    "registrationError": "Failed to display the player registration screen.",
+    "controls": {
+      "playerLeftOuter": "Player 1 (Left-Outer): {{keys}}",
+      "playerRightOuter": "Player 2 (Right-Outer): {{keys}}",
+      "playerLeftInner": "Player 3 (Left-Inner): {{keys}}",
+      "playerRightInner": "Player 4 (Right-Inner): {{keys}}"
+    }
+  },
+  "playerSelector": {
+    "label": "Player {{index}}",
+    "selectPlaceholder": "Select player or AI",
+    "aiOption": "AI",
+    "customOption": "Enter custom alias",
+    "aiDifficulty": "AI Difficulty",
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "customAlias": "Custom Alias",
+    "customPlaceholder": "Enter custom alias",
+    "currentUser": "{{username}} (You)",
+    "aiDisplayName": "AI Player {{index}} ({{difficulty}})"
+  },
+  "playerRegistration": {
+    "missingPlayers": "{{count}} players are not selected",
+    "duplicateNames": "Player names must be unique",
+    "requireHuman": "Please select at least one human player"
+  },
+  "playerRegistrationWithCount": {
+    "title": "Player Registration",
+    "subtitle": "Choose players and prepare your tournament",
+    "tournamentNameLabel": "Tournament Name",
+    "tournamentNamePlaceholder": "Enter tournament name",
+    "playerCountLabel": "Number of Players",
+    "playerCountOption": "{{count}} Players",
+    "buttons": {
+      "back": "Back",
+      "start": "Start"
+    }
+  },
+  "gameSettings": {
+    "title": "Game Customization",
+    "description": "Changes made here will apply to all game modes.",
+    "defaultLabel": "Use default settings",
+    "fieldColor": "Background color",
+    "ballColor": "Ball color",
+    "paddleColor": "Paddle color",
+    "paddleLength": "Paddle length",
+    "paddleLengthOptions": {
+      "short": "Short",
+      "normal": "Normal",
+      "long": "Long"
+    },
+    "ballSize": "Ball size",
+    "ballSizeOptions": {
+      "small": "Small",
+      "normal": "Normal",
+      "big": "Big"
+    },
+    "ballSpeed": "Ball speed",
+    "pointsToWin": "Points to win",
+    "pointsOption": "{{count}} points"
+  },
+  "game": {
+    "scoreboard": {
+      "player1": "Player 1",
+      "player2": "Player 2"
+    }
+  },
+  "login": {
+    "title": "Login",
+    "emailLabel": "Email",
+    "emailPlaceholder": "Enter your email",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "submit": "Login",
+    "register": "Don't have an account? Register",
+    "home": "Back to Home",
+    "errors": {
+      "required": "Email and password are required",
+      "generic": "Login failed",
+      "twoFactorInvalid": "Enter the 6-digit code from your email",
+      "twoFactorUnexpected": "Unexpected response while verifying code.",
+      "twoFactorGeneric": "Verification failed",
+      "twoFactorMissing": "Two-factor challenge missing"
+    },
+    "status": {
+      "loggingIn": "Logging in...",
+      "verifying": "Verifying..."
+    },
+    "twoFactor": {
+      "title": "Two-Factor Verification",
+      "message": "Enter the verification code sent to your email.",
+      "codeLabel": "Verification Code",
+      "codePlaceholder": "123456",
+      "submit": "Verify Code",
+      "cancel": "Back to Login"
+    },
+    "alerts": {
+      "welcome": "Welcome back, {{username}}!",
+      "guest": "User"
+    }
+  },
+  "register": {
+    "pageTitle": "Create Account",
+    "homeButton": "Home",
+    "form": {
+      "title": "Create an Account",
+      "usernameLabel": "Username",
+      "usernamePlaceholder": "Choose a username",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter a secure password",
+      "passwordHint": "At least 6 characters.",
+      "confirmPasswordLabel": "Confirm Password",
+      "confirmPasswordPlaceholder": "Re-enter your password",
+      "submit": "Create account",
+      "showLogin": "Already have an account? Sign in",
+      "showHome": "Back to Home",
+      "status": {
+        "submitting": "Creating account..."
+      },
+      "errors": {
+        "allRequired": "All fields are required.",
+        "usernameLength": "Username must be between {{min}} and {{max}} characters.",
+        "emailInvalid": "Please enter a valid email address.",
+        "passwordLength": "Password must be at least {{min}} characters long.",
+        "passwordMismatch": "Passwords do not match.",
+        "generic": "Registration failed"
+      }
+    }
+  },
+  "tournament": {
+    "titles": {
+      "setup": "Tournament Setup",
+      "registration": "Player Registration",
+      "bracket": "Tournament Bracket",
+      "match": "Tournament Match",
+      "results": "Tournament Results",
+      "mode": "Tournament Mode"
+    },
+    "buttons": {
+      "home": "Home",
+      "back": "Back",
+      "continue": "Continue",
+      "create": "Create Tournament",
+      "backToSetup": "Back to Setup",
+      "startTournament": "Start Tournament",
+      "playMatch": "Play",
+      "playing": "Playing...",
+      "newTournament": "New Tournament",
+      "startMatch": "Start Match",
+      "pause": "Pause",
+      "reset": "Reset",
+      "startNewTournament": "Start New Tournament"
+    },
+    "setup": {
+      "nameLabel": "Tournament Name",
+      "namePlaceholder": "Enter tournament name",
+      "nameDefault": "Pong Tournament",
+      "playerCountLabel": "Number of Players",
+      "playerOption": "{{count}} Players",
+      "missingName": "Please enter a tournament name"
+    },
+    "registration": {
+      "title": "Player Registration",
+      "subtitle": "Tournament: {{name}} ({{count}} players)",
+      "error": "Failed to display the player registration screen."
+    },
+    "errors": {
+      "playerSelection": "Failed to retrieve player selections.",
+      "startTournament": "Error starting tournament: {{message}}",
+      "criticalMatch": "A critical error occurred while saving the match."
+    },
+    "bracket": {
+      "heading": "Current Bracket",
+      "remaining": "{{roundName}} ({{count}} players remaining)",
+      "unknownPlayer": "Unknown",
+      "vs": "VS"
+    },
+    "match": {
+      "heading": "{{player1}} vs {{player2}}",
+      "details": "Match {{id}} - First to 5 points wins",
+      "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>: W/S (Up/Down), A/D (Left/Right)",
+      "controlsRight": "<strong class=\"text-white\">{{player}}</strong>: ↑/↓ (Up/Down), ←/→ (Left/Right)",
+      "playerDefault": "Player {{index}}"
+    },
+    "results": {
+      "title": "🏆 Tournament Complete!",
+      "winner": "Winner: {{name}}",
+      "record": "Wins: {{wins}} | Losses: {{losses}}"
+    },
+    "rounds": {
+      "final": "Final",
+      "semiFinal": "Semi-Final",
+      "quarterFinal": "Quarter-Final",
+      "round": "Round {{number}}"
+    },
+    "notifications": {
+      "tournamentComplete": "Tournament completed! 🏆",
+      "roundBegins": "{{roundName}} begins! 🥊"
+    },
+    "modal": {
+      "playerWins": "Player {{index}} Wins!",
+      "matchResult": "{{player}} wins the match {{score1}} - {{score2}}!"
+    }
+  }
+}

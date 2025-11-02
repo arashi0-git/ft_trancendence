@@ -3,8 +3,35 @@ import { NotificationService } from "../../shared/services/notification.service"
 import { router } from "../../routes/router";
 import { TournamentDataService } from "../../shared/services/tournament-data.service";
 import { PlayerRegistrationWithCountSelector } from "../../shared/components/player-registration-with-count-selector";
+import { onLanguageChange, translate } from "../../i18n";
 
 export type TournamentStep = "registration" | "bracket" | "match" | "results";
+
+type ViewRenderer = (container: HTMLElement) => void | Promise<void>;
+
+type TranslateFn = (key: string, options?: Record<string, unknown>) => unknown;
+
+type NavigationKey = TournamentStep | "fallback";
+
+interface StepNavigationText {
+  pageTitle: string;
+  backButtonLabel: string;
+}
+
+type NavigationCopy = Record<NavigationKey, StepNavigationText>;
+
+type NavigationCopyInput = Partial<
+  Record<NavigationKey, Partial<StepNavigationText>>
+>;
+
+type ElementConstructor<T extends HTMLElement> = new (...args: never[]) => T;
+
+interface GameOverModalElements {
+  modal: HTMLElement;
+  title: HTMLElement;
+  message: HTMLElement;
+  continueButton: HTMLButtonElement;
+}
 
 /**
  * TournamentService - トーナメント機能の管理
@@ -16,23 +43,62 @@ export class TournamentService {
   private tournamentData: TournamentDataService;
   private notificationService: NotificationService;
   private playerRegistrationWithCountSelector: PlayerRegistrationWithCountSelector;
+  private readonly viewRenderers: Record<TournamentStep, ViewRenderer>;
+  private navigationCopy: NavigationCopy;
+  private readonly translateFn: TranslateFn | null;
+  private t: Record<string, any>;
+  private contentContainer: HTMLElement | null = null;
+  private cachedGameOverModal: GameOverModalElements | null = null;
   private eventListeners: Array<{
     element: HTMLElement;
     event: string;
     handler: EventListener;
   }> = [];
 
-  constructor() {
+  constructor(translateFn?: TranslateFn) {
     this.gameManager = new GameManagerService();
     this.tournamentData = TournamentDataService.getInstance();
     this.notificationService = NotificationService.getInstance();
     this.playerRegistrationWithCountSelector =
       new PlayerRegistrationWithCountSelector();
+    this.translateFn = translateFn ?? translate;
+    const translator = this.translateFn;
+    this.t = translator
+      ? (translator("tournament", { returnObjects: true }) as Record<
+          string,
+          any
+        >)
+      : {};
+    this.navigationCopy = this.buildNavigationCopy();
+    this.viewRenderers = {
+      registration: this.renderRegistrationView.bind(this),
+      bracket: this.renderBracketView.bind(this),
+      match: this.renderMatchView.bind(this),
+      results: this.renderResultsView.bind(this),
+    };
+    onLanguageChange(this.handleLanguageChange.bind(this));
   }
 
   setCurrentPath(path: string): void {
     this.currentPath = path;
     this.determineStepFromPath(path);
+  }
+
+  private handleLanguageChange(): void {
+    const translator = this.translateFn;
+
+    this.t = translator
+      ? (translator("tournament", { returnObjects: true }) as Record<
+          string,
+          any
+        >)
+      : {};
+
+    this.navigationCopy = this.buildNavigationCopy();
+
+    if (this.contentContainer) {
+      this.initializeCurrentView();
+    }
   }
 
   private determineStepFromPath(path: string): void {
@@ -48,44 +114,227 @@ export class TournamentService {
   }
 
   async initializeCurrentView(): Promise<void> {
-    const container = document.getElementById("tournament-content");
+    const container = this.getContentContainer();
     if (!container) return;
 
     this.clearEventListeners();
 
-    switch (this.currentStep) {
-      case "registration":
-        await this.renderRegistrationView(container);
-        break;
-      case "bracket":
-        this.renderBracketView(container);
-        break;
-      case "match":
-        this.renderMatchView(container);
-        break;
-      case "results":
-        this.renderResultsView(container);
-        break;
-    }
+    const renderer = this.viewRenderers[this.currentStep];
+    await Promise.resolve(renderer(container));
   }
 
+  // ナビゲーションテキスト構築
+  private buildNavigationCopy(): NavigationCopy {
+    const defaults: NavigationCopy = {
+      registration: {
+        pageTitle: "Player Registration",
+        backButtonLabel: "Home",
+      },
+      bracket: {
+        pageTitle: "Tournament Bracket",
+        backButtonLabel: "Back",
+      },
+      match: {
+        pageTitle: "Tournament Match",
+        backButtonLabel: "Back",
+      },
+      results: {
+        pageTitle: "Tournament Results",
+        backButtonLabel: "Back",
+      },
+      fallback: {
+        pageTitle: "Tournament Mode",
+        backButtonLabel: "Back",
+      },
+    };
+
+    const translator = this.translateFn;
+    if (!translator) {
+      return defaults;
+    }
+
+    const localized = translator("tournament.navigation", {
+      returnObjects: true,
+    });
+
+    return this.mergeNavigationCopy(defaults, localized);
+  }
+
+  // 翻訳データのマージ
+  private mergeNavigationCopy(
+    base: NavigationCopy,
+    localized: unknown,
+  ): NavigationCopy {
+    if (!localized || typeof localized !== "object") {
+      return base;
+    }
+
+    const overrides = localized as NavigationCopyInput;
+    const result: NavigationCopy = { ...base };
+
+    (Object.keys(base) as Array<NavigationKey>).forEach((key) => {
+      const override = overrides[key];
+      if (!override) {
+        return;
+      }
+
+      result[key] = {
+        pageTitle: override.pageTitle ?? base[key].pageTitle,
+        backButtonLabel: override.backButtonLabel ?? base[key].backButtonLabel,
+      };
+    });
+
+    return result;
+  }
+
+  // コンテンツ要素の取得
+  private getContentContainer(): HTMLElement | null {
+    if (
+      this.contentContainer &&
+      document.body.contains(this.contentContainer)
+    ) {
+      return this.contentContainer;
+    }
+
+    const container = document.getElementById("tournament-content");
+    if (container instanceof HTMLElement) {
+      this.contentContainer = container;
+      return container;
+    }
+
+    console.warn("Tournament content container not found.");
+    this.contentContainer = null;
+    return null;
+  }
+
+  // IDによる要素検索
+  private queryElement<T extends HTMLElement>(
+    id: string,
+    elementConstructor?: ElementConstructor<T>,
+  ): T | null {
+    const element = document.getElementById(id);
+    if (!element) {
+      return null;
+    }
+
+    if (elementConstructor && !(element instanceof elementConstructor)) {
+      console.warn(
+        `Element with ID '${id}' is not instance of ${
+          elementConstructor.name || "expected type"
+        }`,
+      );
+      return null;
+    }
+
+    return element as T;
+  }
+
+  // モーダル要素の取得
+  private getGameOverModalElements(): GameOverModalElements | null {
+    if (
+      this.cachedGameOverModal &&
+      document.body.contains(this.cachedGameOverModal.modal)
+    ) {
+      return this.cachedGameOverModal;
+    }
+
+    const modal = this.queryElement<HTMLElement>("game-over-modal");
+    const title = this.queryElement<HTMLElement>("game-over-title");
+    const message = this.queryElement<HTMLElement>("game-over-message");
+    const continueButton = this.queryElement<HTMLButtonElement>(
+      "game-over-continue-btn",
+      HTMLButtonElement,
+    );
+
+    if (modal && title && message && continueButton) {
+      this.cachedGameOverModal = {
+        modal,
+        title,
+        message,
+        continueButton,
+      };
+      return this.cachedGameOverModal;
+    }
+
+    this.cachedGameOverModal = null;
+    return null;
+  }
+
+  // クリックイベントの設定
+  private bindClick<T extends HTMLElement>(
+    elementId: string,
+    handler: () => void,
+    element?: T | null,
+    elementConstructor?: ElementConstructor<T>,
+  ): void {
+    this.clearEventListenersForId(elementId, "click");
+    const target =
+      element ?? this.queryElement<T>(elementId, elementConstructor);
+    if (!target) {
+      console.warn(
+        `Element with ID '${elementId}' not found for click binding.`,
+      );
+      return;
+    }
+    const listener: EventListener = () => handler();
+    this.addEventListenerWithTracking(target, "click", listener);
+  }
+
+  // 試合ボタンの取得
+  private getMatchControlButtons(): {
+    startButton: HTMLButtonElement | null;
+    pauseButton: HTMLButtonElement | null;
+    resetButton: HTMLButtonElement | null;
+  } {
+    return {
+      startButton: this.queryElement<HTMLButtonElement>(
+        "start-tournament-game",
+        HTMLButtonElement,
+      ),
+      pauseButton: this.queryElement<HTMLButtonElement>(
+        "pause-tournament-game",
+        HTMLButtonElement,
+      ),
+      resetButton: this.queryElement<HTMLButtonElement>(
+        "reset-tournament-game",
+        HTMLButtonElement,
+      ),
+    };
+  }
   private async renderRegistrationView(container: HTMLElement): Promise<void> {
+    const reg = this.t.registration || {};
+    const setup = this.t.setup || {};
+    const buttons = this.t.buttons || {};
+    const errors = this.t.errors || {};
+    const playerSelector = this.t.playerSelector || {};
+    const subtitle = this.translateFn
+      ? (this.translateFn("tournament.registration.subtitle", {
+          name: setup.nameDefault || "Pong Tournament",
+          count: 2,
+        }) as string)
+      : "Tournament Setup";
     try {
       await this.playerRegistrationWithCountSelector.render({
         container,
-        title: "Player Registration",
-        subtitle: "Tournament Setup",
+        title: reg.title || "Player Registration",
+        subtitle: subtitle,
         showTournamentName: true,
-        tournamentNameValue: "Pong Tournament",
-        startButtonText: "Start Tournament",
-        backButtonText: "Back to Home",
+        tournamentNameValue: setup.nameDefault || "Pong Tournament",
+        startButtonText: buttons.startTournament || "Start Tournament",
+        backButtonText: buttons.home || "Back to Home",
         requireHumanPlayer: true,
+        translations: {
+          setup: setup,
+          playerSelector: playerSelector,
+        },
         onBack: () => {
           router.navigate("/");
         },
         onSubmit: (data) => {
           if (!data.tournamentName) {
-            this.notificationService.error("トーナメント名を入力してください");
+            this.notificationService.error(
+              setup.missingName || "Please enter tournament name",
+            );
             return;
           }
 
@@ -110,18 +359,25 @@ export class TournamentService {
             this.navigateToBracket();
           } catch (error) {
             console.error("Error generating matches:", error);
-            this.notificationService.error("マッチ生成に失敗しました");
+            const errorMessageTemplate =
+              errors.startTournament ||
+              "Failed to generate matches: {{message}}";
+            const message =
+              error instanceof Error && error.message ? error.message : "";
+            this.notificationService.error(
+              errorMessageTemplate.replace("{{message}}", message),
+            );
           }
         },
       });
     } catch (error) {
       console.error("Failed to render registration view:", error);
-      this.notificationService.error("プレイヤー登録画面の表示に失敗しました");
+      this.notificationService.error(
+        reg.error || "Failed to render registration view",
+      );
       router.navigate("/");
     }
   }
-
-  // Navigation methods
 
   navigateToBracket(): void {
     this.navigate("/tournament/bracket");
@@ -132,22 +388,19 @@ export class TournamentService {
   }
 
   getPageTitle(): string {
-    switch (this.currentStep) {
-      case "registration":
-        return "Player Registration";
-      case "bracket":
-        return "Tournament Bracket";
-      case "match":
-        return "Tournament Match";
-      case "results":
-        return "Tournament Results";
-      default:
-        return "Tournament Mode";
-    }
+    const stepCopy =
+      this.navigationCopy[this.currentStep] ?? this.navigationCopy.fallback;
+    return stepCopy.pageTitle;
   }
 
   getBackButtonTemplate(): string {
-    const backText = this.currentStep === "registration" ? "Home" : "Back";
+    if (this.currentStep === "registration") {
+      return "";
+    }
+
+    const stepCopy =
+      this.navigationCopy[this.currentStep] ?? this.navigationCopy.fallback;
+    const backText = stepCopy.backButtonLabel;
     return `<button id="back-button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">${backText}</button>`;
   }
 
@@ -198,6 +451,8 @@ export class TournamentService {
     this.clearEventListeners();
     this.gameManager.cleanup();
     this.playerRegistrationWithCountSelector.destroy();
+    this.contentContainer = null;
+    this.cachedGameOverModal = null;
   }
 
   private renderBracketView(container: HTMLElement): void {
@@ -472,30 +727,41 @@ export class TournamentService {
       },
     });
 
-    const startBtn = document.getElementById(
+    const { startButton, pauseButton, resetButton } =
+      this.getMatchControlButtons();
+
+    this.bindClick(
       "start-tournament-game",
-    ) as HTMLButtonElement;
-    const pauseBtn = document.getElementById(
+      () => {
+        this.gameManager.startGame();
+        if (startButton) startButton.disabled = true;
+        if (pauseButton) pauseButton.disabled = false;
+      },
+      startButton,
+      HTMLButtonElement,
+    );
+
+    this.bindClick(
       "pause-tournament-game",
-    ) as HTMLButtonElement;
+      () => {
+        this.gameManager.pauseGame();
+        if (startButton) startButton.disabled = false;
+        if (pauseButton) pauseButton.disabled = true;
+      },
+      pauseButton,
+      HTMLButtonElement,
+    );
 
-    this.attachEventListenerSafely("start-tournament-game", "click", () => {
-      this.gameManager.startGame();
-      if (startBtn) startBtn.disabled = true;
-      if (pauseBtn) pauseBtn.disabled = false;
-    });
-
-    this.attachEventListenerSafely("pause-tournament-game", "click", () => {
-      this.gameManager.pauseGame();
-      if (startBtn) startBtn.disabled = false;
-      if (pauseBtn) pauseBtn.disabled = true;
-    });
-
-    this.attachEventListenerSafely("reset-tournament-game", "click", () => {
-      this.gameManager.resetGame();
-      if (startBtn) startBtn.disabled = false;
-      if (pauseBtn) pauseBtn.disabled = true;
-    });
+    this.bindClick(
+      "reset-tournament-game",
+      () => {
+        this.gameManager.resetGame();
+        if (startButton) startButton.disabled = false;
+        if (pauseButton) pauseButton.disabled = true;
+      },
+      resetButton,
+      HTMLButtonElement,
+    );
   }
 
   private handleMatchEnd(
@@ -545,15 +811,12 @@ export class TournamentService {
         }
       });
 
-      const startBtn = document.getElementById(
-        "start-tournament-game",
-      ) as HTMLButtonElement;
-      const pauseBtn = document.getElementById(
-        "pause-tournament-game",
-      ) as HTMLButtonElement;
-      if (startBtn && pauseBtn) {
-        startBtn.disabled = false;
-        pauseBtn.disabled = true;
+      const { startButton, pauseButton } = this.getMatchControlButtons();
+      if (startButton) {
+        startButton.disabled = false;
+      }
+      if (pauseButton) {
+        pauseButton.disabled = true;
       }
     } catch (error) {
       console.error("Error in handleMatchEnd:", error);
@@ -565,39 +828,41 @@ export class TournamentService {
   }
 
   private showGameOverModal(
-    title: string,
-    message: string,
+    modalTitleText: string,
+    modalMessageText: string,
     onContinue: () => void,
   ): void {
-    const modal = document.getElementById("game-over-modal");
-    const modalTitle = document.getElementById("game-over-title");
-    const modalMessage = document.getElementById("game-over-message");
-    const continueBtn = document.getElementById("game-over-continue-btn");
+    const modalElements = this.getGameOverModalElements();
 
-    if (modal && modalTitle && modalMessage && continueBtn) {
-      modalTitle.textContent = title;
-      modalMessage.textContent = message;
+    if (modalElements) {
+      const { modal, title, message, continueButton } = modalElements;
+      title.textContent = modalTitleText;
+      message.textContent = modalMessageText;
       modal.classList.remove("hidden");
 
-      this.clearEventListenersForId("game-over-continue-btn", "click");
-
-      this.attachEventListenerSafely("game-over-continue-btn", "click", () => {
-        this.hideGameOverModal();
-        onContinue();
-      });
-    } else {
-      console.error("Game Over modal elements not found.");
-      this.notificationService.success(`${title}: ${message}`);
-      onContinue();
+      this.bindClick(
+        "game-over-continue-btn",
+        () => {
+          this.hideGameOverModal();
+          onContinue();
+        },
+        continueButton,
+        HTMLButtonElement,
+      );
+      return;
     }
+
+    console.error("Game Over modal elements not found.");
+    this.notificationService.success(`${modalTitleText}: ${modalMessageText}`);
+    onContinue();
   }
 
   private hideGameOverModal(): void {
-    const modal = document.getElementById("game-over-modal");
-    if (modal) {
-      modal.classList.add("hidden");
-      this.clearEventListenersForId("game-over-continue-btn", "click");
+    const modalElements = this.getGameOverModalElements();
+    if (modalElements) {
+      modalElements.modal.classList.add("hidden");
     }
+    this.clearEventListenersForId("game-over-continue-btn", "click");
   }
 
   private clearEventListenersForId(elementId: string, eventType: string): void {

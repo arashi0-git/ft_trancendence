@@ -1,0 +1,264 @@
+{
+  "common": {
+    "language": "🌐 Jazyk",
+    "submit": "Potvrdit",
+    "cancel": "Zrušit"
+  },
+  "navigation": {
+    "home": "Domů",
+    "settings": "Nastavení",
+    "logout": "Odhlásit se"
+  },
+  "auth": {
+    "loginTitle": "Přihlášení",
+    "registerTitle": "Vytvořit účet"
+  },
+  "home": {
+    "intro": "Vyber si, jak chceš hrát Pong!",
+    "quickPlay": "🎮 Rychlá hra",
+    "quickPlayDescription": "2 nebo 4 hráči",
+    "tournament": "🏆 Turnaj",
+    "tournamentDescription": "Turnaj pro 2-4-8 hráčů",
+    "gameSettings": "⚙️ Nastavení hry",
+    "gameSettingsDescription": "Přizpůsob si svou hru"
+  },
+  "header": {
+    "title": "ft_transcendence",
+    "settings": "Nastavení",
+    "logout": "Odhlásit se",
+    "login": "Přihlásit se",
+    "language": "🌐 Jazyk",
+    "logoutSuccess": "Úspěšně jste se odhlásili",
+    "logoutError": "Chyba při odhlášení: {{message}}",
+    "logoutErrorFallback": "Během odhlášení došlo k chybě"
+  },
+  "quickPlay": {
+    "pageTitleSetup": "Rychlá hra - nastavení",
+    "pageTitleRegistration": "Registrace hráčů",
+    "pageTitleGame": "Rychlá hra - Pong",
+    "homeButton": "Domů",
+    "backToRegistration": "Zpět na registraci",
+    "startGame": "Spustit hru",
+    "pauseGame": "Pozastavit",
+    "resetGame": "Resetovat",
+    "gameFinished": "Hra skončila!",
+    "winner": "Vítěz",
+    "finalScore": "Konečné skóre",
+    "resetGameButton": "Resetovat hru",
+    "selectPlayers": "Počet hráčů",
+    "playerOption": "{{count}} hráči",
+    "next": "Další",
+    "backToSetup": "Zpět na nastavení",
+    "startGameButton": "Spustit hru",
+    "registrationTitle": "Registrace hráčů",
+    "registrationSubtitle": "Rychlá hra ({{count}} hráči)",
+    "registrationError": "Nepodařilo se zobrazit obrazovku registrace hráčů.",
+    "controls": {
+      "playerLeftOuter": "Hráč 1 (levý krajní): {{keys}}",
+      "playerRightOuter": "Hráč 2 (pravý krajní): {{keys}}",
+      "playerLeftInner": "Hráč 3 (levý vnitřní): {{keys}}",
+      "playerRightInner": "Hráč 4 (pravý vnitřní): {{keys}}"
+    }
+  },
+  "playerSelector": {
+    "label": "Hráč {{index}}",
+    "selectPlaceholder": "Vyber hráče nebo AI",
+    "aiOption": "AI",
+    "customOption": "Zadat vlastní přezdívku",
+    "aiDifficulty": "Obtížnost AI",
+    "difficulty": {
+      "easy": "Snadná",
+      "medium": "Střední",
+      "hard": "Těžká"
+    },
+    "customAlias": "Vlastní přezdívka",
+    "customPlaceholder": "Zadej vlastní přezdívku",
+    "currentUser": "{{username}} (ty)",
+    "aiDisplayName": "AI hráč {{index}} ({{difficulty}})"
+  },
+  "playerRegistration": {
+    "missingPlayers": "{{count}} hráčů není vybráno",
+    "duplicateNames": "Jména hráčů se nesmí opakovat",
+    "requireHuman": "Vyber alespoň jednoho lidského hráče"
+  },
+  "playerRegistrationWithCount": {
+    "title": "Registrace hráčů",
+    "subtitle": "Vyber hráče a připrav turnaj",
+    "tournamentNameLabel": "Název turnaje",
+    "tournamentNamePlaceholder": "Zadej název turnaje",
+    "playerCountLabel": "Počet hráčů",
+    "playerCountOption": "{{count}} hráči",
+    "buttons": {
+      "back": "Zpět",
+      "start": "Spustit"
+    }
+  },
+  "gameSettings": {
+    "title": "Přizpůsobení hry",
+    "description": "Změny zde se použijí na všechny herní režimy.",
+    "defaultLabel": "Použít výchozí nastavení",
+    "fieldColor": "Barva pozadí",
+    "ballColor": "Barva míčku",
+    "paddleColor": "Barva pálky",
+    "paddleLength": "Délka pálek",
+    "paddleLengthOptions": {
+      "short": "Krátká",
+      "normal": "Normální",
+      "long": "Dlouhá"
+    },
+    "ballSize": "Velikost míčku",
+    "ballSizeOptions": {
+      "small": "Malý",
+      "normal": "Normální",
+      "big": "Velký"
+    },
+    "ballSpeed": "Rychlost míčku",
+    "pointsToWin": "Počet bodů pro výhru",
+    "pointsOption": "{{count}} bodů"
+  },
+  "game": {
+    "scoreboard": {
+      "player1": "Hráč 1",
+      "player2": "Hráč 2"
+    }
+  },
+  "login": {
+    "title": "Přihlášení",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "Zadej svůj e-mail",
+    "passwordLabel": "Heslo",
+    "passwordPlaceholder": "Zadej své heslo",
+    "submit": "Přihlásit se",
+    "register": "Nemáš účet? Registruj se",
+    "home": "Zpět na hlavní stránku",
+    "errors": {
+      "required": "E-mail a heslo jsou povinné",
+      "generic": "Přihlášení se nezdařilo",
+      "twoFactorInvalid": "Zadej šestimístný kód z e-mailu",
+      "twoFactorUnexpected": "Neočekávaná odpověď při ověřování kódu.",
+      "twoFactorGeneric": "Ověření se nezdařilo",
+      "twoFactorMissing": "Chybí informace pro dvoufázové ověření"
+    },
+    "status": {
+      "loggingIn": "Přihlašuji...",
+      "verifying": "Ověřuji..."
+    },
+    "twoFactor": {
+      "title": "Dvoufázové ověření",
+      "message": "Zadej ověřovací kód zaslaný na tvůj e-mail.",
+      "codeLabel": "Ověřovací kód",
+      "codePlaceholder": "123456",
+      "submit": "Ověřit kód",
+      "cancel": "Zpět na přihlášení"
+    },
+    "alerts": {
+      "welcome": "Vítej zpět, {{username}}!",
+      "guest": "Uživatel"
+    }
+  },
+  "register": {
+    "pageTitle": "Vytvořit účet",
+    "homeButton": "Domů",
+    "form": {
+      "title": "Vytvořit účet",
+      "usernameLabel": "Uživatelské jméno",
+      "usernamePlaceholder": "Zvol si uživatelské jméno",
+      "emailLabel": "E-mail",
+      "emailPlaceholder": "ty@example.com",
+      "passwordLabel": "Heslo",
+      "passwordPlaceholder": "Zadej bezpečné heslo",
+      "passwordHint": "Alespoň 6 znaků.",
+      "confirmPasswordLabel": "Potvrzení hesla",
+      "confirmPasswordPlaceholder": "Zadej heslo znovu",
+      "submit": "Vytvořit účet",
+      "showLogin": "Už máš účet? Přihlas se",
+      "showHome": "Zpět na hlavní stránku",
+      "status": {
+        "submitting": "Vytvářím účet..."
+      },
+      "errors": {
+        "allRequired": "Všechna pole jsou povinná.",
+        "usernameLength": "Uživatelské jméno musí mít {{min}} až {{max}} znaků.",
+        "emailInvalid": "Zadej platnou e-mailovou adresu.",
+        "passwordLength": "Heslo musí mít alespoň {{min}} znaků.",
+        "passwordMismatch": "Hesla se neshodují.",
+        "generic": "Registrace se nezdařila"
+      }
+    }
+  },
+  "tournament": {
+    "titles": {
+      "setup": "Nastavení turnaje",
+      "registration": "Registrace hráčů",
+      "bracket": "Pavouk turnaje",
+      "match": "Turnajový zápas",
+      "results": "Výsledky turnaje",
+      "mode": "Turnajový režim"
+    },
+    "buttons": {
+      "home": "Domů",
+      "back": "Zpět",
+      "continue": "Pokračovat",
+      "create": "Vytvořit turnaj",
+      "backToSetup": "Zpět na nastavení",
+      "startTournament": "Spustit turnaj",
+      "playMatch": "Hrát",
+      "playing": "Probíhá...",
+      "newTournament": "Nový turnaj",
+      "startMatch": "Spustit zápas",
+      "pause": "Pozastavit",
+      "reset": "Resetovat",
+      "startNewTournament": "Spustit nový turnaj"
+    },
+    "setup": {
+      "nameLabel": "Název turnaje",
+      "namePlaceholder": "Zadej název turnaje",
+      "nameDefault": "Pong turnaj",
+      "playerCountLabel": "Počet hráčů",
+      "playerOption": "{{count}} hráči",
+      "missingName": "Zadej prosím název turnaje"
+    },
+    "registration": {
+      "title": "Registrace hráčů",
+      "subtitle": "Turnaj: {{name}} ({{count}} hráčů)",
+      "error": "Nepodařilo se zobrazit obrazovku registrace hráčů."
+    },
+    "errors": {
+      "playerSelection": "Nepodařilo se získat výběr hráčů.",
+      "startTournament": "Chyba při spuštění turnaje: {{message}}",
+      "criticalMatch": "Při ukládání zápasu došlo k závažné chybě."
+    },
+    "bracket": {
+      "heading": "Aktuální pavouk",
+      "remaining": "{{roundName}} (zbývá {{count}} hráčů)",
+      "unknownPlayer": "Neznámý",
+      "vs": "VS"
+    },
+    "match": {
+      "heading": "{{player1}} vs {{player2}}",
+      "details": "Zápas {{id}} - vítězí první na 5 bodů",
+      "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>: W/S (nahoru/dolů), A/D (doleva/doprava)",
+      "controlsRight": "<strong class=\"text-white\">{{player}}</strong>: ↑/↓ (nahoru/dolů), ←/→ (doleva/doprava)",
+      "playerDefault": "Hráč {{index}}"
+    },
+    "results": {
+      "title": "🏆 Turnaj dokončen!",
+      "winner": "Vítěz: {{name}}",
+      "record": "Výhry: {{wins}} | Prohry: {{losses}}"
+    },
+    "rounds": {
+      "final": "Finále",
+      "semiFinal": "Semifinále",
+      "quarterFinal": "Čtvrtfinále",
+      "round": "Kolo {{number}}"
+    },
+    "notifications": {
+      "tournamentComplete": "Turnaj dokončen! 🏆",
+      "roundBegins": "{{roundName}} začíná! 🥊"
+    },
+    "modal": {
+      "playerWins": "Hráč {{index}} vyhrál!",
+      "matchResult": "{{player}} vyhrává zápas {{score1}} - {{score2}}!"
+    }
+  }
+}

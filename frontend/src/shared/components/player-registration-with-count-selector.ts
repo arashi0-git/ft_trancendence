@@ -10,6 +10,7 @@ export interface PlayerRegistrationWithCountConfig {
   startButtonText?: string;
   backButtonText?: string;
   requireHumanPlayer?: boolean;
+  translations?: Record<string, any>;
   onBack: () => void;
   onSubmit: (data: {
     playerCount: number;
@@ -35,29 +36,35 @@ export class PlayerRegistrationWithCountSelector {
 
   async render(config: PlayerRegistrationWithCountConfig): Promise<void> {
     this.destroy();
+    this.playerRegistrationManager = new PlayerRegistrationManager();
     this.config = config;
     this.currentPlayerCount = 2; // デフォルト2人
 
     if (!config.container) {
       throw new Error("Container element is required");
     }
+    const translations = config.translations || {};
+    const setup = translations.setup || {};
 
     const titleHtml = config.title
       ? `<h3 class="text-lg font-semibold text-white mb-2">${this.escapeHtml(config.title)}</h3>`
       : "";
-
     const subtitleHtml = config.subtitle
       ? `<p class="text-sm text-gray-300 mb-4">${this.escapeHtml(config.subtitle)}</p>`
       : "";
 
+    const tournamentLabel = setup.nameLabel || "Tournament Name";
+    const tournamentPlaceholder =
+      setup.namePlaceholder || "Enter tournament name";
+
     const tournamentNameHtml = config.showTournamentName
       ? `
         <div class="mb-4">
-          <label class="block text-sm font-medium text-white mb-1">Tournament Name</label>
+          <label class="block text-sm font-medium text-white mb-1">${this.escapeHtml(tournamentLabel)}</label>
           <input
             type="text"
             id="tournament-name-input"
-            placeholder="Enter tournament name"
+            placeholder="${this.escapeHtml(tournamentPlaceholder)}"
             maxlength="50"
             value="${this.escapeHtml(config.tournamentNameValue || "")}"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -65,6 +72,12 @@ export class PlayerRegistrationWithCountSelector {
         </div>
       `
       : "";
+
+    const playerCountLabel = setup.playerCountLabel || "Number of Players";
+    const playerCountOptions = this.getPlayerCountOptionsHtml(setup);
+
+    const backButtonText = config.backButtonText ?? "Back";
+    const startButtonText = config.startButtonText ?? "Start";
 
     config.container.innerHTML = `
       <div class="text-center mb-4">
@@ -75,10 +88,9 @@ export class PlayerRegistrationWithCountSelector {
       ${tournamentNameHtml}
 
       <div class="mb-4">
-        <label class="block text-sm font-medium text-white mb-1">Number of Players</label>
+        <label class="block text-sm font-medium text-white mb-1">${this.escapeHtml(playerCountLabel)}</label>
         <select id="player-count-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
-          <option value="2">2 Players</option>
-          <option value="4">4 Players</option>
+          ${playerCountOptions}
         </select>
       </div>
 
@@ -92,7 +104,7 @@ export class PlayerRegistrationWithCountSelector {
           type="button"
           class="flex-1 bg-purple-400 hover:bg-purple-600 text-white py-2 px-4 rounded border border-purple-400 shadow-lg"
         >
-          ${this.escapeHtml(config.backButtonText || "Back")}
+          ${this.escapeHtml(backButtonText)}
         </button>
         <button
           id="start-button"
@@ -100,7 +112,7 @@ export class PlayerRegistrationWithCountSelector {
           class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg"
           disabled
         >
-          ${this.escapeHtml(config.startButtonText || "Start")}
+          ${this.escapeHtml(startButtonText)}
         </button>
       </div>
     `;
@@ -114,11 +126,38 @@ export class PlayerRegistrationWithCountSelector {
     }
   }
 
+  private getPlayerCountOptionsHtml(setup: Record<string, any>): string {
+    return [2, 4]
+      .map((count) => {
+        const labelTemplate = setup.playerOption || "{{count}} Players";
+        const label = this.formatText(labelTemplate, {
+          count,
+        });
+        const selected =
+          count === this.currentPlayerCount ? ' selected="selected"' : "";
+        return `<option value="${count}"${selected}>${this.escapeHtml(label)}</option>`;
+      })
+      .join("");
+  }
+
+  private formatText(
+    template: string,
+    variables: Record<string, string | number>,
+  ): string {
+    return Object.entries(variables).reduce(
+      (acc, [key, value]) =>
+        acc.replace(new RegExp(`{{\\s*${key}\\s*}}`, "g"), String(value)),
+      template,
+    );
+  }
+
   private async renderPlayerRegistration(): Promise<void> {
     if (!this.config) return;
 
     const container = document.getElementById("player-registration-container");
     if (!container) return;
+    const translations = this.config.translations || {};
+    const playerSelector = translations.playerSelector || {};
 
     try {
       await this.playerRegistrationManager.render({
@@ -126,6 +165,7 @@ export class PlayerRegistrationWithCountSelector {
         playerCount: this.currentPlayerCount,
         startButtonId: "start-button",
         requireHumanPlayer: this.config.requireHumanPlayer,
+        translations: playerSelector,
         onSelectionChange: () => {
           this.validateForm();
         },

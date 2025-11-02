@@ -115,9 +115,7 @@ export class QuickPlayPage extends SpacePageBase {
     const content = `
       <div class="flex justify-between items-center mb-4">
         <h2 id="quick-play-page-title" class="text-2xl font-bold text-white">Player Registration</h2>
-        <div id="quick-play-header-actions" class="space-x-2">
-          <button id="quick-play-home-button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">Home</button>
-        </div>
+        <div id="quick-play-header-actions" class="space-x-2"></div>
       </div>
       <div id="quick-play-content"></div>
     `;
@@ -168,11 +166,7 @@ export class QuickPlayPage extends SpacePageBase {
     }
 
     let title = "Player Registration";
-    let actionsHtml = `
-      <button id="quick-play-home-button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">
-        Home
-      </button>
-    `;
+    let actionsHtml = "";
 
     if (this.currentStep === "game") {
       title = "Quick Play - Pong";
@@ -186,13 +180,7 @@ export class QuickPlayPage extends SpacePageBase {
     titleElement.textContent = title;
     actionsContainer.innerHTML = actionsHtml;
 
-    if (this.currentStep === "registration") {
-      document
-        .getElementById("quick-play-home-button")
-        ?.addEventListener("click", () => {
-          this.service.navigateToHome();
-        });
-    } else {
+    if (this.currentStep === "game") {
       document
         .getElementById("quick-play-header-back")
         ?.addEventListener("click", async () => {

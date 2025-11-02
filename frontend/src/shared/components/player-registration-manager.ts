@@ -1,5 +1,16 @@
 import { PlayerSelector } from "./player-selector";
 import type { PlayerOption } from "../types/tournament";
+import { i18next } from "../../i18n";
+
+type TranslateFn = (key: string, options?: Record<string, unknown>) => unknown;
+
+interface PlayerRegistrationMessages {
+  missingPlayers: string;
+  duplicateNames: string;
+  requireHuman: string;
+}
+
+type PlayerRegistrationMessagesInput = Partial<PlayerRegistrationMessages>;
 
 export interface PlayerRegistrationConfig {
   container: HTMLElement;
@@ -8,6 +19,7 @@ export interface PlayerRegistrationConfig {
   subtitle?: string;
   startButtonId: string;
   requireHumanPlayer?: boolean;
+  translations?: Record<string, any>;
   onSelectionChange?: (selections: (PlayerOption | null)[]) => void;
 }
 
@@ -15,11 +27,21 @@ export class PlayerRegistrationManager {
   private config: PlayerRegistrationConfig | null = null;
   private playerSelectors: PlayerSelector[] = [];
   private playerSelections: (PlayerOption | null)[] = [];
+  private readonly translateFn: TranslateFn | null;
+  private messages: PlayerRegistrationMessages;
+
+  constructor(translateFn?: TranslateFn) {
+    this.translateFn =
+      translateFn ??
+      (typeof i18next?.t === "function" ? i18next.t.bind(i18next) : null);
+    this.messages = this.buildMessages();
+  }
 
   async render(config: PlayerRegistrationConfig): Promise<void> {
     try {
       this.destroy();
       this.config = config;
+      this.messages = this.buildMessages();
 
       if (!config.container) {
         throw new Error("Container element is required");
@@ -73,7 +95,11 @@ export class PlayerRegistrationManager {
       const selectorDiv = document.createElement("div");
       playerSelectorsContainer.appendChild(selectorDiv);
 
-      const playerSelector = new PlayerSelector(selectorDiv, i);
+      const playerSelector = new PlayerSelector(
+        selectorDiv,
+        i,
+        this.translateFn ?? undefined,
+      );
       try {
         await playerSelector.render();
 
@@ -144,13 +170,15 @@ export class PlayerRegistrationManager {
 
     // エラーメッセージの優先順位
     if (missingPlayers > 0) {
-      return `${missingPlayers}人のプレイヤーが選択されていません`;
+      return this.formatText(this.messages.missingPlayers, {
+        count: missingPlayers,
+      });
     }
     if (hasDuplicateNames) {
-      return "プレイヤー名が重複しています";
+      return this.messages.duplicateNames;
     }
     if (this.config?.requireHumanPlayer && !hasHumanPlayer) {
-      return "少なくとも1人は人間プレイヤーを選択してください";
+      return this.messages.requireHuman;
     }
 
     return null;
@@ -162,6 +190,51 @@ export class PlayerRegistrationManager {
     });
     this.playerSelectors = [];
     this.playerSelections = [];
+  }
+
+  private buildMessages(): PlayerRegistrationMessages {
+    const defaults: PlayerRegistrationMessages = {
+      missingPlayers: "{{count}} players are not selected",
+      duplicateNames: "Player names must be unique",
+      requireHuman: "Please select at least one human player",
+    };
+
+    if (!this.translateFn) {
+      return defaults;
+    }
+
+    const localized = this.translateFn("playerRegistration", {
+      returnObjects: true,
+    });
+
+    return this.mergeMessages(defaults, localized);
+  }
+
+  private mergeMessages(
+    base: PlayerRegistrationMessages,
+    localized: unknown,
+  ): PlayerRegistrationMessages {
+    if (!localized || typeof localized !== "object") {
+      return base;
+    }
+
+    const overrides = localized as PlayerRegistrationMessagesInput;
+
+    return {
+      ...base,
+      ...overrides,
+    };
+  }
+
+  private formatText(
+    template: string,
+    variables: Record<string, string | number>,
+  ): string {
+    return Object.entries(variables).reduce(
+      (acc, [key, value]) =>
+        acc.replace(new RegExp(`{{\\s*${key}\\s*}}`, "g"), String(value)),
+      template,
+    );
   }
 
   private escapeHtml(text: string): string {
