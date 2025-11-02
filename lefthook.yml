@@ -17,16 +17,14 @@ pre-commit:
 
     lint-backend:
       glob: "backend/src/**/*.{ts,tsx}"
-      run: npm run lint:fix --prefix backend
-      stage_fixed: true
+      run: npm run lint --prefix backend
       skip:
         - merge
         - rebase
 
     lint-frontend:
       glob: "frontend/src/**/*.{ts,tsx}"
-      run: npm run lint:fix --prefix frontend
-      stage_fixed: true
+      run: npm run lint --prefix frontend
       skip:
         - merge
         - rebase
