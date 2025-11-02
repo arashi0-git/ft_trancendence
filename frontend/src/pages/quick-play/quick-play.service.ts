@@ -12,7 +12,8 @@ export class QuickPlayService extends BaseGameService {
       canvasId: canvasId,
       playerCount: playerCount,
       aiPlayers: aiPlayers,
-      onGameEnd: (data: any) => this.handleGameEnd(data),
+      onGameEnd: (data: { winner: number; score1: number; score2: number }) =>
+        this.handleGameEnd(data),
     });
   }
 
@@ -64,7 +65,11 @@ export class QuickPlayService extends BaseGameService {
     return element instanceof HTMLButtonElement ? element : null;
   }
 
-  private handleGameEnd(data: any): void {
+  private handleGameEnd(data: {
+    winner: number;
+    score1: number;
+    score2: number;
+  }): void {
     const modal = document.getElementById("game-over-modal");
     const winnerNameEl = document.getElementById("winner-name");
     const finalScoreEl = document.getElementById("final-score");

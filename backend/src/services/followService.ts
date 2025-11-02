@@ -40,9 +40,16 @@ export class FollowService {
 
     try {
       await FollowModel.followUser(followerId, targetUser.id);
-    } catch (error: any) {
-      if (error.code === "SQLITE_CONSTRAINT" || error.errno === 19) {
-        throw new Error("You already follow this user");
+    } catch (error) {
+      if (
+        error &&
+        typeof error === "object" &&
+        ("code" in error || "errno" in error)
+      ) {
+        const dbError = error as { code?: string; errno?: number };
+        if (dbError.code === "SQLITE_CONSTRAINT" || dbError.errno === 19) {
+          throw new Error("You already follow this user");
+        }
       }
       throw error;
     }

@@ -65,21 +65,16 @@ export class AuthService {
   }
 
   static async logout(userId: number, token?: string | null): Promise<void> {
-    try {
-      // If a token is provided, ensure it belongs to the user calling logout.
-      // This prevents invalidation requests for other users.
-      if (token) {
-        const decoded = AuthUtils.verifyToken(token);
-        if (!decoded || decoded.id !== userId) {
-          throw new Error("Token does not belong to the given user");
-        }
+    // If a token is provided, ensure it belongs to the user calling logout.
+    // This prevents invalidation requests for other users.
+    if (token) {
+      const decoded = AuthUtils.verifyToken(token);
+      if (!decoded || decoded.id !== userId) {
+        throw new Error("Token does not belong to the given user");
       }
-
-      // Existing behavior: set user offline and increment token_version to invalidate existing tokens.
-      await UserService.updateUserOnlineStatus(userId, false);
-    } catch (error) {
-      // Propagate error so the route can log and return an appropriate response.
-      throw error;
     }
+
+    // Existing behavior: set user offline and increment token_version to invalidate existing tokens.
+    await UserService.updateUserOnlineStatus(userId, false);
   }
 }

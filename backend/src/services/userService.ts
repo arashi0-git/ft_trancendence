@@ -36,16 +36,17 @@ export class UserService {
       });
 
       return stripPassword(newUser);
-    } catch (error: any) {
-      if (
-        error.message?.includes("UNIQUE constraint failed") // Fallback for race conditions
-      ) {
-        if (error.message?.includes("users.email")) {
-          throw new Error("User with this email already exists");
-        } else if (error.message?.includes("users.username")) {
-          throw new Error("User with this username already exists");
-        } else {
-          throw new Error("User with this email or username already exists");
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes("UNIQUE constraint failed")) {
+          // Fallback for race conditions
+          if (error.message.includes("users.email")) {
+            throw new Error("User with this email already exists");
+          } else if (error.message.includes("users.username")) {
+            throw new Error("User with this username already exists");
+          } else {
+            throw new Error("User with this email or username already exists");
+          }
         }
       }
       throw error;
@@ -194,16 +195,15 @@ export class UserService {
 
     try {
       await UserModel.updateProfile(id, profileUpdates);
-    } catch (error: any) {
-      if (
-        typeof error.message === "string" &&
-        error.message.includes("UNIQUE constraint failed")
-      ) {
-        if (error.message.includes("users.username")) {
-          throw new Error("Username is already taken");
-        }
-        if (error.message.includes("users.email")) {
-          throw new Error("Email is already in use");
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes("UNIQUE constraint failed")) {
+          if (error.message.includes("users.username")) {
+            throw new Error("Username is already taken");
+          }
+          if (error.message.includes("users.email")) {
+            throw new Error("Email is already in use");
+          }
         }
       }
       throw error;

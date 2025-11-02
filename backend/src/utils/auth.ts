@@ -2,6 +2,13 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { UserWithoutPassword } from "../models/user";
 
+interface JWTPayload {
+  id: number;
+  username: string;
+  email: string;
+  tokenVersion?: number;
+}
+
 const JWT_SECRET = process.env.JWT_SECRET || "";
 if (!JWT_SECRET) {
   throw new Error("JWT_SECRET must be set");
@@ -33,9 +40,9 @@ export class AuthUtils {
     );
   }
 
-  static verifyToken(token: string): any {
+  static verifyToken(token: string): JWTPayload {
     try {
-      return jwt.verify(token, JWT_SECRET);
+      return jwt.verify(token, JWT_SECRET) as JWTPayload;
     } catch (error) {
       throw new Error("Invalid token");
     }

@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { AuthUtils } from "../utils/auth";
 import { UserService } from "../services/userService";
+import { UserRecord } from "../models/user";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -33,12 +34,12 @@ export async function authenticateToken(
     }
 
     // Check token version to invalidate old tokens
-    const userWithVersion = user as any;
+    const userRecord = user as unknown as UserRecord;
     if (
       decoded.tokenVersion !== undefined &&
-      userWithVersion.token_version !== undefined
+      userRecord.token_version !== undefined
     ) {
-      if (decoded.tokenVersion < userWithVersion.token_version) {
+      if (decoded.tokenVersion < userRecord.token_version) {
         return reply.status(401).send({ error: "Token has been invalidated" });
       }
     }
@@ -55,7 +56,7 @@ export async function authenticateToken(
 
 export async function optionalAuth(
   request: FastifyRequest,
-  reply: FastifyReply,
+  _reply: FastifyReply,
 ) {
   try {
     const token = AuthUtils.extractTokenFromHeader(
@@ -72,11 +73,11 @@ export async function optionalAuth(
       return;
     }
 
-    const userWithVersion = user as any;
+    const userRecord = user as unknown as UserRecord;
     if (
       decoded.tokenVersion !== undefined &&
-      userWithVersion.token_version !== undefined &&
-      decoded.tokenVersion < userWithVersion.token_version
+      userRecord.token_version !== undefined &&
+      decoded.tokenVersion < userRecord.token_version
     ) {
       return;
     }
