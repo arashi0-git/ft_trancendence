@@ -1,17 +1,30 @@
 pre-commit:
   parallel: true
   commands:
-    typecheck:
-      glob: "{src,backend/src}/**/*.{ts,tsx}"
-      run: npm run typecheck
+    typecheck-backend:
+      glob: "backend/src/**/*.{ts,tsx}"
+      run: npm run typecheck --prefix backend
       skip:
         - merge
         - rebase
 
-    lint:
-      glob: "{src,backend/src}/**/*.{ts,tsx}"
-      run: npm run lint:fix
-      stage_fixed: true
+    typecheck-frontend:
+      glob: "frontend/src/**/*.{ts,tsx}"
+      run: npm run typecheck --prefix frontend
+      skip:
+        - merge
+        - rebase
+
+    lint-backend:
+      glob: "backend/src/**/*.{ts,tsx}"
+      run: npm run lint --prefix backend
+      skip:
+        - merge
+        - rebase
+
+    lint-frontend:
+      glob: "frontend/src/**/*.{ts,tsx}"
+      run: npm run lint --prefix frontend
       skip:
         - merge
         - rebase

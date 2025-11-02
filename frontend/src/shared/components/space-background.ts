@@ -175,7 +175,9 @@ export class SpaceBackground {
   public dispose() {
     try {
       window.removeEventListener("resize", this.onResize);
-    } catch {}
+    } catch {
+      // Ignore errors during cleanup
+    }
     this.engine.stopRenderLoop();
     this.scene.dispose();
     this.engine.dispose();

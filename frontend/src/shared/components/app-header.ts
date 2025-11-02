@@ -2,6 +2,14 @@ import { AuthService } from "../services/auth-service";
 import { NotificationService } from "../services/notification.service";
 import { router } from "../../routes/router";
 
+// グローバルwindowの型拡張
+declare global {
+  interface Window {
+    headerNavigate: (path: string) => void;
+    headerLogout: () => Promise<void>;
+  }
+}
+
 export class AppHeader {
   private container: HTMLElement;
 
@@ -45,11 +53,11 @@ export class AppHeader {
     }
 
     // グローバル関数を設定
-    (window as any).headerNavigate = (path: string) => {
+    window.headerNavigate = (path: string) => {
       router.navigate(path);
     };
 
-    (window as any).headerLogout = async () => {
+    window.headerLogout = async () => {
       try {
         await AuthService.logout();
         NotificationService.getInstance().success("Logged out successfully");

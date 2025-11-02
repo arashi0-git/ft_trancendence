@@ -63,21 +63,16 @@ export async function userRoutes(fastify: FastifyInstance) {
               });
             }
 
-            let challenge;
-            try {
-              challenge = await TwoFactorService.startChallenge(
-                user,
-                "email_change",
-                {
-                  payload: { email: normalizedEmail },
-                  deliveryEmail: normalizedEmail,
-                  messageOverride:
-                    TwoFactorService.buildEmailChangeMessage(normalizedEmail),
-                },
-              );
-            } catch (challengeError) {
-              throw challengeError;
-            }
+            const challenge = await TwoFactorService.startChallenge(
+              user,
+              "email_change",
+              {
+                payload: { email: normalizedEmail },
+                deliveryEmail: normalizedEmail,
+                messageOverride:
+                  TwoFactorService.buildEmailChangeMessage(normalizedEmail),
+              },
+            );
 
             let resultUser = user;
             let resultToken: string | undefined;

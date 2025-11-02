@@ -420,12 +420,22 @@ export class SecuritySection {
   }
 
   private getApiUrl(): string {
-    return (
-      (typeof (window as any).__API_BASE_URL__ !== "undefined" &&
-        (window as any).__API_BASE_URL__) ||
-      process.env.API_BASE_URL ||
-      "/api"
-    );
+    if (typeof window !== "undefined") {
+      const browserWindow = window as typeof window & {
+        __API_BASE_URL__?: string;
+      };
+      const browserBase = browserWindow.__API_BASE_URL__;
+      if (typeof browserBase !== "undefined" && browserBase) {
+        return browserBase;
+      }
+    }
+
+    const envBase = process.env.API_BASE_URL;
+    if (envBase) {
+      return envBase;
+    }
+
+    return "/api";
   }
 
   private getAuthHeaders(): HeadersInit {
