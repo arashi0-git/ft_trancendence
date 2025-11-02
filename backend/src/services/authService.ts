@@ -40,7 +40,7 @@ export class AuthService {
     }
 
     if (userRecord.two_factor_enabled) {
-      const challenge = await TwoFactorService.startChallenge(userRecord);
+      const challenge = await TwoFactorService.startLoginChallenge(userRecord);
       console.info(`2FA challenge issued for user: ${userRecord.id}`);
       return {
         requiresTwoFactor: true,
@@ -48,6 +48,8 @@ export class AuthService {
         delivery: challenge.delivery,
         expiresIn: challenge.expiresIn,
         message: challenge.message,
+        destination: challenge.destination,
+        purpose: challenge.purpose,
       };
     }
 

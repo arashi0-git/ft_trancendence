@@ -5,13 +5,14 @@ import type {
   AuthResponse,
   UpdateUserSettingsPayload,
   UpdateUserSettingsResponse,
-  FollowingListResponse,
-  FollowUserResponse,
-  FollowedUserSummary,
+  FriendsListResponse,
+  FriendResponse,
+  FriendSummary,
   TwoFactorChallengeResponse,
   AuthResult,
   TwoFactorVerifyPayload,
   TwoFactorStatusResponse,
+  TwoFactorVerificationResponse,
 } from "../types/user";
 
 declare const __API_BASE_URL__: string | undefined;
@@ -136,7 +137,7 @@ export class AuthService {
 
   static async verifyTwoFactorCode(
     payload: TwoFactorVerifyPayload,
-  ): Promise<AuthResponse> {
+  ): Promise<TwoFactorVerificationResponse> {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/2fa/verify`, {
         method: "POST",
@@ -157,7 +158,7 @@ export class AuthService {
         localStorage.setItem("auth_token", data.token);
       }
 
-      return data as AuthResponse;
+      return data as TwoFactorVerificationResponse;
     } catch (error) {
       console.error("Two-factor verification error:", error);
       throw error;
@@ -185,6 +186,9 @@ export class AuthService {
       }
 
       const data = (await response.json()) as TwoFactorChallengeResponse;
+      if (data.token) {
+        localStorage.setItem("auth_token", data.token);
+      }
       return data;
     } catch (error) {
       console.error("Two-factor resend error:", error);
@@ -192,11 +196,14 @@ export class AuthService {
     }
   }
 
-  static async enableTwoFactor(): Promise<TwoFactorStatusResponse> {
+  static async enableTwoFactor(): Promise<
+    TwoFactorStatusResponse | TwoFactorChallengeResponse
+  > {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/2fa/setup`, {
         method: "POST",
-        headers: this.getAuthHeaders({ includeJson: false }),
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({}),
       });
 
       const data = await response.json();
@@ -209,6 +216,14 @@ export class AuthService {
         localStorage.setItem("auth_token", data.token);
       }
 
+      if (data.requiresTwoFactor) {
+        return data as TwoFactorChallengeResponse;
+      }
+
+      if (!data.user) {
+        throw new Error("Failed to enable two-factor");
+      }
+
       return data as TwoFactorStatusResponse;
     } catch (error) {
       console.error("Two-factor enable error:", error);
@@ -216,14 +231,14 @@ export class AuthService {
     }
   }
 
-  static async disableTwoFactor(
-    currentPassword: string,
-  ): Promise<TwoFactorStatusResponse> {
+  static async disableTwoFactor(): Promise<
+    TwoFactorStatusResponse | TwoFactorChallengeResponse
+  > {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/2fa/disable`, {
         method: "POST",
         headers: this.getAuthHeaders(),
-        body: JSON.stringify({ currentPassword }),
+        body: JSON.stringify({}),
       });
 
       const data = await response.json();
@@ -234,6 +249,14 @@ export class AuthService {
 
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
+      }
+
+      if (data.requiresTwoFactor) {
+        return data as TwoFactorChallengeResponse;
+      }
+
+      if (!data.user) {
+        throw new Error("Failed to disable two-factor");
       }
 
       return data as TwoFactorStatusResponse;
@@ -329,7 +352,7 @@ export class AuthService {
     }
   }
 
-  static async getFollowing(): Promise<FollowedUserSummary[]> {
+  static async getFriends(): Promise<FriendSummary[]> {
     try {
       const response = await fetch(
         `${API_BASE_URL.replace(/\/$/, "")}/users/me/following`,
@@ -345,14 +368,15 @@ export class AuthService {
         throw new Error(data.error || "Failed to load friends");
       }
 
-      return (data as FollowingListResponse).following;
+      const listResponse = data as FriendsListResponse;
+      return listResponse.friends ?? listResponse.following ?? [];
     } catch (error) {
-      console.error("Get following error:", error);
+      console.error("Get friends error:", error);
       throw error;
     }
   }
 
-  static async followUser(username: string): Promise<FollowedUserSummary> {
+  static async addFriend(username: string): Promise<FriendSummary> {
     try {
       const response = await fetch(
         `${API_BASE_URL.replace(/\/$/, "")}/users/me/following`,
@@ -366,17 +390,17 @@ export class AuthService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to follow user");
+        throw new Error(data.error || "Failed to add friend");
       }
 
-      return (data as FollowUserResponse).user;
+      return (data as FriendResponse).user;
     } catch (error) {
-      console.error("Follow user error:", error);
+      console.error("Add friend error:", error);
       throw error;
     }
   }
 
-  static async unfollowUser(userId: number): Promise<void> {
+  static async removeFriend(userId: number): Promise<void> {
     try {
       const response = await fetch(
         `${API_BASE_URL.replace(/\/$/, "")}/users/me/following/${userId}`,
@@ -393,14 +417,14 @@ export class AuthService {
         );
       }
     } catch (error) {
-      console.error("Unfollow user error:", error);
+      console.error("Remove friend error:", error);
       throw error;
     }
   }
 
   static async updateSettings(
     payload: UpdateUserSettingsPayload,
-  ): Promise<UpdateUserSettingsResponse> {
+  ): Promise<UpdateUserSettingsResponse | TwoFactorChallengeResponse> {
     try {
       const response = await fetch(
         `${API_BASE_URL.replace(/\/$/, "")}/users/me`,
@@ -419,6 +443,14 @@ export class AuthService {
 
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
+      }
+
+      if (data.requiresTwoFactor) {
+        return data as TwoFactorChallengeResponse;
+      }
+
+      if (!data.user) {
+        throw new Error("Failed to update settings");
       }
 
       return data as UpdateUserSettingsResponse;

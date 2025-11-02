@@ -8,6 +8,7 @@ import fs from "fs";
 import crypto from "crypto";
 import "@fastify/multipart";
 import sharp from "sharp";
+import { TwoFactorService } from "../services/twoFactorService";
 
 const AVATAR_UPLOAD_DIR = path.join(process.cwd(), "uploads", "avatars");
 const ALLOWED_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp"]);
@@ -23,9 +24,61 @@ export async function userRoutes(fastify: FastifyInstance) {
           return reply.status(401).send({ error: "User not authenticated" });
         }
 
+        const payload: UpdateUserSettingsRequest = {
+          ...(request.body || {}),
+        };
+
+        const user = await UserService.getUserById(request.user.id);
+        if (!user) {
+          return reply.status(404).send({ error: "User not found" });
+        }
+
+        const emailCandidate =
+          typeof payload.email === "string" ? payload.email : undefined;
+        const requiresEmailTwoFactor =
+          Boolean(emailCandidate) && user.two_factor_enabled;
+
+        if (requiresEmailTwoFactor) {
+          const normalizedEmail = await UserService.validateEmailChange(
+            user,
+            emailCandidate as string,
+          );
+
+          if (normalizedEmail !== user.email.toLowerCase()) {
+            const { email: _unused, ...updatesWithoutEmail } = payload;
+            const result = await UserService.updateUserSettings(
+              request.user.id,
+              updatesWithoutEmail,
+            );
+
+            const challenge = await TwoFactorService.startChallenge(
+              user,
+              "email_change",
+              {
+                payload: { email: normalizedEmail },
+                deliveryEmail: normalizedEmail,
+                messageOverride:
+                  TwoFactorService.buildEmailChangeMessage(normalizedEmail),
+              },
+            );
+
+            return reply.send({
+              requiresTwoFactor: true,
+              twoFactorToken: challenge.token,
+              delivery: challenge.delivery,
+              expiresIn: challenge.expiresIn,
+              message: challenge.message,
+              purpose: challenge.purpose,
+              destination: challenge.destination,
+              user: result.user,
+              token: result.token,
+            });
+          }
+        }
+
         const result = await UserService.updateUserSettings(
           request.user.id,
-          request.body || {},
+          payload,
         );
 
         return reply.send(result);
