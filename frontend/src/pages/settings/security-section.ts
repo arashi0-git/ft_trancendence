@@ -288,14 +288,15 @@ export class SecuritySection {
         code,
       });
 
+      const pendingCallback = this.pendingTwoFactorCallback;
       this.hideTwoFactorDialog();
 
       if (result.user) {
         this.onUserUpdate(result.user);
       }
 
-      if (this.pendingTwoFactorCallback) {
-        this.pendingTwoFactorCallback(result);
+      if (pendingCallback) {
+        pendingCallback(result);
       } else {
         NotificationService.getInstance().success(
           "Two-factor verification complete.",
@@ -375,6 +376,10 @@ export class SecuritySection {
     }
 
     this.render(user);
+
+    if (this.activeTwoFactorChallenge) {
+      this.setTwoFactorButtonsDisabled(true);
+    }
   }
 
   private setTwoFactorButtonsDisabled(disabled: boolean): void {
