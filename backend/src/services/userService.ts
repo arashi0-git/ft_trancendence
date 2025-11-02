@@ -109,13 +109,14 @@ export class UserService {
       });
 
       return stripPassword(newUser);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (
-        error.message?.includes("UNIQUE constraint failed") // Fallback for race conditions
+        error instanceof Error &&
+        error.message.includes("UNIQUE constraint failed") // Fallback for race conditions
       ) {
-        if (error.message?.includes("users.email")) {
+        if (error.message.includes("users.email")) {
           throw new Error("User with this email already exists");
-        } else if (error.message?.includes("users.username")) {
+        } else if (error.message.includes("users.username")) {
           throw new Error("User with this username already exists");
         } else {
           throw new Error("User with this email or username already exists");
@@ -255,9 +256,9 @@ export class UserService {
 
     try {
       await UserModel.updateProfile(id, profileUpdates);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (
-        typeof error.message === "string" &&
+        error instanceof Error &&
         error.message.includes("UNIQUE constraint failed")
       ) {
         if (error.message.includes("users.username")) {

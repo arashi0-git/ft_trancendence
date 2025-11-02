@@ -8,6 +8,13 @@ if (!JWT_SECRET) {
 }
 const SALT_ROUNDS = 12;
 
+export interface AuthTokenPayload extends jwt.JwtPayload {
+  id: number;
+  username: string;
+  email: string;
+  tokenVersion?: number;
+}
+
 export class AuthUtils {
   static async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, SALT_ROUNDS);
@@ -33,9 +40,25 @@ export class AuthUtils {
     );
   }
 
-  static verifyToken(token: string): any {
+  static verifyToken(token: string): AuthTokenPayload {
     try {
-      return jwt.verify(token, JWT_SECRET);
+      const decoded = jwt.verify(token, JWT_SECRET);
+
+      if (typeof decoded === "string") {
+        throw new Error("Invalid token payload");
+      }
+
+      const payload = decoded as AuthTokenPayload;
+
+      if (
+        typeof payload.id !== "number" ||
+        typeof payload.username !== "string" ||
+        typeof payload.email !== "string"
+      ) {
+        throw new Error("Invalid token payload");
+      }
+
+      return payload;
     } catch (error) {
       throw new Error("Invalid token");
     }

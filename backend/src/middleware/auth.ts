@@ -33,12 +33,11 @@ export async function authenticateToken(
     }
 
     // Check token version to invalidate old tokens
-    const userWithVersion = user as any;
     if (
       decoded.tokenVersion !== undefined &&
-      userWithVersion.token_version !== undefined
+      user.token_version !== undefined
     ) {
-      if (decoded.tokenVersion < userWithVersion.token_version) {
+      if (decoded.tokenVersion < user.token_version) {
         return reply.status(401).send({ error: "Token has been invalidated" });
       }
     }
@@ -72,11 +71,10 @@ export async function optionalAuth(
       return;
     }
 
-    const userWithVersion = user as any;
     if (
       decoded.tokenVersion !== undefined &&
-      userWithVersion.token_version !== undefined &&
-      decoded.tokenVersion < userWithVersion.token_version
+      user.token_version !== undefined &&
+      decoded.tokenVersion < user.token_version
     ) {
       return;
     }
