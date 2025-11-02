@@ -1,4 +1,5 @@
 import { PublicUser } from "../models/user";
+import type { TwoFactorPurpose } from "../models/twoFactorChallenge";
 
 export interface CreateUserRequest {
   username: string;
@@ -23,8 +24,12 @@ export interface TwoFactorChallengeResponse {
   requiresTwoFactor: true;
   twoFactorToken: string;
   delivery: "email";
+  destination?: string;
   expiresIn: number;
   message: string;
+  purpose: TwoFactorPurpose;
+  user?: PublicUser;
+  token?: string;
 }
 
 export interface TwoFactorVerifyRequest {
@@ -32,8 +37,17 @@ export interface TwoFactorVerifyRequest {
   code: string;
 }
 
+export interface TwoFactorVerificationResponse extends AuthResponse {
+  operation: TwoFactorPurpose;
+  twoFactorEnabled?: boolean;
+}
+
 export interface TwoFactorResendRequest {
   token: string;
+}
+
+export interface EnableTwoFactorRequest {
+  currentPassword: string;
 }
 
 export interface DisableTwoFactorRequest {
