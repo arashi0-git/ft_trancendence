@@ -11,6 +11,7 @@ import {
 export class AppHeader {
   private container: HTMLElement;
   private unsubscribeLanguage?: () => void;
+  private globalClickHandler?: (event: Event) => void;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -102,12 +103,12 @@ export class AppHeader {
       menu?.classList.toggle("hidden");
     };
 
-    if (!(window as any).__headerLanguageMenuListener) {
-      window.addEventListener("click", () => {
+    if (!this.globalClickHandler) {
+      this.globalClickHandler = () => {
         const menu = document.getElementById("header-language-menu");
         menu?.classList.add("hidden");
-      });
-      (window as any).__headerLanguageMenuListener = true;
+      };
+      window.addEventListener("click", this.globalClickHandler);
     }
 
     (window as any).headerSetLanguage = async (
@@ -154,5 +155,9 @@ export class AppHeader {
   destroy(): void {
     this.unsubscribeLanguage?.();
     this.unsubscribeLanguage = undefined;
+    if (this.globalClickHandler) {
+      window.removeEventListener("click", this.globalClickHandler);
+      this.globalClickHandler = undefined;
+    }
   }
 }

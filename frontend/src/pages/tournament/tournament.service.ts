@@ -100,6 +100,9 @@ export class TournamentService {
     this.navigationCopy = this.buildNavigationCopy();
 
     if (this.contentContainer) {
+      if (this.currentStep === "match" && this.gameManager.isGameActive()) {
+        return;
+      }
       this.initializeCurrentView();
     }
   }
