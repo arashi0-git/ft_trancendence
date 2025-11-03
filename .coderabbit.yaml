@@ -1,13 +1,8 @@
 language: "ja-JP"
-review:
+reviews:
   language: ja                # 日本語でコメント
-  level: deep                 # コード設計まで踏み込んだレビュー
-  focus:
-    - typesafety              # 型安全性
-    - readability             # 可読性
-    - maintainability         # 保守性
-    - best_practices          # TypeScriptのベストプラクティス
-  ignore:
+  profile: chill                 # コード設計まで踏み込んだレビュー
+    ignore:
     - dist/
     - node_modules/
     - tests/
