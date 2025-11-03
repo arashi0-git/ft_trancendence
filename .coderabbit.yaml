@@ -2,7 +2,7 @@ language: "ja-JP"
 reviews:
   language: ja                # 日本語でコメント
   profile: chill                 # コード設計まで踏み込んだレビュー
-    ignore:
+    path_filters:
     - dist/
     - node_modules/
     - tests/
