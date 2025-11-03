@@ -3,13 +3,29 @@ import { NotificationService } from "../../shared/services/notification.service"
 import { router } from "../../routes/router";
 import { TournamentDataService } from "../../shared/services/tournament-data.service";
 import { PlayerRegistrationWithCountSelector } from "../../shared/components/player-registration-with-count-selector";
-import { onLanguageChange, translate } from "../../i18n";
+import { onLanguageChange, translate, i18next } from "../../i18n";
+
+type TranslationSection = Record<string, string>;
+interface TournamentTranslations {
+  titles?: TranslationSection;
+  buttons?: TranslationSection;
+  setup?: TranslationSection;
+  registration?: TranslationSection;
+  errors?: TranslationSection;
+  bracket?: TranslationSection;
+  match?: TranslationSection;
+  results?: TranslationSection;
+  rounds?: TranslationSection;
+  notifications?: TranslationSection;
+  modal?: TranslationSection;
+  playerSelector?: TranslationSection;
+}
 
 export type TournamentStep = "registration" | "bracket" | "match" | "results";
 
 type ViewRenderer = (container: HTMLElement) => void | Promise<void>;
 
-type TranslateFn = (key: string, options?: Record<string, unknown>) => unknown;
+type TranslateFn = typeof translate;
 
 type NavigationKey = TournamentStep | "fallback";
 
@@ -33,9 +49,7 @@ interface GameOverModalElements {
   continueButton: HTMLButtonElement;
 }
 
-/**
- * TournamentService - トーナメント機能の管理
- */
+// TournamentService - トーナメント機能の管理
 export class TournamentService {
   private currentStep: TournamentStep = "registration";
   private currentPath: string = "/tournament";
@@ -46,7 +60,7 @@ export class TournamentService {
   private readonly viewRenderers: Record<TournamentStep, ViewRenderer>;
   private navigationCopy: NavigationCopy;
   private readonly translateFn: TranslateFn | null;
-  private t: Record<string, any>;
+  private t: TournamentTranslations;
   private contentContainer: HTMLElement | null = null;
   private cachedGameOverModal: GameOverModalElements | null = null;
   private unsubscribeLanguageChange: (() => void) | null = null;
@@ -63,13 +77,10 @@ export class TournamentService {
     this.playerRegistrationWithCountSelector =
       new PlayerRegistrationWithCountSelector();
     this.translateFn = translateFn ?? translate;
-    const translator = this.translateFn;
-    this.t = translator
-      ? (translator("tournament", { returnObjects: true }) as Record<
-          string,
-          any
-        >)
-      : {};
+    this.t = i18next.t("tournament", {
+      returnObjects: true,
+    }) as TournamentTranslations;
+
     this.navigationCopy = this.buildNavigationCopy();
     this.viewRenderers = {
       registration: this.renderRegistrationView.bind(this),
@@ -88,14 +99,9 @@ export class TournamentService {
   }
 
   private handleLanguageChange(): void {
-    const translator = this.translateFn;
-
-    this.t = translator
-      ? (translator("tournament", { returnObjects: true }) as Record<
-          string,
-          any
-        >)
-      : {};
+    this.t = i18next.t("tournament", {
+      returnObjects: true,
+    }) as TournamentTranslations;
 
     this.navigationCopy = this.buildNavigationCopy();
 
@@ -177,19 +183,16 @@ export class TournamentService {
 
     const overrides = localized as NavigationCopyInput;
     const result: NavigationCopy = { ...base };
-
     (Object.keys(base) as Array<NavigationKey>).forEach((key) => {
       const override = overrides[key];
       if (!override) {
         return;
       }
-
       result[key] = {
         pageTitle: override.pageTitle ?? base[key].pageTitle,
         backButtonLabel: override.backButtonLabel ?? base[key].backButtonLabel,
       };
     });
-
     return result;
   }
 
@@ -231,7 +234,6 @@ export class TournamentService {
       );
       return null;
     }
-
     return element as T;
   }
 
@@ -365,14 +367,14 @@ export class TournamentService {
             this.navigateToBracket();
           } catch (error) {
             console.error("Error generating matches:", error);
-            const errorMessageTemplate =
-              errors.startTournament ||
-              "Failed to generate matches: {{message}}";
             const message =
               error instanceof Error && error.message ? error.message : "";
-            this.notificationService.error(
-              errorMessageTemplate.replace("{{message}}", message),
-            );
+            const errorMessage = this.translateFn
+              ? (this.translateFn(errors.startTournament, {
+                  message,
+                }) as string)
+              : `Failed to generate matches: ${message}`;
+            this.notificationService.error(errorMessage);
           }
         },
       });
@@ -472,30 +474,35 @@ export class TournamentService {
 
     // 現在のラウンドのマッチのみ表示
     const currentRoundMatches = this.tournamentData.getCurrentRoundMatches();
+    const bracket = this.t.bracket || {};
+    const buttons = this.t.buttons || {};
     const matchesHtml = currentRoundMatches
       .map((match) => {
         const player1 = this.tournamentData.getPlayer(match.player1Id);
         const player2 = this.tournamentData.getPlayer(match.player2Id);
-
+        const player1Alias =
+          player1?.alias || bracket.unknownPlayer || "Unknown";
+        const player2Alias =
+          player2?.alias || bracket.unknownPlayer || "Unknown";
         return `
         <div class="bg-black bg-opacity-30 p-4 rounded border border-cyan-400 border-opacity-50">
           <div class="flex justify-between items-center">
             <div class="text-center flex-1">
-              <div class="font-semibold text-white">${this.escapeHtml(player1?.alias || "Unknown")}</div>
+              <div class="font-semibold text-white">${this.escapeHtml(player1Alias)}</div>
               ${match.score ? `<div class="text-sm text-gray-600">${match.score.player1}</div>` : ""}
             </div>
-            <div class="mx-4 text-gray-300">VS</div>
+            <div class="mx-4 text-gray-300">${bracket.vs || "VS"}</div>
             <div class="text-center flex-1">
-              <div class="font-semibold text-white">${this.escapeHtml(player2?.alias || "Unknown")}</div>
+              <div class="font-semibold text-white">${this.escapeHtml(player2Alias)}</div>
               ${match.score ? `<div class="text-sm text-gray-600">${match.score.player2}</div>` : ""}
             </div>
             <div class="ml-4">
               ${
                 match.status === "pending"
-                  ? `<button data-match-id="${match.id}" class="play-match-btn bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">Play</button>`
+                  ? `<button data-match-id="${match.id}" class="play-match-btn bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">${buttons.playMatch || "Play"}</button>`
                   : match.status === "completed"
                     ? `<span class="text-green-600 font-semibold">✓</span>`
-                    : `<span class="text-blue-600">Playing...</span>`
+                    : `<span class="text-blue-600">${buttons.playing || "Playing..."}</span>`
               }
             </div>
           </div>
@@ -507,20 +514,24 @@ export class TournamentService {
     const totalPlayers = tournament.players.length;
     const remainingPlayers = currentRoundMatches.length * 2;
     const roundName = this.getRoundName(tournament.currentRound, totalPlayers);
+    const remainingText = this.translateFn
+      ? (this.translateFn("tournament.bracket.remaining", {
+          roundName: roundName,
+          count: remainingPlayers,
+        }) as string)
+      : `${roundName} (${remainingPlayers} players remaining)`;
 
     container.innerHTML = `
       <div class="text-center mb-4">
-        <h3 class="text-xl font-bold">Current Bracket</h3>
-        <p class="text-gray-300">${roundName} (${remainingPlayers} players remaining)</p>
+        <h3 class="text-xl font-bold">${bracket.heading || "Current Bracket"}</h3>
+        <p class="text-gray-300">${remainingText}</p>
       </div>
-      
       <div class="space-y-4 mb-6">
         ${matchesHtml}
       </div>
-      
       <div class="text-center">
         <button id="new-tournament-btn" class="bg-purple-400 hover:bg-purple-600 text-white px-6 py-2 rounded">
-          New Tournament
+          ${buttons.newTournament || "New Tournament"}
         </button>
       </div>
     `;
@@ -550,28 +561,55 @@ export class TournamentService {
       this.navigateToBracket();
       return;
     }
+    const tMatch = this.t.match || {};
+    const tButtons = this.t.buttons || {};
 
     const player1 = this.tournamentData.getPlayer(match.player1Id);
     const player2 = this.tournamentData.getPlayer(match.player2Id);
 
+    const p1Alias = player1?.alias || `${tMatch.playerDefault || "Player"} 1`;
+    const p2Alias = player2?.alias || `${tMatch.playerDefault || "Player"} 2`;
+
+    const heading = this.translateFn
+      ? (this.translateFn("tournament.match.heading", {
+          player1: p1Alias,
+          player2: p2Alias,
+        }) as string)
+      : `${p1Alias} vs ${p2Alias}`;
+    const details = this.translateFn
+      ? (this.translateFn("tournament.match.details", {
+          id: matchId,
+        }) as string)
+      : `Match ${this.escapeHtml(matchId)} - First to 5 points wins`;
+    const controlsLeft = this.translateFn
+      ? (this.translateFn("tournament.match.controlsLeft", {
+          player: p1Alias,
+        }) as string)
+      : `<strong>${this.escapeHtml(p1Alias)}:</strong> W/S (Up/Down)`;
+    const controlsRight = this.translateFn
+      ? (this.translateFn("tournament.match.controlsRight", {
+          player: p2Alias,
+        }) as string)
+      : `<strong>${this.escapeHtml(p2Alias)}:</strong> ↑/↓ (Up/Down)`;
+
     container.innerHTML = `
       <!-- コンパクトなヘッダー -->
       <div class="text-center mb-2">
-        <h3 class="text-lg font-medium text-white">${this.escapeHtml(player1?.alias || "Player 1")} vs ${this.escapeHtml(player2?.alias || "Player 2")}</h3>
-        <p class="text-sm text-gray-400">Match ${this.escapeHtml(matchId)} - First to 5 points wins</p>
+        <h3 class="text-lg font-medium text-white">${heading}</h3>
+        <p class="text-sm text-gray-400">${details}</p>
       </div>
 
       <!-- コンパクトなボタン -->
       <div class="mb-2 text-center">
         <div class="space-x-2">
           <button id="start-tournament-game" class="bg-green-500 hover:bg-green-600 text-white px-4 py-1 text-sm rounded">
-            Start Match
+            ${tButtons.startMatch || "Start Match"}
           </button>
           <button id="pause-tournament-game" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-1 text-sm rounded" disabled>
-            Pause
+            ${tButtons.pause || "Pause"}
           </button>
           <button id="reset-tournament-game" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 text-sm rounded">
-            Reset
+            ${tButtons.reset || "Reset"}
           </button>
         </div>
       </div>
@@ -583,8 +621,8 @@ export class TournamentService {
       
       <!-- コンパクトなコントロール説明 -->
       <div class="text-center text-xs text-gray-400">
-        <p><strong>${this.escapeHtml(player1?.alias || "Player 1")}:</strong> W/S (Up/Down), A/D (Left/Right)</p>
-        <p><strong>${this.escapeHtml(player2?.alias || "Player 2")}:</strong> ↑/↓ (Up/Down), ←/→ (Left/Right)</p>
+        <p>${controlsLeft}</p>
+        <p>${controlsRight}</p>
       </div>
     `;
 
@@ -600,17 +638,31 @@ export class TournamentService {
       return;
     }
 
+    const tResults = this.t.results || {};
+    const tButtons = this.t.buttons || {};
+
+    const winnerText = this.translateFn
+      ? (this.translateFn("tournament.results.winner", {
+          name: winner.alias,
+        }) as string)
+      : `Winner: ${this.escapeHtml(winner.alias)}`;
+    const recordText = this.translateFn
+      ? (this.translateFn("tournament.results.record", {
+          wins: winner.wins,
+          losses: winner.losses,
+        }) as string)
+      : `Wins: ${winner.wins} | Losses: ${winner.losses}`;
+
     container.innerHTML = `
       <div class="text-center">
-        <h3 class="text-2xl font-bold mb-4 text-white">🏆 Tournament Complete!</h3>
+        <h3 class="text-2xl font-bold mb-4 text-white">${tResults.title || "🏆 Tournament Complete!"}</h3>
         <div class="bg-yellow-50 bg-opacity-10 p-6 rounded-lg mb-6 border border-yellow-400">
-          <h4 class="text-xl font-semibold text-yellow-300">Winner: ${this.escapeHtml(winner.alias)}</h4>
-          <p class="text-yellow-200">Wins: ${winner.wins} | Losses: ${winner.losses}</p>
+          <h4 class="text-xl font-semibold text-yellow-300">${winnerText}</h4>
+          <p class="text-yellow-200">${recordText}</p>
         </div>
-        
         <div class="space-y-2">
           <button id="new-tournament" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded">
-            Start New Tournament
+            ${tButtons.startNewTournament || "Start New Tournament"}
           </button>
         </div>
       </div>
@@ -624,15 +676,20 @@ export class TournamentService {
 
   private getRoundName(currentRound: number, totalPlayers: number): string {
     const totalRounds = Math.log2(totalPlayers);
+    const tRounds = this.t.rounds || {};
 
     if (currentRound === totalRounds) {
-      return "Final";
+      return tRounds.final || "Final";
     } else if (currentRound === totalRounds - 1) {
-      return "Semi-Final";
+      return tRounds.semiFinal || "Semi-Final";
     } else if (currentRound === totalRounds - 2) {
-      return "Quarter-Final";
+      return tRounds.quarterFinal || "Quarter-Final";
     } else {
-      return `Round ${currentRound}`;
+      return this.translateFn
+        ? (this.translateFn("tournament.rounds.round", {
+            number: currentRound,
+          }) as string)
+        : `Round ${currentRound}`;
     }
   }
 
@@ -778,6 +835,8 @@ export class TournamentService {
     score: { player1: number; player2: number },
   ): void {
     console.log(`Handling Match End: ${matchId}`);
+    const tNotifications = this.t.notifications || {};
+    const tErrors = this.t.errors || {};
 
     try {
       const match = this.tournamentData.getMatch(matchId);
@@ -791,14 +850,27 @@ export class TournamentService {
 
       const winnerPlayer = this.tournamentData.getPlayer(winnerId);
       const winnerAlias = winnerPlayer?.alias || "Player";
-      const modalTitle = winner === 1 ? "Player 1 Wins!" : "Player 2 Wins!";
-      const modalMessage = `${winnerAlias} wins the match ${score.player1} - ${score.player2}!`;
+      const modalTitle = this.translateFn
+        ? (this.translateFn("tournament.modal.playerWins", {
+            index: winner,
+          }) as string)
+        : `Player ${winner} Wins!`;
+
+      const modalMessage = this.translateFn
+        ? (this.translateFn("tournament.modal.matchResult", {
+            player: winnerAlias,
+            score1: score.player1,
+            score2: score.player2,
+          }) as string)
+        : `${winnerAlias} wins the match ${score.player1} - ${score.player2}!`;
 
       this.showGameOverModal(modalTitle, modalMessage, () => {
         console.log("Continue button clicked. Checking tournament state...");
         if (this.tournamentData.isTournamentComplete()) {
           console.log("Tournament completed, navigating to results.");
-          this.notificationService.success("Tournament completed! 🏆");
+          this.notificationService.success(
+            tNotifications.tournamentComplete || "Tournament completed! 🏆",
+          );
           this.navigateToResults();
         } else if (this.tournamentData.canAdvanceToNextRound()) {
           console.log("Advancing to next round.");
@@ -810,7 +882,13 @@ export class TournamentService {
             const roundName = tournament
               ? this.getRoundName(currentRound || 1, tournament.players.length)
               : `Round ${currentRound}`;
-            this.notificationService.info(`${roundName} begins! 🥊`);
+            this.notificationService.info(
+              this.translateFn
+                ? (this.translateFn("tournament.notifications.roundBegins", {
+                    roundName: roundName,
+                  }) as string)
+                : `${roundName} begins! 🥊`,
+            );
           }
           this.navigateToBracket();
         } else {
@@ -829,7 +907,8 @@ export class TournamentService {
     } catch (error) {
       console.error("Error in handleMatchEnd:", error);
       this.notificationService.error(
-        "A critical error occurred while saving the match.",
+        tErrors.criticalMatch ||
+          "A critical error occurred while saving the match.",
       );
       this.navigateToBracket();
     }
@@ -846,6 +925,10 @@ export class TournamentService {
       const { modal, title, message, continueButton } = modalElements;
       title.textContent = modalTitleText;
       message.textContent = modalMessageText;
+
+      const tButtons = this.t.buttons || {};
+      continueButton.textContent = tButtons.continue || "Continue";
+
       modal.classList.remove("hidden");
 
       this.bindClick(

@@ -74,7 +74,7 @@
     "customAlias": "Custom Alias",
     "customPlaceholder": "Enter custom alias",
     "currentUser": "{{username}} (You)",
-    "aiDisplayName": "AI Player {{index}} ({{difficulty}})"
+    "aiDisplayName": "AI {{index}} ({{difficulty}})"
   },
   "playerRegistration": {
     "missingPlayers": "{{count}} players are not selected",
@@ -232,13 +232,13 @@
       "heading": "Current Bracket",
       "remaining": "{{roundName}} ({{count}} players remaining)",
       "unknownPlayer": "Unknown",
-      "vs": "VS"
+      "vs": "vs"
     },
     "match": {
       "heading": "{{player1}} vs {{player2}}",
       "details": "Match {{id}} - First to 5 points wins",
-      "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>: W/S (Up/Down), A/D (Left/Right)",
-      "controlsRight": "<strong class=\"text-white\">{{player}}</strong>: ↑/↓ (Up/Down), ←/→ (Left/Right)",
+      "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>: W/S (Up/Down)",
+      "controlsRight": "<strong class=\"text-white\">{{player}}</strong>: ↑/↓ (Up/Down)",
       "playerDefault": "Player {{index}}"
     },
     "results": {

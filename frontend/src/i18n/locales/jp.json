@@ -74,7 +74,7 @@
     "customAlias": "カスタム名",
     "customPlaceholder": "カスタム名を入力",
     "currentUser": "{{username}}（あなた）",
-    "aiDisplayName": "AIプレイヤー{{index}}({{difficulty}})"
+    "aiDisplayName": "AI{{index}}({{difficulty}})"
   },
   "playerRegistration": {
     "missingPlayers": "{{count}} 人のプレイヤーが選択されていません",
@@ -232,13 +232,13 @@
       "heading": "現在のトーナメント表",
       "remaining": "{{roundName}}（残り {{count}} 人）",
       "unknownPlayer": "不明",
-      "vs": "VS"
+      "vs": "対"
     },
     "match": {
       "heading": "{{player1}} 対 {{player2}}",
       "details": "試合 {{id}} - 先に5ポイント取った方が勝利",
-      "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>:W/S(上下)、A/D(左右）",
-      "controlsRight": "<strong class=\"text-white\">{{player}}</strong>：↑/↓（上下）、←/→（左右）",
+      "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>:W/S(上下)",
+      "controlsRight": "<strong class=\"text-white\">{{player}}</strong>：↑/↓（上下）",
       "playerDefault": "プレイヤー{{index}}"
     },
     "results": {

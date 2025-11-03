@@ -74,7 +74,7 @@
     "customAlias": "Vlastní přezdívka",
     "customPlaceholder": "Zadej vlastní přezdívku",
     "currentUser": "{{username}} (ty)",
-    "aiDisplayName": "AI hráč {{index}} ({{difficulty}})"
+    "aiDisplayName": "AI {{index}} ({{difficulty}})"
   },
   "playerRegistration": {
     "missingPlayers": "{{count}} hráčů není vybráno",
@@ -232,13 +232,13 @@
       "heading": "Aktuální pavouk",
       "remaining": "{{roundName}} (zbývá {{count}} hráčů)",
       "unknownPlayer": "Neznámý",
-      "vs": "VS"
+      "vs": "versus"
     },
     "match": {
       "heading": "{{player1}} vs {{player2}}",
       "details": "Zápas {{id}} - vítězí první na 5 bodů",
-      "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>: W/S (nahoru/dolů), A/D (doleva/doprava)",
-      "controlsRight": "<strong class=\"text-white\">{{player}}</strong>: ↑/↓ (nahoru/dolů), ←/→ (doleva/doprava)",
+      "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>: W/S (nahoru/dolů)",
+      "controlsRight": "<strong class=\"text-white\">{{player}}</strong>: ↑/↓ (nahoru/dolů)",
       "playerDefault": "Hráč {{index}}"
     },
     "results": {
