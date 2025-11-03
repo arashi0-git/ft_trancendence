@@ -77,11 +77,8 @@ export class AiPlayer {
     const gameState = this.gameManager.getGameState();
     if (!gameState || gameState.gameStatus !== "playing") return;
 
-    const currentPlayer =
-      this.playerNumber === 1 ? gameState.player1 : gameState.player2;
-
     const predictedPosition = this.predictBallPosition(gameState);
-    this.targetY = predictedPosition.y - currentPlayer.paddle.height / 2;
+    this.targetY = predictedPosition.y;
 
     this.clearReactionTimer();
     this.executeMovement();
@@ -166,8 +163,8 @@ export class AiPlayer {
       const missOffset = (Math.random() - 0.5) * 80;
       this.targetY = predictedPosition.y + missOffset;
     } else {
-      // パドルの中央で打てるように調整
-      this.targetY = predictedPosition.y - currentPlayer.paddle.height / 2;
+      // パドル中心でボールを捉える
+      this.targetY = predictedPosition.y;
     }
 
     console.log(
@@ -232,7 +229,7 @@ export class AiPlayer {
 
       // 予測精度に基づくノイズ追加
       if (Math.random() > this.config.predictionAccuracy) {
-        ballY += (Math.random() - 0.5) * 30;
+        ballY += (Math.random() - 0.5) * 8;
       }
     }
 
