@@ -1,12 +1,20 @@
 import { BaseGameService } from "../../shared/services/base-game.service";
 import { router } from "../../routes/router";
+import type { PlayerOption } from "../../shared/types/tournament";
+import { HistoryService } from "../../shared/services/history-service";
+import { AuthService } from "../../shared/services/auth-service";
 
 export class QuickPlayService extends BaseGameService {
+  private playerSelections: (PlayerOption | null)[] = [];
+
   initializeGame(
     canvasId: string,
     playerCount: number,
+    playerSelections: (PlayerOption | null)[],
     aiPlayers?: { [key: string]: { difficulty: "easy" | "medium" | "hard" } },
   ): void {
+    this.playerSelections = playerSelections;
+
     this.gameManager.initializeGame({
       mode: "quick-play",
       canvasId: canvasId,
@@ -65,11 +73,14 @@ export class QuickPlayService extends BaseGameService {
     return element instanceof HTMLButtonElement ? element : null;
   }
 
-  private handleGameEnd(data: {
+  private async handleGameEnd(data: {
     winner: number;
     score1: number;
     score2: number;
-  }): void {
+  }): Promise<void> {
+    // Save game history for logged-in users
+    await this.saveGameHistory(data);
+
     const modal = document.getElementById("game-over-modal");
     const winnerNameEl = document.getElementById("winner-name");
     const finalScoreEl = document.getElementById("final-score");
@@ -87,6 +98,109 @@ export class QuickPlayService extends BaseGameService {
       this.notificationService.success(`Player ${data.winner} wins! 🎉`);
     }
     this.updateButtonStates(false);
+  }
+
+  private async saveGameHistory(data: {
+    winner: number;
+    score1: number;
+    score2: number;
+  }): Promise<void> {
+    // Check if user is authenticated
+    if (!AuthService.isAuthenticated()) {
+      return; // Guest user, don't save history
+    }
+
+    const currentUser = await AuthService.getCurrentUser();
+    if (!currentUser) {
+      return; // Failed to get user
+    }
+
+    // Find which player is the logged-in user
+    let userPlayerIndex = -1;
+    for (let i = 0; i < this.playerSelections.length; i++) {
+      if (this.playerSelections[i]?.userId === currentUser.id) {
+        userPlayerIndex = i;
+        break;
+      }
+    }
+
+    if (userPlayerIndex === -1) {
+      return; // User not in this game
+    }
+
+    const playerNumber = userPlayerIndex + 1; // 1-indexed
+    const isWinner = data.winner === playerNumber;
+
+    // Get user's score and opponent's score
+    let myScore = 0;
+    let opponentScore = 0;
+    if (playerNumber === 1 || playerNumber === 3) {
+      myScore = data.score1; // Left team
+      opponentScore = data.score2; // Right team
+    } else {
+      myScore = data.score2; // Right team
+      opponentScore = data.score1; // Left team
+    }
+
+    // Build teammate info (for 2v2)
+    let teammate: string | null = null;
+    if (this.playerSelections.length === 4) {
+      const teammateIndex =
+        playerNumber === 1 || playerNumber === 3
+          ? playerNumber === 1
+            ? 2
+            : 0 // Player 1 -> Player 3, Player 3 -> Player 1
+          : playerNumber === 2
+            ? 3
+            : 1; // Player 2 -> Player 4, Player 4 -> Player 2
+
+      const teammateSelection = this.playerSelections[teammateIndex];
+      if (teammateSelection) {
+        teammate = teammateSelection.displayName;
+      }
+    }
+
+    // Build opponent info
+    const opponents: string[] = [];
+    for (let i = 0; i < this.playerSelections.length; i++) {
+      const pNum = i + 1;
+      // Skip user and teammate
+      if (pNum === playerNumber) continue;
+      if (this.playerSelections.length === 4) {
+        const isTeammate =
+          playerNumber === 1 || playerNumber === 3
+            ? pNum === 1 || pNum === 3
+            : pNum === 2 || pNum === 4;
+        if (isTeammate) continue;
+      }
+
+      const opponent = this.playerSelections[i];
+      if (opponent) {
+        if (opponent.isAI) {
+          opponents.push(`AI (${opponent.aiDifficulty || "medium"})`);
+        } else {
+          opponents.push(opponent.displayName);
+        }
+      }
+    }
+
+    const opponentInfo = opponents.join(", ") || "Unknown";
+
+    try {
+      await HistoryService.saveGame({
+        userId: currentUser.id,
+        tournamentId: null, // Quick play has no tournament
+        teammate,
+        myScore,
+        opponentScore,
+        isWinner,
+        opponentInfo,
+        finishedAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Failed to save game history:", error);
+      // Don't show error to user, just log it
+    }
   }
 
   navigateToHome(): void {
