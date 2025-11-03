@@ -10,6 +10,7 @@ import secureJsonParse from "secure-json-parse";
 import { initializeDatabase } from "./database/init";
 import { authRoutes } from "./routes/auth";
 import { userRoutes } from "./routes/user";
+import { historyRoutes } from "./routes/history";
 
 const httpsOptions =
   process.env.NODE_ENV === "production"
@@ -126,6 +127,7 @@ async function registerPlugins() {
 async function setupRoutes() {
   await fastify.register(authRoutes, { prefix: "/api/auth" });
   await fastify.register(userRoutes, { prefix: "/api/users" });
+  await fastify.register(historyRoutes, { prefix: "/api" });
   // ヘルスチェック
   fastify.get("/api/health", async (_request, _reply) => {
     return { status: "ok", timestamp: new Date().toISOString() };
