@@ -13,6 +13,25 @@ A modern Pong game platform with user authentication and tournament system.
 - Secure HTTPS connection
 - Responsive web interface
 
+## Browser Compatibility
+
+This application is optimized for modern web browsers and has been tested on:
+
+- **Google Chrome**: Version 87 and later
+- **Mozilla Firefox**: Version 78 and later (ESR and stable)
+
+### Minimum Requirements
+
+The application uses modern JavaScript features including:
+
+- ES2020 syntax
+- Optional chaining (`?.`)
+- Nullish coalescing (`??`)
+- Async/await
+- WebGL for 3D graphics (Babylon.js)
+
+For the best experience, please ensure your browser is up to date with the latest stable version.
+
 ## Prerequisites
 
 - Docker and Docker Compose
@@ -378,6 +397,25 @@ JWT認証とトーナメントシステムを備えたモダンなPongゲーム�
 - トーナメント対応のリアルタイムPongゲーム
 - セキュアなHTTPS接続
 - レスポンシブWebインターフェース
+
+## ブラウザ互換性
+
+このアプリケーションはモダンなWebブラウザ向けに最適化されており、以下のブラウザでテストされています：
+
+- **Google Chrome**: バージョン87以降
+- **Mozilla Firefox**: バージョン78以降（ESRおよび安定版）
+
+### 最小要件
+
+アプリケーションは以下のモダンなJavaScript機能を使用しています：
+
+- ES2020構文
+- Optional chaining (`?.`)
+- Nullish coalescing (`??`)
+- Async/await
+- 3Dグラフィックス用のWebGL（Babylon.js）
+
+最高のエクスペリエンスを得るには、ブラウザを最新の安定版に更新してください。
 
 ## 前提条件
 
