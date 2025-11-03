@@ -518,7 +518,7 @@ export class BabylonRender {
       { width: 3, height: 1.5 }, // サイズを1.5倍に
       this.scene,
     );
-    this.scoreBoard1.position = new Vector3(-6, 4, 0); // より外側、高い位置に
+    this.scoreBoard1.position = new Vector3(-6, 4, 3); // より外側、高い位置に
     this.scoreBoard1.rotation.x = Math.PI / 5; // 少し下向きに傾ける
 
     this.scoreTexture1 = new DynamicTexture(
@@ -537,7 +537,7 @@ export class BabylonRender {
       { width: 3, height: 1.5 }, // サイズを1.5倍に
       this.scene,
     );
-    this.scoreBoard2.position = new Vector3(6, 4, 0); // より外側、高い位置に
+    this.scoreBoard2.position = new Vector3(6, 4, 3); // より外側、高い位置に
     this.scoreBoard2.rotation.x = Math.PI / 5;
 
     this.scoreTexture2 = new DynamicTexture(
@@ -624,7 +624,8 @@ export class BabylonRender {
     }
     // Ball
     this.ballMesh.position.x = (gameState.ball.x - this.gameWidth / 2) * scaleX;
-    this.ballMesh.position.z = (this.gameHeight / 2 - gameState.ball.y) * scaleY;
+    this.ballMesh.position.z =
+      (this.gameHeight / 2 - gameState.ball.y) * scaleY;
     this.updateBallMeshScale(gameState.ball.radius);
 
     // Score
