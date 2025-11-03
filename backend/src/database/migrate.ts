@@ -2,6 +2,8 @@ import fs from "fs";
 import path from "path";
 import { db } from "./connection";
 
+type TableColumnInfo = { name: string };
+
 function resolveMigrationsDir(): string | null {
   const candidateDirs = [
     path.join(process.cwd(), "database", "migrations"),
@@ -44,27 +46,28 @@ export async function runMigrations(): Promise<void> {
     for (const file of migrationFiles) {
       const executed = await db.get(
         "SELECT filename FROM migrations WHERE filename = ?",
-        [file]
+        [file],
       );
 
       if (!executed) {
         if (file === "001_add_two_factor.sql") {
-          type SchemaInfo = { name: string };
-          const columns = await db.all<SchemaInfo>("PRAGMA table_info(users)");
+          const columns = await db.all<TableColumnInfo>(
+            "PRAGMA table_info(users)",
+          );
           const hasTwoFactorEnabled = columns.some(
-            (column) => column.name === "two_factor_enabled"
+            (column) => column.name === "two_factor_enabled",
           );
 
           let hasTwoFactorChallengesTable = false;
           if (hasTwoFactorEnabled) {
-            const challengeTable = await db.get<SchemaInfo>(
-              "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'two_factor_challenges'"
+            const challengeTable = await db.get<TableColumnInfo>(
+              "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'two_factor_challenges'",
             );
             hasTwoFactorChallengesTable = !!challengeTable;
 
             if (!hasTwoFactorChallengesTable) {
               console.log(
-                "Found two_factor_enabled without two_factor_challenges; restoring missing table"
+                "Found two_factor_enabled without two_factor_challenges; restoring missing table",
               );
               await db.exec(`
                 CREATE TABLE IF NOT EXISTS two_factor_challenges (
@@ -85,7 +88,26 @@ export async function runMigrations(): Promise<void> {
 
           if (hasTwoFactorEnabled && hasTwoFactorChallengesTable) {
             console.log(
-              `Skipping migration ${file}; two_factor schema already present`
+              `Skipping migration ${file}; two_factor schema already present`,
+            );
+            await db.run("INSERT INTO migrations (filename) VALUES (?)", [
+              file,
+            ]);
+            continue;
+          }
+        }
+
+        if (file === "003_add_opponent_score.sql") {
+          const existingColumns = await db.all<TableColumnInfo>(
+            "PRAGMA table_info(game_history)",
+          );
+          const hasOpponentScore = existingColumns.some(
+            (column) => column.name === "opponent_score",
+          );
+
+          if (hasOpponentScore) {
+            console.log(
+              `Skipping migration ${file}; opponent_score column already present`,
             );
             await db.run("INSERT INTO migrations (filename) VALUES (?)", [
               file,

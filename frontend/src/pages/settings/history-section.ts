@@ -7,6 +7,7 @@ export class HistorySection {
   private stats: GameHistoryStats | null = null;
   private history: GameHistory[] = [];
   private historyLoaded = false;
+  private isLoading = false;
   private showAll = false;
 
   constructor(container: HTMLElement) {
@@ -14,24 +15,57 @@ export class HistorySection {
   }
 
   async render(): Promise<void> {
+    // Prevent concurrent data loading
+    if (this.isLoading) {
+      return;
+    }
+
+    // If data is already loaded, just render it
+    if (this.historyLoaded) {
+      this.renderContent();
+      return;
+    }
+
+    // Show loading state and load data
+    this.renderLoading();
+    await this.loadData();
+  }
+
+  private renderLoading(): void {
     this.container.innerHTML = `
       <section class="space-y-4 border-t border-gray-700 pt-4">
         <h3 class="text-lg font-semibold text-cyan-200">Match History & Stats</h3>
         <div id="stats-container">
-          ${this.historyLoaded ? this.renderStats() : this.renderLoading()}
+          <p class="text-xs text-gray-400">Loading stats...</p>
+        </div>
+        <div id="history-container"></div>
+      </section>
+    `;
+  }
+
+  private renderContent(): void {
+    this.container.innerHTML = `
+      <section class="space-y-4 border-t border-gray-700 pt-4">
+        <h3 class="text-lg font-semibold text-cyan-200">Match History & Stats</h3>
+        <div id="stats-container">
+          ${this.renderStats()}
         </div>
         <div id="history-container">
-          ${this.historyLoaded ? this.renderHistory() : ""}
+          ${this.renderHistory()}
         </div>
       </section>
     `;
-
-    if (!this.historyLoaded) {
-      await this.loadData();
-    }
+    this.attachListeners();
   }
 
   async loadData(): Promise<void> {
+    // Prevent concurrent loading
+    if (this.isLoading) {
+      return;
+    }
+
+    this.isLoading = true;
+
     try {
       // Load both stats and history in parallel
       const [stats, history] = await Promise.all([
@@ -43,20 +77,8 @@ export class HistorySection {
       this.history = history;
       this.historyLoaded = true;
 
-      // Re-render with loaded data
-      this.container.innerHTML = `
-        <section class="space-y-4 border-t border-gray-700 pt-4">
-          <h3 class="text-lg font-semibold text-cyan-200">Match History & Stats</h3>
-          <div id="stats-container">
-            ${this.renderStats()}
-          </div>
-          <div id="history-container">
-            ${this.renderHistory()}
-          </div>
-        </section>
-      `;
-
-      this.attachListeners();
+      // Render with loaded data
+      this.renderContent();
     } catch (error) {
       console.error("Failed to load match history:", error);
       NotificationService.getInstance().error("Failed to load match history");
@@ -66,11 +88,9 @@ export class HistorySection {
           <p class="text-sm text-red-400">Failed to load match history. Please try again later.</p>
         </section>
       `;
+    } finally {
+      this.isLoading = false;
     }
-  }
-
-  private renderLoading(): string {
-    return `<p class="text-xs text-gray-400">Loading stats...</p>`;
   }
 
   private renderStats(): string {

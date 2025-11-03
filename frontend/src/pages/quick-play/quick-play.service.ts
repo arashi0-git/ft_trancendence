@@ -145,14 +145,14 @@ export class QuickPlayService extends BaseGameService {
     // Build teammate info (for 2v2)
     let teammate: string | null = null;
     if (this.playerSelections.length === 4) {
-      const teammateIndex =
-        playerNumber === 1 || playerNumber === 3
-          ? playerNumber === 1
-            ? 2
-            : 0 // Player 1 -> Player 3, Player 3 -> Player 1
-          : playerNumber === 2
-            ? 3
-            : 1; // Player 2 -> Player 4, Player 4 -> Player 2
+      // Players 1 & 3 are left team, Players 2 & 4 are right team
+      const teammateMap: { [key: number]: number } = {
+        1: 2, // Player 1's teammate is Player 3 (index 2)
+        2: 3, // Player 2's teammate is Player 4 (index 3)
+        3: 0, // Player 3's teammate is Player 1 (index 0)
+        4: 1, // Player 4's teammate is Player 2 (index 1)
+      };
+      const teammateIndex = teammateMap[playerNumber];
 
       const teammateSelection = this.playerSelections[teammateIndex];
       if (teammateSelection) {

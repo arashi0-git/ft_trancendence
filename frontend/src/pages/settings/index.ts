@@ -63,7 +63,12 @@ export class UserSettingsPage extends SpacePageBase {
 
     if (historyContainer) {
       this.historySection = new HistorySection(historyContainer);
-      void this.historySection.render();
+      this.historySection.render().catch((error) => {
+        console.error("Failed to render history section:", error);
+        NotificationService.getInstance().error(
+          "Failed to load match history.",
+        );
+      });
     }
 
     // Bind form submit

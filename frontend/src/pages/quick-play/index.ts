@@ -37,6 +37,13 @@ export class QuickPlayPage extends SpacePageBase {
       return;
     }
 
+    if (playerSelections.length !== playerCount) {
+      console.error(
+        `Player selections length (${playerSelections.length}) does not match player count (${playerCount})`,
+      );
+      return;
+    }
+
     this.playerRegistrationWithCountSelector.destroy();
     this.selectedPlayerCount = playerCount;
     this.currentStep = "game";

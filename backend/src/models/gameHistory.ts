@@ -65,7 +65,7 @@ export class GameHistoryModel {
     filters?: GameHistoryFilters,
   ): Promise<GameHistory[]> {
     let query = `SELECT * FROM game_history WHERE user_id = ?`;
-    const params: (number | boolean)[] = [userId];
+    const params: number[] = [userId];
 
     if (filters?.tournamentId !== undefined) {
       query += ` AND tournament_id = ?`;

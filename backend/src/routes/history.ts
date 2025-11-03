@@ -6,7 +6,7 @@ import type { CreateGameHistoryInput } from "../types/history";
 export async function historyRoutes(fastify: FastifyInstance) {
   // Create game history
   fastify.post<{ Body: CreateGameHistoryInput }>(
-    "/history",
+    "/",
     { preHandler: authenticateToken },
     async (request, reply) => {
       try {
@@ -44,7 +44,7 @@ export async function historyRoutes(fastify: FastifyInstance) {
       limit?: string;
       offset?: string;
     };
-  }>("/history", { preHandler: authenticateToken }, async (request, reply) => {
+  }>("/", { preHandler: authenticateToken }, async (request, reply) => {
     try {
       if (!request.user) {
         return reply.status(401).send({ error: "User not authenticated" });
@@ -64,6 +64,25 @@ export async function historyRoutes(fastify: FastifyInstance) {
         offset: request.query.offset ? Number(request.query.offset) : undefined,
       };
 
+      // Validate numeric parameters
+      if (filters.tournamentId !== undefined && isNaN(filters.tournamentId)) {
+        return reply.status(400).send({ error: "Invalid tournamentId" });
+      }
+      if (
+        filters.limit !== undefined &&
+        (isNaN(filters.limit) || filters.limit <= 0 || filters.limit > 100)
+      ) {
+        return reply
+          .status(400)
+          .send({ error: "Invalid limit (must be 1-100)" });
+      }
+      if (
+        filters.offset !== undefined &&
+        (isNaN(filters.offset) || filters.offset < 0)
+      ) {
+        return reply.status(400).send({ error: "Invalid offset" });
+      }
+
       const history = await GameHistoryModel.findByUserId(
         request.user.id,
         filters,
@@ -77,7 +96,7 @@ export async function historyRoutes(fastify: FastifyInstance) {
 
   // Get current user's stats
   fastify.get(
-    "/history/stats",
+    "/stats",
     { preHandler: authenticateToken },
     async (request, reply) => {
       try {

@@ -22,6 +22,10 @@ interface CreateGameHistoryRequest {
   finishedAt: string;
 }
 
+interface CreateGameHistoryResponse {
+  history: GameHistory;
+}
+
 interface GameHistoryResponse {
   history: GameHistory[];
 }
@@ -32,7 +36,10 @@ interface GameHistoryStatsResponse {
 
 export class HistoryService {
   private static getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem("auth_token");
+    const token =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("auth_token")
+        : null;
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
@@ -58,7 +65,7 @@ export class HistoryService {
         throw new Error(error || `Failed to save game history`);
       }
 
-      const result = await response.json();
+      const result: CreateGameHistoryResponse = await response.json();
       return result.history;
     } catch (error) {
       console.error("Error saving game history:", error);

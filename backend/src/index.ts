@@ -127,7 +127,7 @@ async function registerPlugins() {
 async function setupRoutes() {
   await fastify.register(authRoutes, { prefix: "/api/auth" });
   await fastify.register(userRoutes, { prefix: "/api/users" });
-  await fastify.register(historyRoutes, { prefix: "/api" });
+  await fastify.register(historyRoutes, { prefix: "/api/history" });
   // ヘルスチェック
   fastify.get("/api/health", async (_request, _reply) => {
     return { status: "ok", timestamp: new Date().toISOString() };
