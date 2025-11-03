@@ -46,23 +46,6 @@ CREATE TABLE IF NOT EXISTS tournaments (
     winner_id INTEGER
 );
 
-CREATE TABLE IF NOT EXISTS matches (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tournament_id INTEGER,
-    player1_id INTEGER,
-    player2_id INTEGER,
-    player1_score INTEGER DEFAULT 0,
-    player2_score INTEGER DEFAULT 0,
-    winner_id INTEGER,
-    status TEXT CHECK(status IN ('in_progress', 'completed', 'abandoned')) DEFAULT 'in_progress',
-    duration INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    completed_at DATETIME,
-    FOREIGN KEY (tournament_id) REFERENCES tournaments(id),
-    FOREIGN KEY (player1_id) REFERENCES users(id),
-    FOREIGN KEY (player2_id) REFERENCES users(id),
-    FOREIGN KEY (winner_id) REFERENCES users(id)
-);
 
 CREATE TABLE IF NOT EXISTS friendships (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -87,3 +70,22 @@ CREATE INDEX IF NOT EXISTS idx_user_follows_following ON user_follows(following_
 
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
+-- Game History table
+CREATE TABLE IF NOT EXISTS game_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    tournament_id INTEGER,
+    teammate TEXT,
+    my_score INTEGER,
+    opponent_score INTEGER,
+    is_winner BOOLEAN,
+    opponent_info TEXT,
+    finished_at DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_game_history_user ON game_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_game_history_tournament ON game_history(tournament_id);
+CREATE INDEX IF NOT EXISTS idx_game_history_finished_at ON game_history(finished_at DESC);

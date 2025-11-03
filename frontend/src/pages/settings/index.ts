@@ -5,6 +5,7 @@ import { AuthService } from "../../shared/services/auth-service";
 import { ProfileSection } from "./profile-section";
 import { SecuritySection } from "./security-section";
 import { FriendsSection } from "./friends-section";
+import { HistorySection } from "./history-section";
 import type {
   PublicUser,
   UpdateUserSettingsPayload,
@@ -16,6 +17,7 @@ export class UserSettingsPage extends SpacePageBase {
   private profileSection: ProfileSection | null = null;
   private securitySection: SecuritySection | null = null;
   private friendsSection: FriendsSection | null = null;
+  private historySection: HistorySection | null = null;
   private initialEmail: string = "";
 
   constructor(container: HTMLElement) {
@@ -40,6 +42,7 @@ export class UserSettingsPage extends SpacePageBase {
     const profileContainer = document.getElementById("profile-section");
     const securityContainer = document.getElementById("security-section");
     const friendsContainer = document.getElementById("friends-section");
+    const historyContainer = document.getElementById("history-section");
 
     if (profileContainer) {
       this.profileSection = new ProfileSection(profileContainer);
@@ -56,6 +59,16 @@ export class UserSettingsPage extends SpacePageBase {
     if (friendsContainer) {
       this.friendsSection = new FriendsSection(friendsContainer);
       this.friendsSection.render();
+    }
+
+    if (historyContainer) {
+      this.historySection = new HistorySection(historyContainer);
+      this.historySection.render().catch((error) => {
+        console.error("Failed to render history section:", error);
+        NotificationService.getInstance().error(
+          "Failed to load match history.",
+        );
+      });
     }
 
     // Bind form submit
@@ -79,6 +92,7 @@ export class UserSettingsPage extends SpacePageBase {
     this.profileSection?.destroy();
     this.securitySection?.destroy();
     this.friendsSection?.destroy();
+    this.historySection?.destroy();
     this.initialEmail = "";
   }
 
@@ -93,6 +107,7 @@ export class UserSettingsPage extends SpacePageBase {
           <form id="user-settings-form" class="space-y-6">
             <div id="profile-section"></div>
             <div id="security-section"></div>
+            <div id="history-section"></div>
             <div id="friends-section"></div>
 
             <div class="flex gap-3 pt-4 border-t border-gray-700">
