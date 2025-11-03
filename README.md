@@ -19,12 +19,11 @@ This application is optimized for modern web browsers and has been tested on:
 
 - **Google Chrome**: Version 87 and later
 - **Mozilla Firefox**: Version 78 and later (ESR and stable)
-- **Safari**: Version 13.1 and later
-- **Microsoft Edge**: Version 88 and later
 
 ### Minimum Requirements
 
 The application uses modern JavaScript features including:
+
 - ES2020 syntax
 - Optional chaining (`?.`)
 - Nullish coalescing (`??`)
@@ -405,12 +404,11 @@ JWT認証とトーナメントシステムを備えたモダンなPongゲーム�
 
 - **Google Chrome**: バージョン87以降
 - **Mozilla Firefox**: バージョン78以降（ESRおよび安定版）
-- **Safari**: バージョン13.1以降
-- **Microsoft Edge**: バージョン88以降
 
 ### 最小要件
 
 アプリケーションは以下のモダンなJavaScript機能を使用しています：
+
 - ES2020構文
 - Optional chaining (`?.`)
 - Nullish coalescing (`??`)
