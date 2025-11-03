@@ -1,1 +1,55 @@
 language: "ja-JP"
+review:
+  language: ja                # 日本語でコメント
+  level: deep                 # コード設計まで踏み込んだレビュー
+  focus:
+    - typesafety              # 型安全性
+    - readability             # 可読性
+    - maintainability         # 保守性
+    - best_practices          # TypeScriptのベストプラクティス
+  ignore:
+    - dist/
+    - node_modules/
+    - tests/
+
+rules:
+  # 🚫 型安全
+  - name: "Disallow any type usage"
+    description: "any型の使用は型安全性を損なうため禁止します。代わりにunknownまたは明示的な型を使用してください。"
+    pattern: "\\b:any\\b"
+    severity: error
+
+  - name: "Avoid implicit any"
+    description: "型注釈がない関数・変数には暗黙のanyが推論されるため、必ず型を明示してください。"
+    pattern: "function\\s+\\w+\\([^:)]*\\)\\s*{"
+    severity: warning
+
+  # ⚖️ 比較演算子
+  - name: "Disallow loose equality"
+    description: "== および != は暗黙の型変換を行うため、=== および !== を使用してください。"
+    pattern: "==|!="
+    severity: warning
+
+  # 🔇 デバッグ用出力
+  - name: "Avoid console.log"
+    description: "console.log はデバッグ目的でのみ使用すべきです。ロガーやデバッグライブラリを使用してください。"
+    pattern: "console\\.log"
+    severity: info
+
+  # 🚫 非nullアサーション
+  - name: "Discourage non-null assertions"
+    description: "非nullアサーション（!）は安全でないため、オプショナルチェーン (?.) を使用してください。"
+    pattern: "![.;)]"
+    severity: warning
+
+  # 🌀 ネストや長大関数
+  - name: "Complex function detection"
+    description: "ネストが深い、または関数が大きすぎます。関数分割を検討してください。"
+    pattern: "if|for|while"
+    severity: suggestion
+
+  # 🪶 Enum / 定数
+  - name: "Prefer enums over string literals"
+    description: "文字列リテラルの直書きではなく、Enumまたは定数を使用してください。"
+    pattern: "\"[a-zA-Z_]+\""
+    severity: suggestion
