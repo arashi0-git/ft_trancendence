@@ -79,14 +79,22 @@ export class GameHistoryModel {
 
     query += ` ORDER BY finished_at DESC`;
 
-    if (filters?.limit !== undefined) {
+    const limit = filters?.limit;
+    const offset = filters?.offset;
+    const hasLimit = limit !== undefined;
+    const hasOffset = offset !== undefined;
+
+    if (hasLimit && limit !== undefined) {
       query += ` LIMIT ?`;
-      params.push(filters.limit);
+      params.push(limit);
     }
 
-    if (filters?.offset !== undefined) {
+    if (hasOffset && offset !== undefined) {
+      if (!hasLimit) {
+        query += ` LIMIT -1`;
+      }
       query += ` OFFSET ?`;
-      params.push(filters.offset);
+      params.push(offset);
     }
 
     const records = await db.all<GameHistoryRecord>(query, params);
@@ -117,13 +125,15 @@ export class GameHistoryModel {
       };
     }
 
-    const winRate =
-      stats.total_games > 0 ? (stats.wins / stats.total_games) * 100 : 0;
+    const totalGames = stats.total_games ?? 0;
+    const wins = stats.wins ?? 0;
+    const losses = stats.losses ?? 0;
+    const winRate = totalGames > 0 ? (wins / totalGames) * 100 : 0;
 
     return {
-      totalGames: stats.total_games,
-      wins: stats.wins,
-      losses: stats.losses,
+      totalGames,
+      wins,
+      losses,
       winRate: Math.round(winRate * 100) / 100, // Round to 2 decimal places
     };
   }

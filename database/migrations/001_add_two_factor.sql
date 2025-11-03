@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS two_factor_challenges (
     token TEXT UNIQUE NOT NULL,
     code_hash TEXT NOT NULL,
     purpose TEXT NOT NULL,
+    payload TEXT,
     expires_at DATETIME NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

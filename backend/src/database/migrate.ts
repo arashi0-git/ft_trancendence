@@ -97,25 +97,6 @@ export async function runMigrations(): Promise<void> {
           }
         }
 
-        if (file === "003_add_opponent_score.sql") {
-          const existingColumns = await db.all<TableColumnInfo>(
-            "PRAGMA table_info(game_history)",
-          );
-          const hasOpponentScore = existingColumns.some(
-            (column) => column.name === "opponent_score",
-          );
-
-          if (hasOpponentScore) {
-            console.log(
-              `Skipping migration ${file}; opponent_score column already present`,
-            );
-            await db.run("INSERT INTO migrations (filename) VALUES (?)", [
-              file,
-            ]);
-            continue;
-          }
-        }
-
         console.log(`Running migration: ${file}`);
         const migrationPath = path.join(migrationsDir, file);
         const migrationSQL = fs.readFileSync(migrationPath, "utf8");
