@@ -36,7 +36,7 @@
     "prettier": "^3.6.2",
     "ts-jest": "^29.1.2",
     "tsx": "^4.7.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.5.4"
   },
   "dependencies": {
     "@babylonjs/core": "^8.33.0",
