@@ -53,6 +53,7 @@
     "registrationTitle": "Player Registration",
     "registrationSubtitle": "Quick Play ({{count}} players)",
     "registrationError": "Failed to display the player registration screen.",
+    "gameOverTitle": "Game Finished!",
     "controls": {
       "playerLeftOuter": "Player 1 (Left-Outer): {{keys}}",
       "playerRightOuter": "Player 2 (Right-Outer): {{keys}}",

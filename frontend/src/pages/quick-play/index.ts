@@ -20,6 +20,7 @@ interface QuickPlayTranslations {
   registrationSubtitle?: string;
   selectPlayers?: string;
   playerOption?: string;
+  gameOverTitle?: string;
 }
 
 export class QuickPlayPage extends SpacePageBase {
@@ -342,7 +343,8 @@ export class QuickPlayPage extends SpacePageBase {
       if (resetBtn) resetBtn.textContent = this.t.resetGame || "Reset";
 
       const modalTitle = document.querySelector("#game-over-modal h2");
-      if (modalTitle) modalTitle.textContent = "Hra skončila!";
+      if (modalTitle)
+        modalTitle.textContent = this.t.gameOverTitle || "Game finished!";
     }
   }
 

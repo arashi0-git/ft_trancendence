@@ -53,6 +53,7 @@
     "registrationTitle": "プレイヤー登録",
     "registrationSubtitle": "クイックプレイ（{{count}} 人）",
     "registrationError": "プレイヤー登録画面の表示に失敗しました。",
+    "gameOverTitle": "ゲーム終了！",
     "controls": {
       "playerLeftOuter": "プレイヤー1(左外):{{keys}}",
       "playerRightOuter": "プレイヤー2(右外）：{{keys}}",

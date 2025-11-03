@@ -53,6 +53,7 @@
     "registrationTitle": "Registrace hráčů",
     "registrationSubtitle": "Rychlá hra ({{count}} hráči)",
     "registrationError": "Nepodařilo se zobrazit obrazovku registrace hráčů.",
+    "gameOverTitle": "Hra skončila!",
     "controls": {
       "playerLeftOuter": "Hráč 1 (levý krajní): {{keys}}",
       "playerRightOuter": "Hráč 2 (pravý krajní): {{keys}}",
