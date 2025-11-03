@@ -325,8 +325,24 @@ export class QuickPlayPage extends SpacePageBase {
 
     if (this.currentStep === "registration") {
       void this.renderPlayerRegistrationView();
-    } else {
-      this.renderGameView(this.selectedPlayerCount);
+    } else if (this.currentStep === "game") {
+      //when playing game dont reset the game and only change language for these buttons
+      console.warn(
+        "QuickPlay: Language change during active match. Updating UI text manually.",
+      );
+      this.updateHeader();
+
+      const startBtn = document.getElementById("start-game");
+      if (startBtn) startBtn.textContent = this.t.startGame || "Start Game";
+
+      const pauseBtn = document.getElementById("pause-game");
+      if (pauseBtn) pauseBtn.textContent = this.t.pauseGame || "Pause";
+
+      const resetBtn = document.getElementById("reset-game");
+      if (resetBtn) resetBtn.textContent = this.t.resetGame || "Reset";
+
+      const modalTitle = document.querySelector("#game-over-modal h2");
+      if (modalTitle) modalTitle.textContent = "Hra skončila!";
     }
   }
 
