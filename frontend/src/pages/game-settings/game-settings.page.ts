@@ -4,6 +4,24 @@ import type {
   BallSpeedOption,
   MaxScoreOption,
 } from "../../shared/services/game-customization.service";
+import { onLanguageChange, i18next } from "../../i18n";
+
+type OptionSection = Record<string, string>;
+interface GameSettingsTranslations {
+  title?: string;
+  description?: string;
+  defaultLabel?: string;
+  fieldColor?: string;
+  ballColor?: string;
+  paddleColor?: string;
+  paddleLength?: string;
+  paddleLengthOptions?: OptionSection;
+  ballSize?: string;
+  ballSizeOptions?: OptionSection;
+  ballSpeed?: string;
+  pointsToWin?: string;
+  pointsOption?: string;
+}
 
 const MAX_SCORE_OPTIONS = [3, 4, 5, 6, 7, 8, 9, 10] as const;
 const BALL_SPEED_OPTIONS = ["slow", "normal", "fast"] as const;
@@ -15,16 +33,34 @@ const isBallSpeedOption = (value: string): value is BallSpeedOption =>
 export class GameSettingsPage extends SpacePageBase {
   private service: GameSettingsService;
   private unsubscribeSettings?: () => void;
+  private unsubscribeLanguage?: () => void;
+  private t: GameSettingsTranslations;
 
   constructor(container: HTMLElement) {
     super(container);
     this.service = new GameSettingsService();
+
+    this.t =
+      (i18next.t("gameSettings", {
+        returnObjects: true,
+      }) as GameSettingsTranslations) || {};
+    this.unsubscribeLanguage = onLanguageChange(
+      this.handleLanguageChange.bind(this),
+    );
   }
 
   render(): void {
     this.container.innerHTML = this.getTemplate();
     this.attachEventListeners();
     this.initializeSpaceBackground();
+  }
+
+  private handleLanguageChange(): void {
+    this.t =
+      (i18next.t("gameSettings", {
+        returnObjects: true,
+      }) as GameSettingsTranslations) || {};
+    this.render();
   }
 
   private getTemplate(): string {
@@ -36,76 +72,86 @@ export class GameSettingsPage extends SpacePageBase {
     const ballSpeed = this.service.getBallSpeed();
     const maxScore = this.service.getMaxScore();
     const isDefault = this.service.isUsingDefaults();
+
+    const t = this.t || {};
+    const paddleOptions = t.paddleLengthOptions || {};
+    const ballOptions = t.ballSizeOptions || {};
+    const homeButtonText = i18next.t("navigation.home", "Home");
+
     const maxScoreOptions = MAX_SCORE_OPTIONS.map(
       (option) =>
-        `<option value="${option}" ${option === maxScore ? "selected" : ""}>${option} points</option>`,
+        `<option value="${option}" ${option === maxScore ? "selected" : ""}>${i18next.t(
+          t.pointsOption || "{{count}} points",
+          { count: option },
+        )}</option>`,
     ).join("");
+
     const content = `
       <div class="text-white text-center max-w-md mx-auto">
-        <h2 class="text-2xl font-bold mb-4">Game Customization</h2>
+        <h2 class="text-2xl font-bold mb-4">${t.title || "Game Customization"}</h2>
         <p class="mb-6 text-gray-300">
-          Changes made here will apply to all game modes
+          ${t.description || "Changes made here will apply to all game modes"}
         </p>
 
         <div class="space-y-4">
           <div class="flex justify-between items-center bg-black bg-opacity-20 p-4 rounded-lg">
-            <label for="power-ups-toggle" class="text-lg">Default</label>
+            <label for="power-ups-toggle" class="text-lg">${t.defaultLabel || "Default"}</label>
             <input type="checkbox" id="power-ups-toggle" class="form-checkbox h-6 w-6 text-yellow-500 rounded focus:ring-yellow-400" ${isDefault ? "checked" : ""}>
           </div>
 
           <div class="flex justify-between items-center bg-black bg-opacity-20 p-4 rounded-lg">
-            <label for="field-color-picker" class="text-lg">Background color</label>
+            <label for="field-color-picker" class="text-lg">${t.fieldColor || "Background color"}</label>
             <input type="color" id="field-color-picker" value="${fieldColor}" class="w-12 h-10 p-0 border-0 rounded">
           </div>
 
           <div class="flex justify-between items-center bg-black bg-opacity-20 p-4 rounded-lg">
-            <label for="ball-color-picker" class="text-lg">Ball color</label>
+            <label for="ball-color-picker" class="text-lg">${t.ballColor || "Ball color"}</label>
             <input type="color" id="ball-color-picker" value="${ballColor}" class="w-12 h-10 p-0 border-0 rounded">
           </div>
 
           <div class="flex justify-between items-center bg-black bg-opacity-20 p-4 rounded-lg">
-            <label for="paddle-color-picker" class="text-lg">Paddle color</label>
+            <label for="paddle-color-picker" class="text-lg">${t.paddleColor || "Paddle color"}</label>
             <input type="color" id="paddle-color-picker" value="${paddleColor}" class="w-12 h-10 p-0 border-0 rounded">
           </div>
 
           <div class="bg-black bg-opacity-20 p-4 rounded-lg text-left">
-            <span class="text-lg block mb-3">Paddle length</span>
+            <span class="text-lg block mb-3">${t.paddleLength || "Paddle length"}</span>
             <div class="flex justify-around">
               <label class="flex items-center space-x-2">
                 <input type="radio" name="paddle-length" value="short" class="form-radio text-purple-500" ${paddleLength === "short" ? "checked" : ""}>
-                <span>Short</span>
+                <span>${paddleOptions.short || "Short"}</span>
               </label>
               <label class="flex items-center space-x-2">
                 <input type="radio" name="paddle-length" value="normal" class="form-radio text-purple-500" ${paddleLength === "normal" ? "checked" : ""}>
-                <span>Normal</span>
+                <span>${paddleOptions.normal || "Normal"}</span>
               </label>
               <label class="flex items-center space-x-2">
                 <input type="radio" name="paddle-length" value="long" class="form-radio text-purple-500" ${paddleLength === "long" ? "checked" : ""}>
-                <span>Long</span>
+                <span>${paddleOptions.long || "Long"}</span>
               </label>
             </div>
           </div>
 
           <div class="bg-black bg-opacity-20 p-4 rounded-lg text-left">
-            <span class="text-lg block mb-3">Ball size</span>
+            <span class="text-lg block mb-3">${t.ballSize || "Ball size"}</span>
             <div class="flex justify-around">
               <label class="flex items-center space-x-2">
                 <input type="radio" name="ball-size" value="small" class="form-radio text-purple-500" ${ballSize === "small" ? "checked" : ""}>
-                <span>Small</span>
+                <span>${ballOptions.small || "Small"}</span>
               </label>
               <label class="flex items-center space-x-2">
                 <input type="radio" name="ball-size" value="normal" class="form-radio text-purple-500" ${ballSize === "normal" ? "checked" : ""}>
-                <span>Normal</span>
+                <span>${ballOptions.normal || "Normal"}</span>
               </label>
               <label class="flex items-center space-x-2">
                 <input type="radio" name="ball-size" value="big" class="form-radio text-purple-500" ${ballSize === "big" ? "checked" : ""}>
-                <span>Big</span>
+                <span>${ballOptions.big || "Big"}</span>
               </label>
             </div>
           </div>
 
           <div class="bg-black bg-opacity-20 p-4 rounded-lg text-left">
-            <span class="text-lg block mb-3">Ball speed</span>
+            <span class="text-lg block mb-3">${t.ballSpeed || "Ball speed"}</span>
             <div class="flex justify-around">
               <label class="flex items-center space-x-2">
                 <input type="radio" name="ball-speed" value="slow" class="form-radio text-purple-500" ${ballSpeed === "slow" ? "checked" : ""}>
@@ -123,7 +169,7 @@ export class GameSettingsPage extends SpacePageBase {
           </div>
 
           <div class="bg-black bg-opacity-20 p-4 rounded-lg text-left">
-            <label for="max-score-select" class="text-lg block mb-3">Points to win</label>
+            <label for="max-score-select" class="text-lg block mb-3">${t.pointsToWin || "Points to win"}</label>
             <select id="max-score-select" class="w-full bg-black bg-opacity-40 border border-purple-500 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
               ${maxScoreOptions}
             </select>
@@ -131,7 +177,7 @@ export class GameSettingsPage extends SpacePageBase {
         </div>
 
         <button id="back-to-home" class="mt-8 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">
-          Home
+          ${homeButtonText}
         </button>
       </div>
     `;
@@ -152,7 +198,9 @@ export class GameSettingsPage extends SpacePageBase {
       "power-ups-toggle",
     ) as HTMLInputElement | null;
     const paddleLengthInputs = Array.from(
-      document.querySelectorAll<HTMLInputElement>("input[name='paddle-length']"),
+      document.querySelectorAll<HTMLInputElement>(
+        "input[name='paddle-length']",
+      ),
     );
     const ballSizeInputs = Array.from(
       document.querySelectorAll<HTMLInputElement>("input[name='ball-size']"),
@@ -281,6 +329,8 @@ export class GameSettingsPage extends SpacePageBase {
   destroy(): void {
     this.unsubscribeSettings?.();
     this.unsubscribeSettings = undefined;
+    this.unsubscribeLanguage?.();
+    this.unsubscribeLanguage = undefined;
     this.cleanupSpaceBackground();
   }
 }
