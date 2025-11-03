@@ -17,10 +17,15 @@ build/
 !.env.example
 
 # Database
-database/
+!database/migrations/
+!database/migrations/*.sql
+!database/schema.sql
+!database/seed.sql
 *.db
 *.sqlite
 *.sqlite3
+*.db-wal
+*.db-shm
 
 backend/database/transcendence.db
 backend/database/transcendence.db*

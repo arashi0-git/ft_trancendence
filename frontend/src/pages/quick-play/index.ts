@@ -58,12 +58,20 @@ export class QuickPlayPage extends SpacePageBase {
 
   private renderGameView(
     playerCount: number,
+    playerSelections: (PlayerOption | null)[],
     aiPlayers?: { [key: string]: { difficulty: "easy" | "medium" | "hard" } },
   ): void {
     const contentDiv = this.ensureBaseTemplate();
     if (!contentDiv) {
       console.warn(
         "QuickPlayPage: failed to ensure base template for game view",
+      );
+      return;
+    }
+
+    if (playerSelections.length !== playerCount) {
+      console.error(
+        `Player selections length (${playerSelections.length}) does not match player count (${playerCount})`,
       );
       return;
     }
@@ -82,11 +90,11 @@ export class QuickPlayPage extends SpacePageBase {
             <button id="reset-game" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 text-sm rounded border border-blue-400 shadow-lg">${this.t.resetGame || "Reset"}</button>
           </div>
         </div>
-        
+
         <div class="flex justify-center">
           <canvas id="pong-canvas" class="border-2 border-gray-300 bg-black max-w-full h-auto"></canvas>
         </div>
-        
+
         <div class="text-center text-sm text-gray-300">
           ${this.getControlsTemplate(playerCount)}
         </div>
@@ -99,13 +107,18 @@ export class QuickPlayPage extends SpacePageBase {
             <button id="reset-game-modal-btn" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded">
               Reset Game
             </button>
-          </div>  
+          </div>
         </div>
       </div>
     `;
     contentDiv.innerHTML = gameContent;
     this.attachGameEventListeners();
-    this.service.initializeGame("pong-canvas", playerCount, aiPlayers);
+    this.service.initializeGame(
+      "pong-canvas",
+      playerCount,
+      playerSelections,
+      aiPlayers,
+    );
   }
 
   private async renderPlayerRegistrationView(): Promise<void> {
@@ -215,7 +228,7 @@ export class QuickPlayPage extends SpacePageBase {
       }
     });
 
-    this.renderGameView(this.selectedPlayerCount, aiPlayers);
+    this.renderGameView(this.selectedPlayerCount, playerSelections, aiPlayers);
   }
 
   private attachGameEventListeners(): void {
