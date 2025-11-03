@@ -29,7 +29,7 @@ export type UserWithoutPassword = Omit<
 export type PublicUser = Omit<UserWithoutPassword, "token_version">;
 
 export function stripPassword(user: UserRecord): UserWithoutPassword {
-  const { password_hash, two_factor_enabled, ...rest } = user;
+  const { password_hash: _password_hash, two_factor_enabled, ...rest } = user;
   return {
     ...rest,
     two_factor_enabled: Boolean(two_factor_enabled),
@@ -37,7 +37,7 @@ export function stripPassword(user: UserRecord): UserWithoutPassword {
 }
 
 export function toPublicUser(user: UserWithoutPassword): PublicUser {
-  const { token_version, ...publicUser } = user;
+  const { token_version: _token_version, ...publicUser } = user;
   return publicUser;
 }
 

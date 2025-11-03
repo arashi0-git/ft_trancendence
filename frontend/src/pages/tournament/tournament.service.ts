@@ -107,6 +107,19 @@ export class TournamentService {
 
     if (this.contentContainer) {
       if (this.currentStep === "match" && this.gameManager.isGameActive()) {
+        console.warn("Language change during active match. Updating UI text manually.");
+
+        const tButtons = this.t.buttons || {};
+        //added some translations here for be ablet o switch language while in match
+        const startBtn = document.getElementById("start-tournament-game");
+        if (startBtn) startBtn.textContent = tButtons.startMatch || "Start Match";
+        
+        const pauseBtn = document.getElementById("pause-tournament-game");
+        if (pauseBtn) pauseBtn.textContent = tButtons.pause || "Pause";
+        
+        const resetBtn = document.getElementById("reset-tournament-game");
+        if (resetBtn) resetBtn.textContent = tButtons.reset || "Reset";
+      
         return;
       }
       this.initializeCurrentView();

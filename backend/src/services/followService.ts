@@ -3,6 +3,17 @@ import path from "path";
 import { FollowModel } from "../models/follow";
 import { UserModel, UserWithoutPassword, stripPassword } from "../models/user";
 
+function isSqliteConstraintViolation(
+  error: unknown,
+): error is { code?: string; errno?: number } {
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+
+  const maybeError = error as Record<string, unknown>;
+  return maybeError.code === "SQLITE_CONSTRAINT" || maybeError.errno === 19;
+}
+
 export class FollowService {
   static async listFollowing(userId: number): Promise<UserWithoutPassword[]> {
     const users = await FollowModel.getFollowingUsers(userId);
@@ -40,8 +51,8 @@ export class FollowService {
 
     try {
       await FollowModel.followUser(followerId, targetUser.id);
-    } catch (error: any) {
-      if (error.code === "SQLITE_CONSTRAINT" || error.errno === 19) {
+    } catch (error) {
+      if (isSqliteConstraintViolation(error)) {
         throw new Error("You already follow this user");
       }
       throw error;

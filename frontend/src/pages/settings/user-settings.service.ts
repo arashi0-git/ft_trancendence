@@ -3,21 +3,27 @@ import { NotificationService } from "../../shared/services/notification.service"
 import type {
   PublicUser,
   UpdateUserSettingsPayload,
-  FollowedUserSummary,
+  UpdateUserSettingsResponse,
+  FriendSummary,
   TwoFactorStatusResponse,
+  TwoFactorChallengeResponse,
 } from "../../shared/types/user";
 import { router } from "../../routes/router";
 
 export class UserSettingsService {
   private currentUser: PublicUser | null = null;
-  private following: FollowedUserSummary[] = [];
+  private friends: FriendSummary[] = [];
+
+  setCurrentUser(user: PublicUser): void {
+    this.currentUser = user;
+  }
 
   getUser(): PublicUser | null {
     return this.currentUser;
   }
 
-  getFollowing(): FollowedUserSummary[] {
-    return this.following;
+  getFriends(): FriendSummary[] {
+    return this.friends;
   }
 
   async loadCurrentUser(): Promise<PublicUser> {
@@ -34,11 +40,22 @@ export class UserSettingsService {
     }
   }
 
-  async saveSettings(payload: UpdateUserSettingsPayload): Promise<PublicUser> {
+  async saveSettings(
+    payload: UpdateUserSettingsPayload,
+  ): Promise<UpdateUserSettingsResponse | TwoFactorChallengeResponse> {
     try {
       const response = await AuthService.updateSettings(payload);
-      this.currentUser = response.user;
-      return this.currentUser;
+      if ("requiresTwoFactor" in response && response.requiresTwoFactor) {
+        if (response.user) {
+          this.currentUser = response.user;
+        }
+        return response;
+      }
+
+      if (response.user) {
+        this.currentUser = response.user;
+      }
+      return response;
     } catch (error) {
       console.error("Failed to save settings:", error);
       throw error;
@@ -56,35 +73,35 @@ export class UserSettingsService {
     }
   }
 
-  async loadFollowing(): Promise<FollowedUserSummary[]> {
+  async loadFriends(): Promise<FriendSummary[]> {
     try {
-      const list = await AuthService.getFollowing();
-      this.following = [...list].sort((a, b) =>
+      const list = await AuthService.getFriends();
+      this.friends = [...list].sort((a, b) =>
         a.username.localeCompare(b.username, undefined, {
           sensitivity: "base",
         }),
       );
-      return this.following;
+      return this.friends;
     } catch (error) {
-      console.error("Failed to load following list:", error);
+      console.error("Failed to load friends list:", error);
       throw error;
     }
   }
 
-  async addFollowing(username: string): Promise<FollowedUserSummary> {
+  async addFriend(username: string): Promise<FriendSummary> {
     try {
-      const user = await AuthService.followUser(username);
-      const existingIndex = this.following.findIndex((f) => f.id === user.id);
+      const user = await AuthService.addFriend(username);
+      const existingIndex = this.friends.findIndex((f) => f.id === user.id);
       if (existingIndex === -1) {
-        this.following = [...this.following, user].sort((a, b) =>
+        this.friends = [...this.friends, user].sort((a, b) =>
           a.username.localeCompare(b.username, undefined, {
             sensitivity: "base",
           }),
         );
       } else {
-        const updated = [...this.following];
+        const updated = [...this.friends];
         updated[existingIndex] = user;
-        this.following = updated.sort((a, b) =>
+        this.friends = updated.sort((a, b) =>
           a.username.localeCompare(b.username, undefined, {
             sensitivity: "base",
           }),
@@ -92,24 +109,33 @@ export class UserSettingsService {
       }
       return user;
     } catch (error) {
-      console.error("Failed to follow user:", error);
+      console.error("Failed to add friend:", error);
       throw error;
     }
   }
 
-  async removeFollowing(userId: number): Promise<void> {
+  async removeFriend(userId: number): Promise<void> {
     try {
-      await AuthService.unfollowUser(userId);
-      this.following = this.following.filter((user) => user.id !== userId);
+      await AuthService.removeFriend(userId);
+      this.friends = this.friends.filter((user) => user.id !== userId);
     } catch (error) {
-      console.error("Failed to remove following:", error);
+      console.error("Failed to remove friend:", error);
       throw error;
     }
   }
 
-  async enableTwoFactor(): Promise<TwoFactorStatusResponse> {
+  async enableTwoFactor(): Promise<
+    TwoFactorStatusResponse | TwoFactorChallengeResponse
+  > {
     try {
       const result = await AuthService.enableTwoFactor();
+      if ("requiresTwoFactor" in result && result.requiresTwoFactor) {
+        if (result.user) {
+          this.currentUser = result.user;
+        }
+        return result;
+      }
+
       if (!result.user) {
         throw new Error("User data missing from enable 2FA response");
       }
@@ -121,11 +147,18 @@ export class UserSettingsService {
     }
   }
 
-  async disableTwoFactor(
-    currentPassword: string,
-  ): Promise<TwoFactorStatusResponse> {
+  async disableTwoFactor(): Promise<
+    TwoFactorStatusResponse | TwoFactorChallengeResponse
+  > {
     try {
-      const result = await AuthService.disableTwoFactor(currentPassword);
+      const result = await AuthService.disableTwoFactor();
+      if ("requiresTwoFactor" in result && result.requiresTwoFactor) {
+        if (result.user) {
+          this.currentUser = result.user;
+        }
+        return result;
+      }
+
       if (!result.user) {
         throw new Error("User data missing from disable 2FA response");
       }

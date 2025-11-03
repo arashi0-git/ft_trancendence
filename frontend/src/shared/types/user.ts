@@ -26,12 +26,22 @@ export interface AuthResponse {
   token: string;
 }
 
+export type TwoFactorPurpose =
+  | "login"
+  | "enable_2fa"
+  | "disable_2fa"
+  | "email_change";
+
 export interface TwoFactorChallengeResponse {
   requiresTwoFactor: true;
   twoFactorToken: string;
   delivery: "email";
+  destination?: string;
   expiresIn: number;
   message: string;
+  purpose: TwoFactorPurpose;
+  user?: PublicUser;
+  token?: string;
 }
 
 export type AuthResult = AuthResponse | TwoFactorChallengeResponse;
@@ -39,6 +49,11 @@ export type AuthResult = AuthResponse | TwoFactorChallengeResponse;
 export interface TwoFactorVerifyPayload {
   token: string;
   code: string;
+}
+
+export interface TwoFactorVerificationResponse extends AuthResponse {
+  operation: TwoFactorPurpose;
+  twoFactorEnabled?: boolean;
 }
 
 export interface TwoFactorStatusResponse {
@@ -59,17 +74,18 @@ export interface UpdateUserSettingsResponse {
   token?: string;
 }
 
-export type FollowedUserSummary = Pick<
+export type FriendSummary = Pick<
   PublicUser,
   "id" | "username" | "profile_image_url" | "is_online" | "last_login"
 >;
 
-export interface FollowingListResponse {
-  following: FollowedUserSummary[];
+export interface FriendsListResponse {
+  friends?: FriendSummary[];
+  following?: FriendSummary[];
 }
 
-export interface FollowUserResponse {
-  user: FollowedUserSummary;
+export interface FriendResponse {
+  user: FriendSummary;
 }
 
 export interface ApiError {

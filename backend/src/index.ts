@@ -127,12 +127,12 @@ async function setupRoutes() {
   await fastify.register(authRoutes, { prefix: "/api/auth" });
   await fastify.register(userRoutes, { prefix: "/api/users" });
   // ヘルスチェック
-  fastify.get("/api/health", async (request, reply) => {
+  fastify.get("/api/health", async (_request, _reply) => {
     return { status: "ok", timestamp: new Date().toISOString() };
   });
 
   // API基本ルート
-  fastify.get("/api", async (request, reply) => {
+  fastify.get("/api", async (_request, _reply) => {
     return {
       message: "ft_transcendence API",
       version: "1.0.0",

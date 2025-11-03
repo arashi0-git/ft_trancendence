@@ -9,6 +9,7 @@ import {
   GameEvents,
 } from "../types/game";
 import { BabylonRender } from "./babylon-render";
+import { GameManagerService } from "../services/game-manager.service";
 
 interface PongGameOptions {
   fieldColorHex?: string;
@@ -29,8 +30,8 @@ const MAX_MAX_SCORE = 10;
 const COLOR_HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
 const BASE_PADDLE_HEIGHT = 80;
 const BASE_BALL_RADIUS = 8;
-const BASE_BALL_SPEED = 11;
-const BASE_PADDLE_SPEED = 5;
+const BASE_BALL_SPEED = 9;
+const BASE_PADDLE_SPEED = 6;
 const INITIAL_BALL_SPEED_FACTOR = 0.5;
 const INITIAL_SERVE_SPEED = BASE_BALL_SPEED * INITIAL_BALL_SPEED_FACTOR;
 
@@ -66,9 +67,13 @@ export class PongGame3D {
   private gameState!: GameState;
   private config: GameConfig;
   private keyState: KeyState = {};
-  private eventListeners: Partial<
-    Record<keyof GameEvents, Array<(...args: any[]) => void>>
-  > = {};
+  private eventListeners: {
+    onScoreUpdate?: Array<(score: Score) => void>;
+    onGameEnd?: Array<
+      (data: { winner: number; score1: number; score2: number }) => void
+    >;
+    onGameStateChange?: Array<(state: GameState) => void>;
+  } = {};
   private isAiMode: boolean = false;
   private aiPlayers: {
     player1: boolean;
@@ -81,6 +86,7 @@ export class PongGame3D {
     player3: false,
     player4: false,
   }; // AIプレイヤー管理
+  private gameManager: GameManagerService | null = null;
   private animationId: number | null = null;
   private boundHandleResize: () => void;
   private playerCount: number;
@@ -318,6 +324,10 @@ export class PongGame3D {
     this.aiPlayers.player2 = aiPlayers.player2 || false;
     this.aiPlayers.player3 = aiPlayers.player3 || false;
     this.aiPlayers.player4 = aiPlayers.player4 || false;
+  }
+
+  public setGameManager(gameManager: GameManagerService): void {
+    this.gameManager = gameManager;
   }
 
   public moveAiPaddle(deltaY: number, playerNumber: 1 | 2 | 3 | 4 = 2): void {
@@ -646,6 +656,8 @@ export class PongGame3D {
     ball.speed = INITIAL_SERVE_SPEED;
     this.isBallAtFullSpeed = false;
     this.setBallDirection(direction, Math.random() * 0.5 - 0.25);
+
+    this.gameManager?.notifyAiPlayersOfBallReset();
   }
 
   private endGame(winner: number): void {
@@ -757,7 +769,9 @@ export class PongGame3D {
     return "normal";
   }
 
-  private normalizeBallSpeed(speed?: string | BallSpeedSetting): BallSpeedSetting {
+  private normalizeBallSpeed(
+    speed?: string | BallSpeedSetting,
+  ): BallSpeedSetting {
     if (speed === "slow" || speed === "normal" || speed === "fast") {
       return speed;
     }
@@ -868,11 +882,33 @@ export class PongGame3D {
     event: E,
     callback: GameEvents[E],
   ): void {
-    if (callback) {
-      if (!this.eventListeners[event]) {
-        this.eventListeners[event] = [];
+    if (!callback) return;
+
+    if (event === "onScoreUpdate") {
+      if (!this.eventListeners.onScoreUpdate) {
+        this.eventListeners.onScoreUpdate = [];
       }
-      this.eventListeners[event]?.push(callback);
+      this.eventListeners.onScoreUpdate.push(
+        callback as (score: Score) => void,
+      );
+    } else if (event === "onGameEnd") {
+      if (!this.eventListeners.onGameEnd) {
+        this.eventListeners.onGameEnd = [];
+      }
+      this.eventListeners.onGameEnd.push(
+        callback as (data: {
+          winner: number;
+          score1: number;
+          score2: number;
+        }) => void,
+      );
+    } else if (event === "onGameStateChange") {
+      if (!this.eventListeners.onGameStateChange) {
+        this.eventListeners.onGameStateChange = [];
+      }
+      this.eventListeners.onGameStateChange.push(
+        callback as (state: GameState) => void,
+      );
     }
   }
 
@@ -880,13 +916,36 @@ export class PongGame3D {
     event: E,
     callback: GameEvents[E],
   ): void {
-    if (!this.eventListeners[event] || !callback) {
-      return;
-    }
+    if (!callback) return;
 
-    const index = this.eventListeners[event]?.indexOf(callback) ?? -1;
-    if (index > -1) {
-      this.eventListeners[event]?.splice(index, 1);
+    if (event === "onScoreUpdate" && this.eventListeners.onScoreUpdate) {
+      const index = this.eventListeners.onScoreUpdate.indexOf(
+        callback as (score: Score) => void,
+      );
+      if (index > -1) {
+        this.eventListeners.onScoreUpdate.splice(index, 1);
+      }
+    } else if (event === "onGameEnd" && this.eventListeners.onGameEnd) {
+      const index = this.eventListeners.onGameEnd.indexOf(
+        callback as (data: {
+          winner: number;
+          score1: number;
+          score2: number;
+        }) => void,
+      );
+      if (index > -1) {
+        this.eventListeners.onGameEnd.splice(index, 1);
+      }
+    } else if (
+      event === "onGameStateChange" &&
+      this.eventListeners.onGameStateChange
+    ) {
+      const index = this.eventListeners.onGameStateChange.indexOf(
+        callback as (state: GameState) => void,
+      );
+      if (index > -1) {
+        this.eventListeners.onGameStateChange.splice(index, 1);
+      }
     }
   }
 
@@ -898,12 +957,12 @@ export class PongGame3D {
         obj.map((v) => this.deepFreeze(v)),
       ) as unknown as Readonly<T>;
 
-    const out: any = {};
+    const out: Record<string, unknown> = {};
     for (const k in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, k))
-        out[k] = this.deepFreeze((obj as any)[k]);
+        out[k] = this.deepFreeze(obj[k]);
     }
-    return Object.freeze(out);
+    return Object.freeze(out) as Readonly<T>;
   }
 
   private deepClone<T>(obj: T): T {
