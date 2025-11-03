@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
       __API_BASE_URL__: JSON.stringify(env.VITE_API_BASE_URL || "/api"),
     },
     build: {
+      target: ["chrome87", "firefox78"],
       outDir: "dist",
       emptyOutDir: true,
       rollupOptions: {

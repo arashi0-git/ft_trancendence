@@ -27,5 +27,11 @@
     "eslint-plugin-unused-imports": "^3.0.0",
     "typescript": "^5.5.4",
     "vite": "^5.0.8"
-  }
+  },
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Firefox versions",
+    "Chrome >= 87",
+    "Firefox >= 78"
+  ]
 }
