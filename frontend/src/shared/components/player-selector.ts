@@ -1,6 +1,28 @@
 import type { PlayerOption } from "../types/tournament";
 import { AuthService } from "../services/auth-service";
 
+interface DifficultyTranslations {
+  easy?: string;
+  medium?: string;
+  hard?: string;
+}
+interface PlayerSelectorTranslations {
+  label?: string;
+  selectPlaceholder?: string;
+  aiOption?: string;
+  customOption?: string;
+  aiDifficulty?: string;
+  difficulty?: DifficultyTranslations;
+  customAlias?: string;
+  customPlaceholder?: string;
+  currentUser?: string;
+  aiDisplayName?: string;
+}
+
+export interface PlayerSelectorConfig {
+  translations: PlayerSelectorTranslations;
+}
+
 export class PlayerSelector {
   private container: HTMLElement;
   private playerIndex: number;
@@ -13,6 +35,7 @@ export class PlayerSelector {
     type: string;
     handler: EventListener;
   }> = [];
+  private t: PlayerSelectorTranslations = {};
 
   constructor(container: HTMLElement, playerIndex: number) {
     this.container = container;
@@ -44,45 +67,62 @@ export class PlayerSelector {
     this.eventListeners = [];
   }
 
-  async render(): Promise<void> {
+  async render(config: PlayerSelectorConfig): Promise<void> {
     // 既存のイベントリスナーをクリア
     this.destroy();
+    this.t = config.translations || {};
 
     const playerOptions = await this.getPlayerOptions();
 
+    const label = this.formatText(this.t.label || "Player {{index}}", {
+      index: this.playerIndex,
+    });
+    const placeholder = this.t.selectPlaceholder || "Select player or AI";
+    const customOptionLabel = this.t.customOption || "Enter custom alias";
+    const difficultyLabel = this.t.aiDifficulty || "AI Difficulty";
+    const customAliasLabel = this.t.customAlias || "Custom Alias";
+    const customAliasPlaceholder =
+      this.t.customPlaceholder || "Enter custom alias";
+
+    const difficultyButtonsHtml = (["easy", "medium", "hard"] as const)
+      .map((difficulty) => {
+        const label = this.getDifficultyLabel(difficulty);
+        return `
+            <button type="button" class="ai-difficulty-btn px-3 py-1 text-xs rounded border" data-difficulty="${difficulty}">
+              ${this.escapeHtml(label)}
+            </button>`;
+      })
+      .join("");
+
     this.container.innerHTML = `
       <div class="player-selector">
-        <label class="block text-sm font-medium text-white mb-1">Player ${this.playerIndex}</label>
+        <label class="block text-sm font-medium text-white mb-1">${this.escapeHtml(label)}</label>
         <div class="relative">
           <select id="player-${this.playerIndex}-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
-            <option value="">Select player or AI</option>
+            <option value="">${this.escapeHtml(placeholder)}</option>
             ${playerOptions
               .map(
                 (option) =>
-                  `<option value="${this.escapeHtml(option.id)}" data-is-ai="${option.isAI}" data-ai-difficulty="${this.escapeHtml(option.aiDifficulty || "")}" data-user-id="${option.userId || ""}">${this.escapeHtml(option.displayName)}</option>`,
+                  `<option value="${this.escapeHtml(option.id)}" data-is-ai="${option.isAI}" data-ai-difficulty="${this.escapeHtml(option.aiDifficulty || "")}" data-user-id="${option.userId ?? ""}">${this.escapeHtml(option.displayName)}</option>`,
               )
               .join("")}
-            <option value="custom">Enter custom alias</option>
+            <option value="custom">${this.escapeHtml(customOptionLabel)}</option>
           </select>
         </div>
         
-        <!-- AI難易度選択 -->
         <div id="ai-difficulty-${this.playerIndex}" class="mt-2 hidden">
-          <label class="block text-sm font-medium text-white mb-1">AI Difficulty</label>
+          <label class="block text-sm font-medium text-white mb-1">${this.escapeHtml(difficultyLabel)}</label>
           <div class="flex space-x-2">
-            <button type="button" class="ai-difficulty-btn px-3 py-1 text-xs rounded border" data-difficulty="easy">Easy</button>
-            <button type="button" class="ai-difficulty-btn px-3 py-1 text-xs rounded border" data-difficulty="medium">Medium</button>
-            <button type="button" class="ai-difficulty-btn px-3 py-1 text-xs rounded border" data-difficulty="hard">Hard</button>
+            ${difficultyButtonsHtml}
           </div>
         </div>
         
-        <!-- カスタムエイリアス入力 -->
         <div id="custom-alias-${this.playerIndex}" class="mt-2 hidden">
-          <label class="block text-sm font-medium text-white mb-1">Custom Alias</label>
+          <label class="block text-sm font-medium text-white mb-1">${this.escapeHtml(customAliasLabel)}</label>
           <input
             type="text"
             id="custom-alias-input-${this.playerIndex}"
-            placeholder="Enter custom alias"
+            placeholder="${this.escapeHtml(customAliasPlaceholder)}"
             maxlength="20"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           >
@@ -102,7 +142,12 @@ export class PlayerSelector {
         const user = await AuthService.getCurrentUser();
         options.push({
           id: `user-${user.id}`,
-          displayName: `${user.username} (You)`,
+          displayName: this.formatText(
+            this.t.currentUser || "{{username}} (You)",
+            {
+              username: user.username,
+            },
+          ),
           isAI: false,
           userId: user.id,
         });
@@ -114,7 +159,7 @@ export class PlayerSelector {
     // AIオプションを1つだけ追加
     options.push({
       id: "ai",
-      displayName: "AI",
+      displayName: this.t.aiOption || "AI",
       isAI: true,
       aiDifficulty: "medium", // デフォルト難易度
     });
@@ -140,6 +185,8 @@ export class PlayerSelector {
       this.addEventListener(select, "change", () => {
         const selectedOption = select.options[select.selectedIndex];
         const value = selectedOption.value;
+        const datasetDifficulty = (selectedOption.dataset.aiDifficulty ||
+          "medium") as "easy" | "medium" | "hard";
 
         // コンテナを隠す
         aiDifficultyContainer?.classList.add("hidden");
@@ -153,13 +200,20 @@ export class PlayerSelector {
         } else if (value && selectedOption.dataset.isAi === "true") {
           // AIが選択された場合、難易度選択を表示
           aiDifficultyContainer?.classList.remove("hidden");
-          this.setAIDifficultyButtons("medium"); // デフォルトはmedium
+          this.setAIDifficultyButtons(datasetDifficulty); // デフォルトはmedium
 
+          const difficultyLabel = this.getDifficultyLabel(datasetDifficulty);
           this.currentSelection = {
             id: value,
-            displayName: `AI Player ${this.playerIndex} (Medium)`, // 枠ごとに一意な表示名
+            displayName: this.formatText(
+              this.t.aiDisplayName || "AI Player {{index}} ({{difficulty}})",
+              {
+                index: this.playerIndex,
+                difficulty: difficultyLabel,
+              },
+            ),
             isAI: true,
-            aiDifficulty: "medium",
+            aiDifficulty: datasetDifficulty,
           };
           this.onSelectionChange?.(this.currentSelection);
         } else if (value) {
@@ -195,7 +249,13 @@ export class PlayerSelector {
 
         if (this.currentSelection?.isAI) {
           this.currentSelection.aiDifficulty = difficulty;
-          this.currentSelection.displayName = `AI Player ${this.playerIndex} (${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)})`;
+          this.currentSelection.displayName = this.formatText(
+            this.t.aiDisplayName || "AI Player {{index}} ({{difficulty}})",
+            {
+              index: this.playerIndex,
+              difficulty: this.getDifficultyLabel(difficulty),
+            },
+          );
           this.onSelectionChange?.(this.currentSelection);
         }
       });
@@ -234,6 +294,25 @@ export class PlayerSelector {
         btn.classList.remove("bg-blue-500", "text-white");
       }
     });
+  }
+
+  private formatText(
+    template: string,
+    variables: Record<string, string | number>,
+  ): string {
+    return Object.entries(variables).reduce(
+      (acc, [key, value]) =>
+        acc.replace(new RegExp(`{{\\s*${key}\\s*}}`, "g"), String(value)),
+      template,
+    );
+  }
+
+  private getDifficultyLabel(difficulty: "easy" | "medium" | "hard"): string {
+    const difficultyLabels = this.t.difficulty || {};
+    return (
+      difficultyLabels[difficulty] ??
+      difficulty.charAt(0).toUpperCase() + difficulty.slice(1)
+    );
   }
 
   public setOnSelectionChange(

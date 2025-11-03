@@ -1,6 +1,13 @@
 import { PlayerSelector } from "./player-selector";
 import type { PlayerOption } from "../types/tournament";
 
+type TranslationSection = Record<string, string>;
+
+interface ManagerTranslations {
+  selector?: TranslationSection;
+  validation?: TranslationSection;
+}
+
 export interface PlayerRegistrationConfig {
   container: HTMLElement;
   playerCount: number;
@@ -8,6 +15,7 @@ export interface PlayerRegistrationConfig {
   subtitle?: string;
   startButtonId: string;
   requireHumanPlayer?: boolean;
+  translations?: ManagerTranslations;
   onSelectionChange?: (selections: (PlayerOption | null)[]) => void;
 }
 
@@ -15,6 +23,8 @@ export class PlayerRegistrationManager {
   private config: PlayerRegistrationConfig | null = null;
   private playerSelectors: PlayerSelector[] = [];
   private playerSelections: (PlayerOption | null)[] = [];
+
+  constructor() {}
 
   async render(config: PlayerRegistrationConfig): Promise<void> {
     try {
@@ -33,15 +43,14 @@ export class PlayerRegistrationManager {
         : "";
 
       config.container.innerHTML = `
-				<div class="text-center mb-4">
-					${titleHtml}
-					${subtitleHtml}
-				</div>
+        <div class="text-center mb-4">
+          ${titleHtml}
+          ${subtitleHtml}
+        </div>
 
-				<div id="player-selectors" class="space-y-4 mb-4">
-					<!-- プレイヤー選択フィールド生成 -->
-				</div>
-			`;
+        <div id="player-selectors" class="space-y-4 mb-4">
+          </div>
+      `;
 
       await this.generatePlayerSelectors();
       this.validatePlayerSelections();
@@ -63,6 +72,8 @@ export class PlayerRegistrationManager {
       throw new Error("Player selectors container not found");
     }
 
+    const selectorTranslations = this.config.translations?.selector || {};
+
     playerSelectorsContainer.innerHTML = "";
     this.cleanupPlayerSelectors();
     this.playerSelections = new Array(this.config.playerCount).fill(null);
@@ -74,8 +85,11 @@ export class PlayerRegistrationManager {
       playerSelectorsContainer.appendChild(selectorDiv);
 
       const playerSelector = new PlayerSelector(selectorDiv, i);
+
       try {
-        await playerSelector.render();
+        await playerSelector.render({
+          translations: selectorTranslations,
+        });
 
         playerSelector.setOnSelectionChange((playerOption) => {
           this.playerSelections[i - 1] = playerOption;
@@ -91,7 +105,6 @@ export class PlayerRegistrationManager {
         selectorDiv.remove();
       }
     }
-
     if (successfulSelectors === 0) {
       throw new Error("Failed to render any player selectors");
     }
@@ -118,6 +131,8 @@ export class PlayerRegistrationManager {
   }
 
   private getValidationError(): string | null {
+    const validationMessages = this.config?.translations?.validation || {};
+
     const aliases = new Set<string>();
     let hasHumanPlayer = false;
     let missingPlayers = 0;
@@ -128,12 +143,9 @@ export class PlayerRegistrationManager {
         missingPlayers++;
         return;
       }
-
-      // 人間プレイヤーがいるかチェック
       if (!selection.isAI) {
         hasHumanPlayer = true;
       }
-
       const alias = selection.displayName.toLowerCase();
       if (aliases.has(alias)) {
         hasDuplicateNames = true;
@@ -142,15 +154,21 @@ export class PlayerRegistrationManager {
       }
     });
 
-    // エラーメッセージの優先順位
     if (missingPlayers > 0) {
-      return `${missingPlayers}人のプレイヤーが選択されていません`;
+      return this.formatText(
+        validationMessages.missingPlayers ||
+          "{{count}} players are not selected",
+        { count: missingPlayers },
+      );
     }
     if (hasDuplicateNames) {
-      return "プレイヤー名が重複しています";
+      return validationMessages.duplicateNames || "Player names must be unique";
     }
     if (this.config?.requireHumanPlayer && !hasHumanPlayer) {
-      return "少なくとも1人は人間プレイヤーを選択してください";
+      return (
+        validationMessages.requireHuman ||
+        "Please select at least one human player"
+      );
     }
 
     return null;
@@ -162,6 +180,17 @@ export class PlayerRegistrationManager {
     });
     this.playerSelectors = [];
     this.playerSelections = [];
+  }
+
+  private formatText(
+    template: string,
+    variables: Record<string, string | number>,
+  ): string {
+    return Object.entries(variables).reduce(
+      (acc, [key, value]) =>
+        acc.replace(new RegExp(`{{\\s*${key}\\s*}}`, "g"), String(value)),
+      template,
+    );
   }
 
   private escapeHtml(text: string): string {
