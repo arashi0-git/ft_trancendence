@@ -25,13 +25,23 @@ export class TournamentPage extends SpacePageBase {
     const backButton = this.service.getBackButtonTemplate();
     const title = this.service.getPageTitle();
 
-    const content = `
+    const headerTitle = title
+      ? `<h2 class="text-xl font-semibold text-white">${title}</h2>`
+      : "";
+    const headerActions = backButton
+      ? `<div class="space-x-2">${backButton}</div>`
+      : "";
+    const header =
+      headerTitle || headerActions
+        ? `
         <div class="flex justify-between items-center mb-2">
-          <h2 class="text-xl font-semibold text-white">${title}</h2>
-          <div class="space-x-2">
-            ${backButton}
-          </div>
-        </div>
+          ${headerTitle}
+          ${headerActions}
+        </div>`
+        : "";
+
+    const content = `
+        ${header}
         <div id="tournament-content"></div>
         <div id="game-over-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
             <div class="bg-gray-800 p-8 rounded-lg shadow-xl text-center border-2 border-green-500 max-w-sm w-full">

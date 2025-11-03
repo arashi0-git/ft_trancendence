@@ -1,31 +1,27 @@
 import type { PlayerOption } from "../types/tournament";
 import { AuthService } from "../services/auth-service";
-import { i18next } from "../../i18n";
 
-type TranslateFn = (key: string, options?: Record<string, unknown>) => unknown;
-
-interface PlayerSelectorCopy {
-  label: string;
-  selectPlaceholder: string;
-  aiOption: string;
-  customOption: string;
-  aiDifficulty: string;
-  difficulty: {
-    easy: string;
-    medium: string;
-    hard: string;
-  };
-  customAlias: string;
-  customPlaceholder: string;
-  currentUser: string;
-  aiDisplayName: string;
+interface DifficultyTranslations {
+  easy?: string;
+  medium?: string;
+  hard?: string;
+}
+interface PlayerSelectorTranslations {
+  label?: string;
+  selectPlaceholder?: string;
+  aiOption?: string;
+  customOption?: string;
+  aiDifficulty?: string;
+  difficulty?: DifficultyTranslations;
+  customAlias?: string;
+  customPlaceholder?: string;
+  currentUser?: string;
+  aiDisplayName?: string;
 }
 
-type PlayerSelectorCopyInput = Partial<
-  Omit<PlayerSelectorCopy, "difficulty">
-> & {
-  difficulty?: Partial<PlayerSelectorCopy["difficulty"]>;
-};
+export interface PlayerSelectorConfig {
+  translations: PlayerSelectorTranslations;
+}
 
 export class PlayerSelector {
   private container: HTMLElement;
@@ -39,20 +35,11 @@ export class PlayerSelector {
     type: string;
     handler: EventListener;
   }> = [];
-  private readonly translateFn: TranslateFn | null;
-  private copy: PlayerSelectorCopy;
+  private t: PlayerSelectorTranslations = {};
 
-  constructor(
-    container: HTMLElement,
-    playerIndex: number,
-    translateFn?: TranslateFn,
-  ) {
+  constructor(container: HTMLElement, playerIndex: number) {
     this.container = container;
     this.playerIndex = playerIndex;
-    this.translateFn =
-      translateFn ??
-      (typeof i18next?.t === "function" ? i18next.t.bind(i18next) : null);
-    this.copy = this.buildCopy();
   }
 
   private escapeHtml(unsafe: string): string {
@@ -80,18 +67,23 @@ export class PlayerSelector {
     this.eventListeners = [];
   }
 
-  async render(): Promise<void> {
+  async render(config: PlayerSelectorConfig): Promise<void> {
     // 既存のイベントリスナーをクリア
     this.destroy();
-    this.copy = this.buildCopy();
+    this.t = config.translations || {};
 
     const playerOptions = await this.getPlayerOptions();
-    const label = this.formatText(this.copy.label, { index: this.playerIndex });
-    const placeholder = this.copy.selectPlaceholder;
-    const customOptionLabel = this.copy.customOption;
-    const difficultyLabel = this.copy.aiDifficulty;
-    const customAliasLabel = this.copy.customAlias;
-    const customAliasPlaceholder = this.copy.customPlaceholder;
+
+    const label = this.formatText(this.t.label || "Player {{index}}", {
+      index: this.playerIndex,
+    });
+    const placeholder = this.t.selectPlaceholder || "Select player or AI";
+    const customOptionLabel = this.t.customOption || "Enter custom alias";
+    const difficultyLabel = this.t.aiDifficulty || "AI Difficulty";
+    const customAliasLabel = this.t.customAlias || "Custom Alias";
+    const customAliasPlaceholder =
+      this.t.customPlaceholder || "Enter custom alias";
+
     const difficultyButtonsHtml = (["easy", "medium", "hard"] as const)
       .map((difficulty) => {
         const label = this.getDifficultyLabel(difficulty);
@@ -118,7 +110,6 @@ export class PlayerSelector {
           </select>
         </div>
         
-        <!-- AI難易度選択 -->
         <div id="ai-difficulty-${this.playerIndex}" class="mt-2 hidden">
           <label class="block text-sm font-medium text-white mb-1">${this.escapeHtml(difficultyLabel)}</label>
           <div class="flex space-x-2">
@@ -126,7 +117,6 @@ export class PlayerSelector {
           </div>
         </div>
         
-        <!-- カスタムエイリアス入力 -->
         <div id="custom-alias-${this.playerIndex}" class="mt-2 hidden">
           <label class="block text-sm font-medium text-white mb-1">${this.escapeHtml(customAliasLabel)}</label>
           <input
@@ -152,9 +142,12 @@ export class PlayerSelector {
         const user = await AuthService.getCurrentUser();
         options.push({
           id: `user-${user.id}`,
-          displayName: this.formatText(this.copy.currentUser, {
-            username: user.username,
-          }),
+          displayName: this.formatText(
+            this.t.currentUser || "{{username}} (You)",
+            {
+              username: user.username,
+            },
+          ),
           isAI: false,
           userId: user.id,
         });
@@ -166,7 +159,7 @@ export class PlayerSelector {
     // AIオプションを1つだけ追加
     options.push({
       id: "ai",
-      displayName: this.copy.aiOption,
+      displayName: this.t.aiOption || "AI",
       isAI: true,
       aiDifficulty: "medium", // デフォルト難易度
     });
@@ -212,10 +205,13 @@ export class PlayerSelector {
           const difficultyLabel = this.getDifficultyLabel(datasetDifficulty);
           this.currentSelection = {
             id: value,
-            displayName: this.formatText(this.copy.aiDisplayName, {
-              index: this.playerIndex,
-              difficulty: difficultyLabel,
-            }),
+            displayName: this.formatText(
+              this.t.aiDisplayName || "AI Player {{index}} ({{difficulty}})",
+              {
+                index: this.playerIndex,
+                difficulty: difficultyLabel,
+              },
+            ),
             isAI: true,
             aiDifficulty: datasetDifficulty,
           };
@@ -254,7 +250,7 @@ export class PlayerSelector {
         if (this.currentSelection?.isAI) {
           this.currentSelection.aiDifficulty = difficulty;
           this.currentSelection.displayName = this.formatText(
-            this.copy.aiDisplayName,
+            this.t.aiDisplayName || "AI Player {{index}} ({{difficulty}})",
             {
               index: this.playerIndex,
               difficulty: this.getDifficultyLabel(difficulty),
@@ -300,55 +296,6 @@ export class PlayerSelector {
     });
   }
 
-  private buildCopy(): PlayerSelectorCopy {
-    const defaults: PlayerSelectorCopy = {
-      label: "Player {{index}}",
-      selectPlaceholder: "Select player or AI",
-      aiOption: "AI",
-      customOption: "Enter custom alias",
-      aiDifficulty: "AI Difficulty",
-      difficulty: {
-        easy: "Easy",
-        medium: "Medium",
-        hard: "Hard",
-      },
-      customAlias: "Custom Alias",
-      customPlaceholder: "Enter custom alias",
-      currentUser: "{{username}} (You)",
-      aiDisplayName: "AI Player {{index}} ({{difficulty}})",
-    };
-
-    if (!this.translateFn) {
-      return defaults;
-    }
-
-    const localized = this.translateFn("playerSelector", {
-      returnObjects: true,
-    });
-
-    return this.mergeCopy(defaults, localized);
-  }
-
-  private mergeCopy(
-    base: PlayerSelectorCopy,
-    localized: unknown,
-  ): PlayerSelectorCopy {
-    if (!localized || typeof localized !== "object") {
-      return base;
-    }
-
-    const overrides = localized as PlayerSelectorCopyInput;
-
-    return {
-      ...base,
-      ...overrides,
-      difficulty: {
-        ...base.difficulty,
-        ...(overrides.difficulty ?? {}),
-      },
-    };
-  }
-
   private formatText(
     template: string,
     variables: Record<string, string | number>,
@@ -361,8 +308,9 @@ export class PlayerSelector {
   }
 
   private getDifficultyLabel(difficulty: "easy" | "medium" | "hard"): string {
+    const difficultyLabels = this.t.difficulty || {};
     return (
-      this.copy.difficulty[difficulty] ??
+      difficultyLabels[difficulty] ??
       difficulty.charAt(0).toUpperCase() + difficulty.slice(1)
     );
   }

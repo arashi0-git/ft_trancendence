@@ -6,6 +6,23 @@ import type {
 } from "../../shared/services/game-customization.service";
 import { onLanguageChange, i18next } from "../../i18n";
 
+type OptionSection = Record<string, string>;
+interface GameSettingsTranslations {
+  title?: string;
+  description?: string;
+  defaultLabel?: string;
+  fieldColor?: string;
+  ballColor?: string;
+  paddleColor?: string;
+  paddleLength?: string;
+  paddleLengthOptions?: OptionSection;
+  ballSize?: string;
+  ballSizeOptions?: OptionSection;
+  ballSpeed?: string;
+  pointsToWin?: string;
+  pointsOption?: string;
+}
+
 const MAX_SCORE_OPTIONS = [3, 4, 5, 6, 7, 8, 9, 10] as const;
 const BALL_SPEED_OPTIONS = ["slow", "normal", "fast"] as const;
 const isMaxScoreOption = (value: number): value is MaxScoreOption =>
@@ -17,7 +34,7 @@ export class GameSettingsPage extends SpacePageBase {
   private service: GameSettingsService;
   private unsubscribeSettings?: () => void;
   private unsubscribeLanguage?: () => void;
-  private t: Record<string, any>;
+  private t: GameSettingsTranslations;
 
   constructor(container: HTMLElement) {
     super(container);
@@ -26,7 +43,7 @@ export class GameSettingsPage extends SpacePageBase {
     this.t =
       (i18next.t("gameSettings", {
         returnObjects: true,
-      }) as Record<string, any>) || {};
+      }) as GameSettingsTranslations) || {};
     this.unsubscribeLanguage = onLanguageChange(
       this.handleLanguageChange.bind(this),
     );
@@ -34,7 +51,6 @@ export class GameSettingsPage extends SpacePageBase {
 
   render(): void {
     this.container.innerHTML = this.getTemplate();
-    this.initializeAppHeader();
     this.attachEventListeners();
     this.initializeSpaceBackground();
   }
@@ -43,7 +59,7 @@ export class GameSettingsPage extends SpacePageBase {
     this.t =
       (i18next.t("gameSettings", {
         returnObjects: true,
-      }) as Record<string, any>) || {};
+      }) as GameSettingsTranslations) || {};
     this.render();
   }
 
@@ -315,7 +331,6 @@ export class GameSettingsPage extends SpacePageBase {
     this.unsubscribeSettings = undefined;
     this.unsubscribeLanguage?.();
     this.unsubscribeLanguage = undefined;
-    this.cleanupAppHeader();
     this.cleanupSpaceBackground();
   }
 }

@@ -1,16 +1,12 @@
 import { PlayerSelector } from "./player-selector";
 import type { PlayerOption } from "../types/tournament";
-import { i18next } from "../../i18n";
 
-type TranslateFn = (key: string, options?: Record<string, unknown>) => unknown;
+type TranslationSection = Record<string, string>;
 
-interface PlayerRegistrationMessages {
-  missingPlayers: string;
-  duplicateNames: string;
-  requireHuman: string;
+interface ManagerTranslations {
+  selector?: TranslationSection;
+  validation?: TranslationSection;
 }
-
-type PlayerRegistrationMessagesInput = Partial<PlayerRegistrationMessages>;
 
 export interface PlayerRegistrationConfig {
   container: HTMLElement;
@@ -19,7 +15,7 @@ export interface PlayerRegistrationConfig {
   subtitle?: string;
   startButtonId: string;
   requireHumanPlayer?: boolean;
-  translations?: Record<string, any>;
+  translations?: ManagerTranslations;
   onSelectionChange?: (selections: (PlayerOption | null)[]) => void;
 }
 
@@ -27,21 +23,13 @@ export class PlayerRegistrationManager {
   private config: PlayerRegistrationConfig | null = null;
   private playerSelectors: PlayerSelector[] = [];
   private playerSelections: (PlayerOption | null)[] = [];
-  private readonly translateFn: TranslateFn | null;
-  private messages: PlayerRegistrationMessages;
 
-  constructor(translateFn?: TranslateFn) {
-    this.translateFn =
-      translateFn ??
-      (typeof i18next?.t === "function" ? i18next.t.bind(i18next) : null);
-    this.messages = this.buildMessages();
-  }
+  constructor() {}
 
   async render(config: PlayerRegistrationConfig): Promise<void> {
     try {
       this.destroy();
       this.config = config;
-      this.messages = this.buildMessages();
 
       if (!config.container) {
         throw new Error("Container element is required");
@@ -55,15 +43,14 @@ export class PlayerRegistrationManager {
         : "";
 
       config.container.innerHTML = `
-				<div class="text-center mb-4">
-					${titleHtml}
-					${subtitleHtml}
-				</div>
+        <div class="text-center mb-4">
+          ${titleHtml}
+          ${subtitleHtml}
+        </div>
 
-				<div id="player-selectors" class="space-y-4 mb-4">
-					<!-- プレイヤー選択フィールド生成 -->
-				</div>
-			`;
+        <div id="player-selectors" class="space-y-4 mb-4">
+          </div>
+      `;
 
       await this.generatePlayerSelectors();
       this.validatePlayerSelections();
@@ -85,6 +72,8 @@ export class PlayerRegistrationManager {
       throw new Error("Player selectors container not found");
     }
 
+    const selectorTranslations = this.config.translations?.selector || {};
+
     playerSelectorsContainer.innerHTML = "";
     this.cleanupPlayerSelectors();
     this.playerSelections = new Array(this.config.playerCount).fill(null);
@@ -95,13 +84,12 @@ export class PlayerRegistrationManager {
       const selectorDiv = document.createElement("div");
       playerSelectorsContainer.appendChild(selectorDiv);
 
-      const playerSelector = new PlayerSelector(
-        selectorDiv,
-        i,
-        this.translateFn ?? undefined,
-      );
+      const playerSelector = new PlayerSelector(selectorDiv, i);
+
       try {
-        await playerSelector.render();
+        await playerSelector.render({
+          translations: selectorTranslations,
+        });
 
         playerSelector.setOnSelectionChange((playerOption) => {
           this.playerSelections[i - 1] = playerOption;
@@ -117,7 +105,6 @@ export class PlayerRegistrationManager {
         selectorDiv.remove();
       }
     }
-
     if (successfulSelectors === 0) {
       throw new Error("Failed to render any player selectors");
     }
@@ -144,6 +131,8 @@ export class PlayerRegistrationManager {
   }
 
   private getValidationError(): string | null {
+    const validationMessages = this.config?.translations?.validation || {};
+
     const aliases = new Set<string>();
     let hasHumanPlayer = false;
     let missingPlayers = 0;
@@ -154,12 +143,9 @@ export class PlayerRegistrationManager {
         missingPlayers++;
         return;
       }
-
-      // 人間プレイヤーがいるかチェック
       if (!selection.isAI) {
         hasHumanPlayer = true;
       }
-
       const alias = selection.displayName.toLowerCase();
       if (aliases.has(alias)) {
         hasDuplicateNames = true;
@@ -168,17 +154,21 @@ export class PlayerRegistrationManager {
       }
     });
 
-    // エラーメッセージの優先順位
     if (missingPlayers > 0) {
-      return this.formatText(this.messages.missingPlayers, {
-        count: missingPlayers,
-      });
+      return this.formatText(
+        validationMessages.missingPlayers ||
+          "{{count}} players are not selected",
+        { count: missingPlayers },
+      );
     }
     if (hasDuplicateNames) {
-      return this.messages.duplicateNames;
+      return validationMessages.duplicateNames || "Player names must be unique";
     }
     if (this.config?.requireHumanPlayer && !hasHumanPlayer) {
-      return this.messages.requireHuman;
+      return (
+        validationMessages.requireHuman ||
+        "Please select at least one human player"
+      );
     }
 
     return null;
@@ -190,40 +180,6 @@ export class PlayerRegistrationManager {
     });
     this.playerSelectors = [];
     this.playerSelections = [];
-  }
-
-  private buildMessages(): PlayerRegistrationMessages {
-    const defaults: PlayerRegistrationMessages = {
-      missingPlayers: "{{count}} players are not selected",
-      duplicateNames: "Player names must be unique",
-      requireHuman: "Please select at least one human player",
-    };
-
-    if (!this.translateFn) {
-      return defaults;
-    }
-
-    const localized = this.translateFn("playerRegistration", {
-      returnObjects: true,
-    });
-
-    return this.mergeMessages(defaults, localized);
-  }
-
-  private mergeMessages(
-    base: PlayerRegistrationMessages,
-    localized: unknown,
-  ): PlayerRegistrationMessages {
-    if (!localized || typeof localized !== "object") {
-      return base;
-    }
-
-    const overrides = localized as PlayerRegistrationMessagesInput;
-
-    return {
-      ...base,
-      ...overrides,
-    };
   }
 
   private formatText(

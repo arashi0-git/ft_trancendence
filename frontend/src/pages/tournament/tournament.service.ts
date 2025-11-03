@@ -19,6 +19,7 @@ interface TournamentTranslations {
   notifications?: TranslationSection;
   modal?: TranslationSection;
   playerSelector?: TranslationSection;
+  playerRegistration?: TranslationSection;
 }
 
 export type TournamentStep = "registration" | "bracket" | "match" | "results";
@@ -107,19 +108,22 @@ export class TournamentService {
 
     if (this.contentContainer) {
       if (this.currentStep === "match" && this.gameManager.isGameActive()) {
-        console.warn("Language change during active match. Updating UI text manually.");
+        console.warn(
+          "Language change during active match. Updating UI text manually.",
+        );
 
         const tButtons = this.t.buttons || {};
         //added some translations here for be ablet o switch language while in match
         const startBtn = document.getElementById("start-tournament-game");
-        if (startBtn) startBtn.textContent = tButtons.startMatch || "Start Match";
-        
+        if (startBtn)
+          startBtn.textContent = tButtons.startMatch || "Start Match";
+
         const pauseBtn = document.getElementById("pause-tournament-game");
         if (pauseBtn) pauseBtn.textContent = tButtons.pause || "Pause";
-        
+
         const resetBtn = document.getElementById("reset-tournament-game");
         if (resetBtn) resetBtn.textContent = tButtons.reset || "Reset";
-      
+
         return;
       }
       this.initializeCurrentView();
@@ -327,7 +331,12 @@ export class TournamentService {
     const setup = this.t.setup || {};
     const buttons = this.t.buttons || {};
     const errors = this.t.errors || {};
-    const playerSelector = this.t.playerSelector || {};
+    const playerSelector = i18next.t("playerSelector", {
+      returnObjects: true,
+    }) as TranslationSection;
+    const playerRegistration = i18next.t("playerRegistration", {
+      returnObjects: true,
+    }) as TranslationSection;
     const subtitle = this.translateFn
       ? (this.translateFn("tournament.registration.subtitle", {
           name: setup.nameDefault || "Pong Tournament",
@@ -347,6 +356,7 @@ export class TournamentService {
         translations: {
           setup: setup,
           playerSelector: playerSelector,
+          playerRegistration: playerRegistration,
         },
         onBack: () => {
           router.navigate("/");
@@ -409,6 +419,10 @@ export class TournamentService {
   }
 
   getPageTitle(): string {
+    if (this.currentStep === "registration") {
+      return "";
+    }
+
     const stepCopy =
       this.navigationCopy[this.currentStep] ?? this.navigationCopy.fallback;
     return stepCopy.pageTitle;

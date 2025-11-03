@@ -1,6 +1,14 @@
 import { PlayerRegistrationManager } from "./player-registration-manager";
 import type { PlayerOption } from "../types/tournament";
 
+type TranslationSection = Record<string, string>;
+
+interface RegistrationTranslations {
+  setup?: TranslationSection;
+  playerSelector?: TranslationSection;
+  playerRegistration?: TranslationSection;
+}
+
 export interface PlayerRegistrationWithCountConfig {
   container: HTMLElement;
   title?: string;
@@ -10,7 +18,9 @@ export interface PlayerRegistrationWithCountConfig {
   startButtonText?: string;
   backButtonText?: string;
   requireHumanPlayer?: boolean;
-  translations?: Record<string, any>;
+
+  translations?: RegistrationTranslations;
+
   onBack: () => void;
   onSubmit: (data: {
     playerCount: number;
@@ -38,7 +48,7 @@ export class PlayerRegistrationWithCountSelector {
     this.destroy();
     this.playerRegistrationManager = new PlayerRegistrationManager();
     this.config = config;
-    this.currentPlayerCount = 2; // デフォルト2人
+    this.currentPlayerCount = 2;
 
     if (!config.container) {
       throw new Error("Container element is required");
@@ -95,8 +105,7 @@ export class PlayerRegistrationWithCountSelector {
       </div>
 
       <div id="player-registration-container" class="mb-4">
-        <!-- プレイヤー登録UI -->
-      </div>
+        </div>
 
       <div class="flex space-x-4">
         <button
@@ -126,7 +135,7 @@ export class PlayerRegistrationWithCountSelector {
     }
   }
 
-  private getPlayerCountOptionsHtml(setup: Record<string, any>): string {
+  private getPlayerCountOptionsHtml(setup: TranslationSection): string {
     return [2, 4]
       .map((count) => {
         const labelTemplate = setup.playerOption || "{{count}} Players";
@@ -157,7 +166,9 @@ export class PlayerRegistrationWithCountSelector {
     const container = document.getElementById("player-registration-container");
     if (!container) return;
     const translations = this.config.translations || {};
-    const playerSelector = translations.playerSelector || {};
+    const playerSelectorTranslations = translations.playerSelector || {};
+    const playerRegistrationTranslations =
+      translations.playerRegistration || {};
 
     try {
       await this.playerRegistrationManager.render({
@@ -165,7 +176,10 @@ export class PlayerRegistrationWithCountSelector {
         playerCount: this.currentPlayerCount,
         startButtonId: "start-button",
         requireHumanPlayer: this.config.requireHumanPlayer,
-        translations: playerSelector,
+        translations: {
+          selector: playerSelectorTranslations,
+          validation: playerRegistrationTranslations,
+        },
         onSelectionChange: () => {
           this.validateForm();
         },
