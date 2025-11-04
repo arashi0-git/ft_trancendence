@@ -19,7 +19,6 @@ npm run dev &
 FRONT_PID=$!
 
 # 終了時にプロセスを停止
-trap "echo '🛑 Stopping servers...'; kill $BACK_PID $FRONT_PID" EXIT
-
+trap 'echo "🛑 Stopping servers..."; kill $BACK_PID $FRONT_PID' EXIT
 # どちらかが終了するまで待機
 wait

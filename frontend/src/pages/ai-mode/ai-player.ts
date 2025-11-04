@@ -297,7 +297,7 @@ export class AiPlayer {
 
       // 目標に到達したか、方向が変わった場合は停止
       const canvasSize = this.gameManager.getCanvasSize();
-      const threshold = canvasSize ? canvasSize.height * 0.05 : 20; // キャンバス高さの5%、フォールバック20
+      const threshold = canvasSize ? canvasSize.height * 0.01 : 20; // キャンバス高さの5%、フォールバック20
 
       if (
         Math.abs(difference) < threshold ||
