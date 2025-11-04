@@ -7,6 +7,10 @@ import type {
   PublicUser,
   TwoFactorChallengeResponse,
 } from "../types/user";
+import { setupPasswordToggles } from "../utils/password-toggle-utils";
+
+const eyeIconUrl = new URL("../../../images/icon/eye_icon.png", import.meta.url)
+  .href;
 
 export class LoginForm {
   private container: HTMLElement;
@@ -52,14 +56,23 @@ export class LoginForm {
           </div>
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              required
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter your password"
-            >
+            <div class="mt-1 relative">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                required
+                class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter your password"
+              >
+              <button
+                type="button"
+                class="password-toggle absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Show password"
+                data-target="password"
+                data-visible="false"
+              ></button>
+            </div>
           </div>
           <div id="error-message" class="hidden text-red-600 text-sm"></div>
           <div class="space-y-2">
@@ -90,6 +103,7 @@ export class LoginForm {
     `;
 
     this.attachLoginListeners();
+    setupPasswordToggles(this.container, eyeIconUrl);
   }
 
   private renderTwoFactorView(): void {

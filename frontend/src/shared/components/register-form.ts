@@ -1,5 +1,9 @@
 import { AuthService } from "../services/auth-service";
 import type { CreateUserRequest, PublicUser } from "../types/user";
+import { setupPasswordToggles } from "../utils/password-toggle-utils";
+
+const eyeIconUrl = new URL("../../../images/icon/eye_icon.png", import.meta.url)
+  .href;
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -45,27 +49,45 @@ export class RegisterForm {
           </div>
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              required
-              minlength="6"
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter a secure password"
-            >
+            <div class="mt-1 relative">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                required
+                minlength="6"
+                class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter a secure password"
+              >
+              <button
+                type="button"
+                class="password-toggle absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Show password"
+                data-target="password"
+                data-visible="false"
+              ></button>
+            </div>
             <p class="text-xs text-gray-500 mt-1">At least 6 characters.</p>
           </div>
           <div>
             <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
-            <input
-              type="password"
-              id="confirm-password"
-              name="confirm-password"
-              required
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Re-enter your password"
-            >
+            <div class="mt-1 relative">
+              <input
+                type="password"
+                id="confirm-password"
+                name="confirm-password"
+                required
+                class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Re-enter your password"
+              >
+              <button
+                type="button"
+                class="password-toggle absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Show password"
+                data-target="confirm-password"
+                data-visible="false"
+              ></button>
+            </div>
           </div>
           <div id="register-error-message" class="hidden text-red-600 text-sm"></div>
           <div class="space-y-2">
@@ -96,6 +118,7 @@ export class RegisterForm {
     `;
 
     this.attachEventListeners();
+    setupPasswordToggles(this.container, eyeIconUrl);
   }
 
   private attachEventListeners(): void {
