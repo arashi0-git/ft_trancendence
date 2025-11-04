@@ -15,10 +15,19 @@ export class QuickPlayService extends BaseGameService {
   ): void {
     this.playerSelections = playerSelections;
 
+    // プレイヤー名を抽出
+    const playerNames = {
+      player1: playerSelections[0]?.displayName,
+      player2: playerSelections[1]?.displayName,
+      player3: playerSelections[2]?.displayName,
+      player4: playerSelections[3]?.displayName,
+    };
+
     this.gameManager.initializeGame({
       mode: "quick-play",
       canvasId: canvasId,
       playerCount: playerCount,
+      playerNames: playerNames,
       aiPlayers: aiPlayers,
       onGameEnd: (data: { winner: number; score1: number; score2: number }) =>
         this.handleGameEnd(data),
