@@ -13,7 +13,7 @@ import {
 import { AdvancedDynamicTexture, Rectangle, TextBlock } from "@babylonjs/gui";
 import { GameState } from "../types/game";
 
-interface BabylonRenderOptions {
+export interface BabylonRenderOptions {
   withBackground?: boolean;
   fieldColorHex?: string;
   ballColorHex?: string;
@@ -21,6 +21,8 @@ interface BabylonRenderOptions {
   ballRadius?: number;
   player1Name?: string;
   player2Name?: string;
+  player3Name?: string;
+  player4Name?: string;
 }
 
 const DEFAULT_FIELD_COLOR_HEX = "#245224";
@@ -58,6 +60,9 @@ export class BabylonRender {
   private currentBallRadius: number = BASE_BALL_RADIUS_LOGICAL;
   private player1Name: string;
   private player2Name: string;
+  private player3Name: string;
+  private player4Name: string;
+  private playerCount: number = 2;
 
   constructor(
     engine: Engine,
@@ -70,6 +75,8 @@ export class BabylonRender {
     this.withBackground = options.withBackground ?? false;
     this.player1Name = options.player1Name || "Player 1";
     this.player2Name = options.player2Name || "Player 2";
+    this.player3Name = options.player3Name || "Player 3";
+    this.player4Name = options.player4Name || "Player 4";
     this.fieldColorHex = isValidColorHex(options.fieldColorHex)
       ? options.fieldColorHex
       : DEFAULT_FIELD_COLOR_HEX;
@@ -290,6 +297,11 @@ export class BabylonRender {
     // プレイヤー名を更新
     this.player1Name = gameState.player1.name || "Player 1";
     this.player2Name = gameState.player2.name || "Player 2";
+    this.player3Name = gameState.player3?.name || "Player 3";
+    this.player4Name = gameState.player4?.name || "Player 4";
+
+    // プレイヤー数を判定
+    this.playerCount = gameState.player3 && gameState.player4 ? 4 : 2;
 
     this.paddle1Mesh?.dispose();
     this.paddle2Mesh?.dispose();
@@ -571,31 +583,39 @@ export class BabylonRender {
     divider.verticalAlignment = Rectangle.VERTICAL_ALIGNMENT_CENTER;
     container.addControl(divider);
 
-    // Player 1 ラベル
-    const player1Label = new TextBlock("player1Label");
-    player1Label.text = this.player1Name.toUpperCase();
-    player1Label.color = "#00BFFF";
-    player1Label.fontSize = 48;
-    player1Label.fontWeight = "bold";
-    player1Label.fontFamily = "Arial";
-    player1Label.textHorizontalAlignment =
+    // 左チームラベル (Player 1 & Player 3)
+    const leftTeamLabel = new TextBlock("leftTeamLabel");
+    if (this.playerCount === 4) {
+      leftTeamLabel.text = `${this.player1Name.toUpperCase()} & ${this.player3Name.toUpperCase()}`;
+    } else {
+      leftTeamLabel.text = this.player1Name.toUpperCase();
+    }
+    leftTeamLabel.color = "#00BFFF";
+    leftTeamLabel.fontSize = this.playerCount === 4 ? 32 : 48;
+    leftTeamLabel.fontWeight = "bold";
+    leftTeamLabel.fontFamily = "Arial";
+    leftTeamLabel.textHorizontalAlignment =
       TextBlock.HORIZONTAL_ALIGNMENT_CENTER;
-    player1Label.top = "-60px";
-    player1Label.left = "-300px";
-    container.addControl(player1Label);
+    leftTeamLabel.top = "-60px";
+    leftTeamLabel.left = "-300px";
+    container.addControl(leftTeamLabel);
 
-    // Player 2 ラベル
-    const player2Label = new TextBlock("player2Label");
-    player2Label.text = this.player2Name.toUpperCase();
-    player2Label.color = "#00BFFF";
-    player2Label.fontSize = 48;
-    player2Label.fontWeight = "bold";
-    player2Label.fontFamily = "Arial";
-    player2Label.textHorizontalAlignment =
+    // 右チームラベル (Player 2 & Player 4)
+    const rightTeamLabel = new TextBlock("rightTeamLabel");
+    if (this.playerCount === 4) {
+      rightTeamLabel.text = `${this.player2Name.toUpperCase()} & ${this.player4Name.toUpperCase()}`;
+    } else {
+      rightTeamLabel.text = this.player2Name.toUpperCase();
+    }
+    rightTeamLabel.color = "#00BFFF";
+    rightTeamLabel.fontSize = this.playerCount === 4 ? 32 : 48;
+    rightTeamLabel.fontWeight = "bold";
+    rightTeamLabel.fontFamily = "Arial";
+    rightTeamLabel.textHorizontalAlignment =
       TextBlock.HORIZONTAL_ALIGNMENT_CENTER;
-    player2Label.top = "-60px";
-    player2Label.left = "300px";
-    container.addControl(player2Label);
+    rightTeamLabel.top = "-60px";
+    rightTeamLabel.left = "300px";
+    container.addControl(rightTeamLabel);
 
     // Player 1 スコア（TextBlockとして保持）
     this.scoreTexture1 = new TextBlock("score1", "0");
