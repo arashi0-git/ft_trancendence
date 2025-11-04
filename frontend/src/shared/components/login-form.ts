@@ -7,6 +7,7 @@ import type {
   PublicUser,
   TwoFactorChallengeResponse,
 } from "../types/user";
+import { setupPasswordToggles } from "../utils/password-toggle-utils";
 
 const eyeIconUrl = new URL("../../../images/icon/eye_icon.png", import.meta.url)
   .href;
@@ -102,7 +103,7 @@ export class LoginForm {
     `;
 
     this.attachLoginListeners();
-    this.setupPasswordToggles();
+    setupPasswordToggles(this.container, eyeIconUrl);
   }
 
   private renderTwoFactorView(): void {
@@ -169,54 +170,6 @@ export class LoginForm {
       this.onShowRegisterCallback(),
     );
     showHomeBtn.addEventListener("click", () => this.onShowHomeCallback());
-  }
-
-  private setupPasswordToggles(): void {
-    const toggles =
-      this.container.querySelectorAll<HTMLButtonElement>(".password-toggle");
-
-    toggles.forEach((toggle) => {
-      const targetId = toggle.dataset.target;
-      const input = targetId
-        ? this.container.querySelector<HTMLInputElement>(`#${targetId}`)
-        : null;
-
-      if (!input) {
-        console.warn("Password toggle target not found for login form.");
-        return;
-      }
-
-      const applyState = (visible: boolean) => {
-        input.type = visible ? "text" : "password";
-        toggle.dataset.visible = String(visible);
-        toggle.setAttribute(
-          "aria-label",
-          visible ? "Hide password" : "Show password",
-        );
-        toggle.innerHTML = this.getPasswordToggleIcon(visible);
-      };
-
-      const initialVisible = toggle.dataset.visible === "true";
-      applyState(initialVisible);
-
-      toggle.addEventListener("click", () => {
-        const isVisible = toggle.dataset.visible === "true";
-        applyState(!isVisible);
-      });
-    });
-  }
-
-  private getPasswordToggleIcon(isVisible: boolean): string {
-    const slashMarkup = isVisible
-      ? ""
-      : `<span class="absolute block" style="width: 1.35rem; height: 2px; background-color: currentColor; transform: rotate(45deg); border-radius: 9999px;"></span>`;
-
-    return `
-      <span class="relative inline-flex h-5 w-5 items-center justify-center">
-        <img src="${eyeIconUrl}" alt="" class="pointer-events-none h-5 w-5 object-contain" />
-        ${slashMarkup}
-      </span>
-    `;
   }
 
   private async handleLoginSubmit(event: Event): Promise<void> {
