@@ -8,6 +8,12 @@ export interface GameConfig {
   mode: GameMode;
   canvasId: string;
   playerCount?: number;
+  playerNames?: {
+    player1?: string;
+    player2?: string;
+    player3?: string;
+    player4?: string;
+  };
   aiPlayers?: {
     player1?: { difficulty: "easy" | "medium" | "hard" };
     player2?: { difficulty: "easy" | "medium" | "hard" };
@@ -52,6 +58,7 @@ export class GameManagerService {
         ballSize: customizationSettings.ballSize,
         ballSpeed: customizationSettings.ballSpeed,
         maxScore: customizationSettings.maxScore,
+        playerNames: config.playerNames,
       }); // Pass the playerCount
 
       // AIモードの設定

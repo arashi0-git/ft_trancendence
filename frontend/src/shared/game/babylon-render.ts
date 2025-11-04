@@ -1,15 +1,16 @@
 import {
-  Scene,
-  Engine,
   ArcRotateCamera,
-  HemisphericLight,
-  Vector3,
-  MeshBuilder,
-  StandardMaterial,
   Color3,
+  Engine,
+  GlowLayer,
+  HemisphericLight,
   Mesh,
-  DynamicTexture,
+  MeshBuilder,
+  Scene,
+  StandardMaterial,
+  Vector3,
 } from "@babylonjs/core";
+import { AdvancedDynamicTexture, Rectangle, TextBlock } from "@babylonjs/gui";
 import { GameState } from "../types/game";
 
 interface BabylonRenderOptions {
@@ -18,6 +19,8 @@ interface BabylonRenderOptions {
   ballColorHex?: string;
   paddleColorHex?: string;
   ballRadius?: number;
+  player1Name?: string;
+  player2Name?: string;
 }
 
 const DEFAULT_FIELD_COLOR_HEX = "#245224";
@@ -41,10 +44,10 @@ export class BabylonRender {
   private withBackground: boolean;
   private fieldMesh!: Mesh;
   private centerLineSegments: Mesh[] = [];
-  private scoreBoard1!: Mesh;
-  private scoreBoard2!: Mesh;
-  private scoreTexture1!: DynamicTexture;
-  private scoreTexture2!: DynamicTexture;
+  private scoreBoard1: Mesh | null = null;
+  private scoreBoard2: Mesh | null = null;
+  private scoreTexture1: TextBlock | null = null;
+  private scoreTexture2: TextBlock | null = null;
   private prevScore1 = -1;
   private prevScore2 = -1;
   private gameWidth: number;
@@ -53,6 +56,8 @@ export class BabylonRender {
   private ballColorHex: string;
   private paddleColorHex: string;
   private currentBallRadius: number = BASE_BALL_RADIUS_LOGICAL;
+  private player1Name: string;
+  private player2Name: string;
 
   constructor(
     engine: Engine,
@@ -63,6 +68,8 @@ export class BabylonRender {
     this.gameWidth = gameWidth;
     this.gameHeight = gameHeight;
     this.withBackground = options.withBackground ?? false;
+    this.player1Name = options.player1Name || "Player 1";
+    this.player2Name = options.player2Name || "Player 2";
     this.fieldColorHex = isValidColorHex(options.fieldColorHex)
       ? options.fieldColorHex
       : DEFAULT_FIELD_COLOR_HEX;
@@ -82,8 +89,8 @@ export class BabylonRender {
     this.camera = new ArcRotateCamera(
       "camera",
       -Math.PI / 2,
-      Math.PI / 4, // より浅い角度でフィールドをアップに
-      22, // カメラを近づけてフィールドをアップ
+      Math.PI / 3, // より浅い角度でフィールドをアップに
+      25, // カメラを近づけてフィールドをアップ
       Vector3.Zero(),
       this.scene,
     );
@@ -280,6 +287,10 @@ export class BabylonRender {
   }
 
   public initializeScene(gameState: GameState): void {
+    // プレイヤー名を更新
+    this.player1Name = gameState.player1.name || "Player 1";
+    this.player2Name = gameState.player2.name || "Player 2";
+
     this.paddle1Mesh?.dispose();
     this.paddle2Mesh?.dispose();
     this.paddle3Mesh?.dispose();
@@ -512,72 +523,126 @@ export class BabylonRender {
   }
 
   private createScoreBoards() {
-    // Player 1 スコアボード（より大きく）
+    // フィールドサイズに基づいて計算
+    const aspectRatio = this.gameWidth / this.gameHeight;
+    const fieldWidth = this.FIELD_WIDTH;
+    const fieldHeight = fieldWidth / aspectRatio;
+
+    // スコアボードのサイズ（3Dメッシュ）
+    const boardWidth = fieldWidth * 0.6; // フィールド幅の60%
+    const boardHeight = boardWidth / 5; // アスペクト比 5:1
+
+    // テクスチャサイズ（高解像度）
+    const textureWidth = 1200;
+    const textureHeight = 240;
+
+    // 統合スコアボード用のPlane（中央に1つ）
     this.scoreBoard1 = MeshBuilder.CreatePlane(
-      "scoreBoard1",
-      { width: 3, height: 1.5 }, // サイズを1.5倍に
+      "scoreBoard",
+      { width: boardWidth, height: boardHeight },
       this.scene,
     );
-    this.scoreBoard1.position = new Vector3(-6, 4, 3); // より外側、高い位置に
-    this.scoreBoard1.rotation.x = Math.PI / 5; // 少し下向きに傾ける
+    this.scoreBoard1.position = new Vector3(0, 5, fieldHeight / 2 + 2); // フィールドの後ろに配置
+    this.scoreBoard1.rotation.x = Math.PI / 6; // 少し下向きに傾ける
 
-    this.scoreTexture1 = new DynamicTexture(
-      "scoreTexture1",
-      { width: 384, height: 192 }, // テクスチャサイズを1.5倍に
-      this.scene,
+    // DynamicTextureを使用してスコアボードを描画
+    const texture = AdvancedDynamicTexture.CreateForMesh(
+      this.scoreBoard1,
+      textureWidth,
+      textureHeight,
     );
-    const scoreMaterial1 = new StandardMaterial("scoreMaterial1", this.scene);
-    scoreMaterial1.diffuseTexture = this.scoreTexture1;
-    scoreMaterial1.emissiveColor = new Color3(0.3, 0.3, 0.3); // 少し光らせる
-    this.scoreBoard1.material = scoreMaterial1;
 
-    // Player 2 スコアボード（より大きく）
-    this.scoreBoard2 = MeshBuilder.CreatePlane(
-      "scoreBoard2",
-      { width: 3, height: 1.5 }, // サイズを1.5倍に
-      this.scene,
-    );
-    this.scoreBoard2.position = new Vector3(6, 4, 3); // より外側、高い位置に
-    this.scoreBoard2.rotation.x = Math.PI / 5;
+    // 外枠コンテナ
+    const container = new Rectangle("scoreContainer");
+    container.width = "1";
+    container.height = "1";
+    container.cornerRadius = 60;
+    container.thickness = 4;
+    container.color = "#00BFFF";
+    container.background = "rgba(0, 20, 40, 0.7)";
+    texture.addControl(container);
 
-    this.scoreTexture2 = new DynamicTexture(
-      "scoreTexture2",
-      { width: 384, height: 192 }, // テクスチャサイズを1.5倍に
-      this.scene,
-    );
-    const scoreMaterial2 = new StandardMaterial("scoreMaterial2", this.scene);
-    scoreMaterial2.diffuseTexture = this.scoreTexture2;
-    scoreMaterial2.emissiveColor = new Color3(0.3, 0.3, 0.3);
-    this.scoreBoard2.material = scoreMaterial2;
+    // 中央区切り線
+    const divider = new Rectangle("divider");
+    divider.width = "2px";
+    divider.height = "160px";
+    divider.background = "#00BFFF";
+    divider.horizontalAlignment = Rectangle.HORIZONTAL_ALIGNMENT_CENTER;
+    divider.verticalAlignment = Rectangle.VERTICAL_ALIGNMENT_CENTER;
+    container.addControl(divider);
 
-    // 初期スコア表示
-    this.updateScoreDisplay(0, 0);
+    // Player 1 ラベル
+    const player1Label = new TextBlock("player1Label");
+    player1Label.text = this.player1Name.toUpperCase();
+    player1Label.color = "#00BFFF";
+    player1Label.fontSize = 48;
+    player1Label.fontWeight = "bold";
+    player1Label.fontFamily = "Arial";
+    player1Label.textHorizontalAlignment =
+      TextBlock.HORIZONTAL_ALIGNMENT_CENTER;
+    player1Label.top = "-60px";
+    player1Label.left = "-300px";
+    container.addControl(player1Label);
+
+    // Player 2 ラベル
+    const player2Label = new TextBlock("player2Label");
+    player2Label.text = this.player2Name.toUpperCase();
+    player2Label.color = "#00BFFF";
+    player2Label.fontSize = 48;
+    player2Label.fontWeight = "bold";
+    player2Label.fontFamily = "Arial";
+    player2Label.textHorizontalAlignment =
+      TextBlock.HORIZONTAL_ALIGNMENT_CENTER;
+    player2Label.top = "-60px";
+    player2Label.left = "300px";
+    container.addControl(player2Label);
+
+    // Player 1 スコア（TextBlockとして保持）
+    this.scoreTexture1 = new TextBlock("score1", "0");
+    this.scoreTexture1.color = "white";
+    this.scoreTexture1.fontSize = 128;
+    this.scoreTexture1.fontWeight = "bold";
+    this.scoreTexture1.fontFamily = "Arial";
+    this.scoreTexture1.textHorizontalAlignment =
+      TextBlock.HORIZONTAL_ALIGNMENT_CENTER;
+    this.scoreTexture1.top = "30px";
+    this.scoreTexture1.left = "-300px";
+    container.addControl(this.scoreTexture1);
+
+    // Player 2 スコア（TextBlockとして保持）
+    this.scoreTexture2 = new TextBlock("score2", "0");
+    this.scoreTexture2.color = "white";
+    this.scoreTexture2.fontSize = 128;
+    this.scoreTexture2.fontWeight = "bold";
+    this.scoreTexture2.fontFamily = "Arial";
+    this.scoreTexture2.textHorizontalAlignment =
+      TextBlock.HORIZONTAL_ALIGNMENT_CENTER;
+    this.scoreTexture2.top = "30px";
+    this.scoreTexture2.left = "300px";
+    container.addControl(this.scoreTexture2);
+
+    // マテリアル設定
+    const scoreMaterial = new StandardMaterial("scoreMaterial", this.scene);
+    scoreMaterial.diffuseTexture = texture;
+    scoreMaterial.emissiveColor = new Color3(0.2, 0.2, 0.2); // 発光を抑える
+    scoreMaterial.opacityTexture = texture;
+    this.scoreBoard1.material = scoreMaterial;
+
+    // GlowLayerを追加して発光効果を追加（強度を下げる）
+    const glowLayer = new GlowLayer("glow", this.scene);
+    glowLayer.intensity = 0.3;
+
+    // scoreBoard2は使用しない
+    this.scoreBoard2 = null;
   }
 
   private updateScoreDisplay(score1: number, score2: number) {
-    // Player 1 スコア更新
-    this.scoreTexture1.clear();
-    this.scoreTexture1.drawText(
-      `Player 1\n${score1}`,
-      null,
-      null,
-      "bold 64px Arial", // 48pxから64pxに増加
-      "white",
-      "transparent",
-      true,
-    );
-
-    // Player 2 スコア更新
-    this.scoreTexture2.clear();
-    this.scoreTexture2.drawText(
-      `Player 2\n${score2}`,
-      null,
-      null,
-      "bold 64px Arial", // 48pxから64pxに増加
-      "white",
-      "transparent",
-      true,
-    );
+    if (this.scoreTexture1) {
+      this.scoreTexture1.text = score1.toString();
+    }
+    if (this.scoreTexture2) {
+      this.scoreTexture2.text = score2.toString();
+    }
   }
 
   public updateGameObjects(gameState: GameState) {
