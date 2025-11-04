@@ -8,6 +8,9 @@ import type {
   TwoFactorChallengeResponse,
 } from "../types/user";
 
+const eyeIconUrl = new URL("../../../images/icon/eye_icon.png", import.meta.url)
+  .href;
+
 export class LoginForm {
   private container: HTMLElement;
   private twoFactorChallenge: TwoFactorChallengeResponse | null = null;
@@ -52,14 +55,23 @@ export class LoginForm {
           </div>
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              required
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter your password"
-            >
+            <div class="mt-1 relative">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                required
+                class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter your password"
+              >
+              <button
+                type="button"
+                class="password-toggle absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Show password"
+                data-target="password"
+                data-visible="false"
+              ></button>
+            </div>
           </div>
           <div id="error-message" class="hidden text-red-600 text-sm"></div>
           <div class="space-y-2">
@@ -90,6 +102,7 @@ export class LoginForm {
     `;
 
     this.attachLoginListeners();
+    this.setupPasswordToggles();
   }
 
   private renderTwoFactorView(): void {
@@ -156,6 +169,54 @@ export class LoginForm {
       this.onShowRegisterCallback(),
     );
     showHomeBtn.addEventListener("click", () => this.onShowHomeCallback());
+  }
+
+  private setupPasswordToggles(): void {
+    const toggles =
+      this.container.querySelectorAll<HTMLButtonElement>(".password-toggle");
+
+    toggles.forEach((toggle) => {
+      const targetId = toggle.dataset.target;
+      const input = targetId
+        ? this.container.querySelector<HTMLInputElement>(`#${targetId}`)
+        : null;
+
+      if (!input) {
+        console.warn("Password toggle target not found for login form.");
+        return;
+      }
+
+      const applyState = (visible: boolean) => {
+        input.type = visible ? "text" : "password";
+        toggle.dataset.visible = String(visible);
+        toggle.setAttribute(
+          "aria-label",
+          visible ? "Hide password" : "Show password",
+        );
+        toggle.innerHTML = this.getPasswordToggleIcon(visible);
+      };
+
+      const initialVisible = toggle.dataset.visible === "true";
+      applyState(initialVisible);
+
+      toggle.addEventListener("click", () => {
+        const isVisible = toggle.dataset.visible === "true";
+        applyState(!isVisible);
+      });
+    });
+  }
+
+  private getPasswordToggleIcon(isVisible: boolean): string {
+    const slashMarkup = isVisible
+      ? ""
+      : `<span class="absolute block" style="width: 1.35rem; height: 2px; background-color: currentColor; transform: rotate(45deg); border-radius: 9999px;"></span>`;
+
+    return `
+      <span class="relative inline-flex h-5 w-5 items-center justify-center">
+        <img src="${eyeIconUrl}" alt="" class="pointer-events-none h-5 w-5 object-contain" />
+        ${slashMarkup}
+      </span>
+    `;
   }
 
   private async handleLoginSubmit(event: Event): Promise<void> {
