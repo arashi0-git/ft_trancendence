@@ -2,9 +2,13 @@
 
 A modern Pong game platform with user authentication and tournament system.
 
-<img width="1470" height="794" alt="image" src="https://github.com/user-attachments/assets/96aef5ee-fb55-40f1-861c-fd6b4a138669" />
+<img width="1470" height="792" alt="image" src="https://github.com/user-attachments/assets/03450ddf-42c6-4534-a1f5-f9302e66ac37" />
 
-<img width="1470" height="795" alt="image" src="https://github.com/user-attachments/assets/ac7910c5-abaf-4e89-8e50-25c2d0225bd4" />
+## Player Register Page
+<img width="1470" height="795" alt="image" src="https://github.com/user-attachments/assets/06828952-adba-4131-9f3f-638a6d10a14f" />
+
+## Game Page
+<img width="1470" height="795" alt="image" src="https://github.com/user-attachments/assets/de43f838-f7ae-4c75-acf6-de715a5e697b" />
 
 ## Features
 
