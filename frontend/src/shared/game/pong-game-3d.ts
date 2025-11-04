@@ -166,6 +166,8 @@ export class PongGame3D {
         ballRadius: this.config.ballRadius,
         player1Name: this.playerNames.player1,
         player2Name: this.playerNames.player2,
+        player3Name: this.playerNames.player3,
+        player4Name: this.playerNames.player4,
       },
     );
 
