@@ -809,6 +809,10 @@ export class TournamentService {
     this.gameManager.initializeGame({
       mode: "tournament",
       canvasId: "tournament-pong-canvas",
+      playerNames: {
+        player1: player1?.alias,
+        player2: player2?.alias,
+      },
       aiPlayers: Object.keys(aiPlayers).length > 0 ? aiPlayers : undefined,
       onGameEnd: (data: { winner: number; score1: number; score2: number }) => {
         console.log(`Match Ended: ${matchId}`, data);

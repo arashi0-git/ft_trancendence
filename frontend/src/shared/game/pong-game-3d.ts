@@ -19,6 +19,12 @@ interface PongGameOptions {
   ballSize?: BallSizeSetting;
   ballSpeed?: BallSpeedSetting;
   maxScore?: number;
+  playerNames?: {
+    player1?: string;
+    player2?: string;
+    player3?: string;
+    player4?: string;
+  };
 }
 
 const DEFAULT_FIELD_COLOR_HEX = "#245224";
@@ -98,6 +104,12 @@ export class PongGame3D {
   private ballSpeedSetting: BallSpeedSetting;
   private maxScoreSetting: number;
   private isBallAtFullSpeed: boolean = false;
+  private playerNames: {
+    player1?: string;
+    player2?: string;
+    player3?: string;
+    player4?: string;
+  };
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -121,6 +133,7 @@ export class PongGame3D {
     this.ballSizeSetting = this.normalizeBallSize(options.ballSize);
     this.ballSpeedSetting = this.normalizeBallSpeed(options.ballSpeed);
     this.maxScoreSetting = this.normalizeMaxScore(options.maxScore);
+    this.playerNames = options.playerNames || {};
 
     // レスポンシブサイズを計算
     const { width, height } = this.calculateResponsiveSize();
@@ -146,10 +159,13 @@ export class PongGame3D {
       this.config.canvasWidth,
       this.config.canvasHeight,
       {
+        withBackground: true,
         fieldColorHex: this.fieldColorHex,
         ballColorHex: this.ballColorHex,
         paddleColorHex: this.paddleColorHex,
         ballRadius: this.config.ballRadius,
+        player1Name: this.playerNames.player1,
+        player2Name: this.playerNames.player2,
       },
     );
 
@@ -169,6 +185,7 @@ export class PongGame3D {
     // 既存のPongGameと同じ初期化処理をコピー
     const player1: Player = {
       id: 1,
+      name: this.playerNames.player1,
       paddle: {
         x: 20,
         y: this.config.canvasHeight / 2 - PADDLE_HALF_HEIGHT,
@@ -183,6 +200,7 @@ export class PongGame3D {
 
     const player2: Player = {
       id: 2,
+      name: this.playerNames.player2,
       paddle: {
         x: this.config.canvasWidth - 30,
         y: this.config.canvasHeight / 2 - PADDLE_HALF_HEIGHT,
@@ -205,6 +223,7 @@ export class PongGame3D {
       const innerLeftX = this.config.canvasWidth / 4;
       player3 = {
         id: 3,
+        name: this.playerNames.player3,
         paddle: {
           x: innerLeftX,
           y: this.config.canvasHeight / 2 - PADDLE_HALF_HEIGHT,
@@ -220,6 +239,7 @@ export class PongGame3D {
       const innerRightX = (this.config.canvasWidth / 4) * 3;
       player4 = {
         id: 4,
+        name: this.playerNames.player4,
         paddle: {
           x: innerRightX,
           y: this.config.canvasHeight / 2 - PADDLE_HALF_HEIGHT,

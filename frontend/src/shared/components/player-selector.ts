@@ -142,12 +142,9 @@ export class PlayerSelector {
         const user = await AuthService.getCurrentUser();
         options.push({
           id: `user-${user.id}`,
-          displayName: this.formatText(
-            this.t.currentUser || "{{username}} (You)",
-            {
-              username: user.username,
-            },
-          ),
+          displayName: this.formatText(this.t.currentUser || "{{username}}", {
+            username: user.username,
+          }),
           isAI: false,
           userId: user.id,
         });
@@ -206,7 +203,7 @@ export class PlayerSelector {
           this.currentSelection = {
             id: value,
             displayName: this.formatText(
-              this.t.aiDisplayName || "AI Player {{index}} ({{difficulty}})",
+              this.t.aiDisplayName || "AI ({{difficulty}})",
               {
                 index: this.playerIndex,
                 difficulty: difficultyLabel,
@@ -250,7 +247,7 @@ export class PlayerSelector {
         if (this.currentSelection?.isAI) {
           this.currentSelection.aiDifficulty = difficulty;
           this.currentSelection.displayName = this.formatText(
-            this.t.aiDisplayName || "AI Player {{index}} ({{difficulty}})",
+            this.t.aiDisplayName || "AI ({{difficulty}})",
             {
               index: this.playerIndex,
               difficulty: this.getDifficultyLabel(difficulty),
