@@ -61,9 +61,17 @@ export class SpaceBackground {
     this.createSpaceBackground();
     this.startAnimation();
 
-    // レンダリングループ
-    this.engine.runRenderLoop(() => {
-      this.scene.render();
+    // シーンの準備完了を待ってからレンダリングループを開始
+    this.scene.executeWhenReady(() => {
+      if (this.engine.isDisposed) {
+        return;
+      }
+      this.engine.runRenderLoop(() => {
+        if (!this.scene.isReady()) {
+          return;
+        }
+        this.scene.render();
+      });
     });
 
     // リサイズ対応（参照保持してクリーンアップ可能に）
@@ -178,8 +186,12 @@ export class SpaceBackground {
     } catch {
       // Ignore errors during cleanup
     }
-    this.engine.stopRenderLoop();
-    this.scene.dispose();
-    this.engine.dispose();
+
+    // エンジンが既に破棄されていないかチェック
+    if (!this.engine.isDisposed) {
+      this.engine.stopRenderLoop();
+      this.scene.dispose();
+      this.engine.dispose();
+    }
   }
 }

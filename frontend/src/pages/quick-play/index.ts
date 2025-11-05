@@ -57,13 +57,20 @@ export class QuickPlayPage extends SpacePageBase {
 
     // URLに応じて適切な画面を表示
     const currentPath = window.location.pathname;
-    if (currentPath === "/quick-play/game" && this.currentStep === "game") {
-      // ゲーム画面が既にレンダリング済みの場合は何もしない
-      // (URL変更によるrenderの再呼び出しを避ける)
-    } else if (
-      currentPath === "/quick-play" ||
-      currentPath === "/quick-play/game"
-    ) {
+    if (currentPath === "/quick-play/game") {
+      // ゲーム画面のURL
+      if (this.currentStep === "game") {
+        // ゲーム画面が既にレンダリング済みの場合は何もしない
+        // (URL変更によるrenderの再呼び出しを避ける)
+      } else {
+        // ゲームが初期化されていないのに/quick-play/gameにアクセスした場合
+        console.warn(
+          "URL is /quick-play/game but game is not initialized. Redirecting to registration.",
+        );
+        this.service.navigateToRegistration();
+        return;
+      }
+    } else if (currentPath === "/quick-play") {
       // プレイヤー登録画面
       await this.renderPlayerRegistrationView();
     }
@@ -243,16 +250,12 @@ export class QuickPlayPage extends SpacePageBase {
       }
     });
 
+    // currentStepを先に更新してからURL遷移（render()での判定のため）
+    this.currentStep = "game";
+
     // URL遷移してからゲーム画面を表示
     this.service.navigateToGameView();
     this.renderGameView(this.selectedPlayerCount, playerSelections, aiPlayers);
-
-    // ヘッダーを再レンダリングしてボタンを非表示にする
-    console.log(
-      "QuickPlay: Rendering header, appHeader exists:",
-      !!this.appHeader,
-    );
-    console.log("QuickPlay: Current URL:", window.location.pathname);
 
     // AppHeaderを強制的に再レンダリング
     const headerContainer = document.getElementById("app-header-container");

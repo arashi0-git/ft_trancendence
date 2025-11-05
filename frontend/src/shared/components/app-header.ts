@@ -60,17 +60,14 @@ export class AppHeader {
 
   private getAuthButtonsTemplate(): string {
     const currentPath = window.location.pathname;
-    console.log("AppHeader: getAuthButtonsTemplate, currentPath:", currentPath);
     if (
       currentPath === "/quick-play/game" ||
       currentPath.startsWith("/tournament/match")
     ) {
-      console.log("AppHeader: Hiding buttons (game mode)");
       return "";
     }
 
     if (currentPath === "/login" || currentPath === "/register") {
-      console.log("AppHeader: Hiding buttons (auth page)");
       return "";
     }
 

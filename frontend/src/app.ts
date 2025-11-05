@@ -35,27 +35,39 @@ export class App {
   private renderPage(
     PageClass: new (container: HTMLElement) => PageComponent,
   ): void {
-    // 前のページをクリーンアップ
-    if (this.currentPage?.destroy) {
-      this.currentPage.destroy();
-    }
-
     // コンテナの表示/非表示を適切に設定
     const isAuthPage =
       window.location.pathname === "/login" ||
       window.location.pathname === "/register";
 
-    if (isAuthPage) {
-      this.authContainer.classList.remove("hidden");
-      this.gameContainer.classList.add("hidden");
-      this.currentPage = new PageClass(this.authContainer);
-    } else {
-      this.authContainer.classList.add("hidden");
-      this.gameContainer.classList.remove("hidden");
-      this.currentPage = new PageClass(this.gameContainer);
-    }
+    // 同じページクラスで同じコンテナなら、インスタンスを再利用
+    const isSamePageClass =
+      this.currentPage && this.currentPage.constructor === PageClass;
+    const isCurrentlyAuthPage =
+      !this.authContainer.classList.contains("hidden");
+    const isSameContainer = isAuthPage === isCurrentlyAuthPage;
 
-    this.currentPage.render();
+    if (isSamePageClass && isSameContainer && this.currentPage) {
+      // 既存のページインスタンスを再利用してrenderだけ呼び出す
+      this.currentPage.render();
+    } else {
+      // 異なるページまたはコンテナの場合は新規作成
+      if (this.currentPage?.destroy) {
+        this.currentPage.destroy();
+      }
+
+      if (isAuthPage) {
+        this.authContainer.classList.remove("hidden");
+        this.gameContainer.classList.add("hidden");
+        this.currentPage = new PageClass(this.authContainer);
+      } else {
+        this.authContainer.classList.add("hidden");
+        this.gameContainer.classList.remove("hidden");
+        this.currentPage = new PageClass(this.gameContainer);
+      }
+
+      this.currentPage.render();
+    }
   }
 
   private init(): void {

@@ -726,6 +726,16 @@ export class BabylonRender {
     this.scene.render();
   }
 
+  public onReady(callback: () => void): void {
+    this.scene.executeWhenReady(() => {
+      callback();
+    });
+  }
+
+  public isReady(): boolean {
+    return this.scene.isReady();
+  }
+
   public dispose() {
     // 中央線セグメントを破棄
     this.centerLineSegments.forEach((segment) => {
