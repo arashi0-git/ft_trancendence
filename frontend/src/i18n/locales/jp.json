@@ -55,10 +55,10 @@
     "registrationError": "プレイヤー登録画面の表示に失敗しました。",
     "gameOverTitle": "ゲーム終了！",
     "controls": {
-      "playerLeftOuter": "プレイヤー1(左外):{{keys}}",
-      "playerRightOuter": "プレイヤー2(右外）：{{keys}}",
-      "playerLeftInner": "プレイヤー3(左内）：{{keys}}",
-      "playerRightInner": "プレイヤー4(右内）：{{keys}}"
+      "playerLeftOuter": "プレイヤー1(左外):W/S",
+      "playerRightOuter": "プレイヤー2(右外）：↑/↓",
+      "playerLeftInner": "プレイヤー3(左内）： R/F",
+      "playerRightInner": "プレイヤー4(右内）： I/K"
     }
   },
   "playerSelector": {

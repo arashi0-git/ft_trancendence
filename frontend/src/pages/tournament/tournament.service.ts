@@ -6,6 +6,16 @@ import { PlayerRegistrationWithCountSelector } from "../../shared/components/pla
 import { onLanguageChange, translate, i18next } from "../../i18n";
 
 type TranslationSection = Record<string, string>;
+
+interface DifficultyTranslations {
+  easy?: string;
+  medium?: string;
+  hard?: string;
+}
+interface PlayerSelectorTranslations {
+  difficulty?: DifficultyTranslations;
+  aiDisplayName?: string;
+}
 interface TournamentTranslations {
   titles?: TranslationSection;
   buttons?: TranslationSection;
@@ -174,7 +184,7 @@ export class TournamentService {
       fallback: {
         pageTitle: "Tournament Mode",
         backButtonLabel: "Back",
-      },
+      },   
     };
 
     const translator = this.translateFn;
@@ -503,14 +513,34 @@ export class TournamentService {
     const currentRoundMatches = this.tournamentData.getCurrentRoundMatches();
     const bracket = this.t.bracket || {};
     const buttons = this.t.buttons || {};
+    const tSelector = i18next.t("playerSelector", { 
+      returnObjects: true 
+    }) as PlayerSelectorTranslations;
     const matchesHtml = currentRoundMatches
       .map((match) => {
         const player1 = this.tournamentData.getPlayer(match.player1Id);
         const player2 = this.tournamentData.getPlayer(match.player2Id);
-        const player1Alias =
-          player1?.alias || bracket.unknownPlayer || "Unknown";
-        const player2Alias =
-          player2?.alias || bracket.unknownPlayer || "Unknown";
+        let player1Alias: string;
+        if (player1 && player1.isAI && player1.aiDifficulty) {
+          const difficultyLabel = tSelector.difficulty?.[player1.aiDifficulty] || player1.aiDifficulty;
+          const template = tSelector.aiDisplayName || "AI Player {{index}} ({{difficulty}})";
+          const aliasMatch = player1.alias.match(/(\d+)/); 
+          const playerIndex = aliasMatch ? aliasMatch[1] : '?';
+          player1Alias = template.replace("{{index}}", playerIndex).replace("{{difficulty}}", difficultyLabel);
+        } else {
+          player1Alias = player1?.alias || bracket.unknownPlayer || "Unknown";
+        }
+        
+        let player2Alias: string;
+        if (player2 && player2.isAI && player2.aiDifficulty) {
+          const difficultyLabel = tSelector.difficulty?.[player2.aiDifficulty] || player2.aiDifficulty;
+          const template = tSelector.aiDisplayName || "AI Player {{index}} ({{difficulty}})";
+          const aliasMatch = player2.alias.match(/(\d+)/);
+          const playerIndex = aliasMatch ? aliasMatch[1] : '?';
+          player2Alias = template.replace("{{index}}", playerIndex).replace("{{difficulty}}", difficultyLabel);
+        } else {
+          player2Alias = player2?.alias || bracket.unknownPlayer || "Unknown";
+        }
         return `
         <div class="bg-black bg-opacity-30 p-4 rounded border border-cyan-400 border-opacity-50">
           <div class="flex justify-between items-center">
@@ -876,7 +906,21 @@ export class TournamentService {
       this.tournamentData.completeMatch(matchId, winnerId, score);
 
       const winnerPlayer = this.tournamentData.getPlayer(winnerId);
-      const winnerAlias = winnerPlayer?.alias || "Player";
+      let winnerAlias: string;
+      
+      if (winnerPlayer && winnerPlayer.isAI && winnerPlayer.aiDifficulty) {
+        const tSelector = i18next.t("playerSelector", { 
+          returnObjects: true 
+        }) as PlayerSelectorTranslations;
+        const difficultyLabel = tSelector.difficulty?.[winnerPlayer.aiDifficulty] || winnerPlayer.aiDifficulty;
+        const playerIndex = winner; 
+        const template = tSelector.aiDisplayName || "AI Player {{index}} ({{difficulty}})";
+        winnerAlias = template
+          .replace("{{index}}", playerIndex.toString())
+          .replace("{{difficulty}}", difficultyLabel);
+      } else {
+        winnerAlias = winnerPlayer?.alias || "Player";
+      }
       const modalTitle = this.translateFn
         ? (this.translateFn("tournament.modal.playerWins", {
             index: winner,
