@@ -5,7 +5,6 @@ import type {
   AuthResponse,
   UpdateUserSettingsPayload,
   UpdateUserSettingsResponse,
-  FriendsListResponse,
   FriendResponse,
   FriendSummary,
   TwoFactorChallengeResponse,
@@ -355,21 +354,22 @@ export class AuthService {
   static async getFriends(): Promise<FriendSummary[]> {
     try {
       const response = await fetch(
-        `${API_BASE_URL.replace(/\/$/, "")}/users/me/following`,
+        `${API_BASE_URL.replace(/\/$/, "")}/users/me/friends`,
         {
           method: "GET",
           headers: this.getAuthHeaders({ includeJson: false }),
         },
       );
 
-      const data = await response.json();
-
       if (!response.ok) {
+        const data = await response.json();
         throw new Error(data.error || "Failed to load friends");
       }
 
-      const listResponse = data as FriendsListResponse;
-      return listResponse.friends ?? listResponse.following ?? [];
+      const { friends } = (await response.json()) as {
+        friends: FriendSummary[];
+      };
+      return friends;
     } catch (error) {
       console.error("Get friends error:", error);
       throw error;
@@ -379,7 +379,7 @@ export class AuthService {
   static async addFriend(username: string): Promise<FriendSummary> {
     try {
       const response = await fetch(
-        `${API_BASE_URL.replace(/\/$/, "")}/users/me/following`,
+        `${API_BASE_URL.replace(/\/$/, "")}/users/me/friends`,
         {
           method: "POST",
           headers: this.getAuthHeaders(),
@@ -403,7 +403,7 @@ export class AuthService {
   static async removeFriend(userId: number): Promise<void> {
     try {
       const response = await fetch(
-        `${API_BASE_URL.replace(/\/$/, "")}/users/me/following/${userId}`,
+        `${API_BASE_URL.replace(/\/$/, "")}/users/me/friends/${userId}`,
         {
           method: "DELETE",
           headers: this.getAuthHeaders({ includeJson: false }),

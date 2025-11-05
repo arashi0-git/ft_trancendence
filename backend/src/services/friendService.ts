@@ -1,6 +1,6 @@
 import { promises as fsPromises } from "fs";
 import path from "path";
-import { FollowModel } from "../models/follow";
+import { FriendModel } from "../models/friend";
 import { UserModel, UserWithoutPassword, stripPassword } from "../models/user";
 
 function isSqliteConstraintViolation(
@@ -14,16 +14,16 @@ function isSqliteConstraintViolation(
   return maybeError.code === "SQLITE_CONSTRAINT" || maybeError.errno === 19;
 }
 
-export class FollowService {
-  static async listFollowing(userId: number): Promise<UserWithoutPassword[]> {
-    const users = await FollowModel.getFollowingUsers(userId);
+export class FriendService {
+  static async listFriends(userId: number): Promise<UserWithoutPassword[]> {
+    const users = await FriendModel.getFriends(userId);
     return Promise.all(
       users.map((user) => this.sanitizeProfileImage(stripPassword(user))),
     );
   }
 
-  static async followByUsername(
-    followerId: number,
+  static async addFriendByUsername(
+    userId: number,
     username: string,
   ): Promise<UserWithoutPassword> {
     const normalizedUsername = username.trim();
@@ -36,24 +36,21 @@ export class FollowService {
       throw new Error("User not found");
     }
 
-    if (targetUser.id === followerId) {
-      throw new Error("You cannot follow yourself");
+    if (targetUser.id === userId) {
+      throw new Error("You cannot add yourself as a friend");
     }
 
-    const alreadyFollowing = await FollowModel.isFollowing(
-      followerId,
-      targetUser.id,
-    );
+    const alreadyFriend = await FriendModel.isFriend(userId, targetUser.id);
 
-    if (alreadyFollowing) {
-      throw new Error("You already follow this user");
+    if (alreadyFriend) {
+      throw new Error("You are already friends with this user");
     }
 
     try {
-      await FollowModel.followUser(followerId, targetUser.id);
+      await FriendModel.addFriend(userId, targetUser.id);
     } catch (error) {
       if (isSqliteConstraintViolation(error)) {
-        throw new Error("You already follow this user");
+        throw new Error("You are already friends with this user");
       }
       throw error;
     }
@@ -61,23 +58,20 @@ export class FollowService {
     return await this.sanitizeProfileImage(stripPassword(targetUser));
   }
 
-  static async unfollow(
-    followerId: number,
-    followingId: number,
-  ): Promise<void> {
-    const targetUser = await UserModel.findById(followingId);
+  static async removeFriend(userId: number, friendId: number): Promise<void> {
+    const targetUser = await UserModel.findById(friendId);
     if (!targetUser) {
       throw new Error("User not found");
     }
 
-    await FollowModel.unfollowUser(followerId, followingId);
+    await FriendModel.removeFriend(userId, friendId);
   }
 
-  static toFollowSummaries(users: UserWithoutPassword[]) {
-    return users.map((user) => this.toFollowSummary(user));
+  static toFriendSummaries(users: UserWithoutPassword[]) {
+    return users.map((user) => this.toFriendSummary(user));
   }
 
-  static toFollowSummary(user: UserWithoutPassword) {
+  static toFriendSummary(user: UserWithoutPassword) {
     return {
       id: user.id,
       username: user.username,

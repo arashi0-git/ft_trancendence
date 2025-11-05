@@ -79,11 +79,6 @@ export type FriendSummary = Pick<
   "id" | "username" | "profile_image_url" | "is_online" | "last_login"
 >;
 
-export interface FriendsListResponse {
-  friends?: FriendSummary[];
-  following?: FriendSummary[];
-}
-
 export interface FriendResponse {
   user: FriendSummary;
 }
