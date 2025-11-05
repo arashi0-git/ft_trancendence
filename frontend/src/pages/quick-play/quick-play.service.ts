@@ -224,7 +224,11 @@ export class QuickPlayService extends BaseGameService {
     router.navigate(path);
   }
 
-  // 認証関連のメソッドは共通ヘッダーに移動したため削除
+  navigateToGameView(): void {
+    this.navigate("/quick-play/game");
+  }
 
-  // cleanup()はBaseGameServiceから継承
+  navigateToRegistration(): void {
+    this.navigate("/quick-play");
+  }
 }

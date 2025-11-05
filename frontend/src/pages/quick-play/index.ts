@@ -3,6 +3,7 @@ import { SpacePageBase } from "../../shared/components/space-page-base";
 import { PlayerRegistrationWithCountSelector } from "../../shared/components/player-registration-with-count-selector";
 import type { PlayerOption } from "../../shared/types/tournament";
 import { i18next, onLanguageChange } from "../../i18n";
+import { AppHeader } from "../../shared/components/app-header";
 
 type QuickPlayStep = "registration" | "game";
 
@@ -53,7 +54,20 @@ export class QuickPlayPage extends SpacePageBase {
 
   async render(): Promise<void> {
     this.ensureBaseTemplate();
-    await this.renderPlayerRegistrationView();
+
+    // URLに応じて適切な画面を表示
+    const currentPath = window.location.pathname;
+    if (currentPath === "/quick-play/game" && this.currentStep === "game") {
+      // ゲーム画面が既にレンダリング済みの場合は何もしない
+      // (URL変更によるrenderの再呼び出しを避ける)
+    } else if (
+      currentPath === "/quick-play" ||
+      currentPath === "/quick-play/game"
+    ) {
+      // プレイヤー登録画面
+      await this.renderPlayerRegistrationView();
+    }
+
     this.initializeSpaceBackground();
   }
 
@@ -229,7 +243,26 @@ export class QuickPlayPage extends SpacePageBase {
       }
     });
 
+    // URL遷移してからゲーム画面を表示
+    this.service.navigateToGameView();
     this.renderGameView(this.selectedPlayerCount, playerSelections, aiPlayers);
+
+    // ヘッダーを再レンダリングしてボタンを非表示にする
+    console.log(
+      "QuickPlay: Rendering header, appHeader exists:",
+      !!this.appHeader,
+    );
+    console.log("QuickPlay: Current URL:", window.location.pathname);
+
+    // AppHeaderを強制的に再レンダリング
+    const headerContainer = document.getElementById("app-header-container");
+    if (headerContainer) {
+      if (!this.appHeader) {
+        // AppHeaderがまだ初期化されていない場合は新規作成
+        this.appHeader = new AppHeader(headerContainer);
+      }
+      this.appHeader.render();
+    }
   }
 
   private attachGameEventListeners(): void {
@@ -270,7 +303,7 @@ export class QuickPlayPage extends SpacePageBase {
         .getElementById("quick-play-header-back")
         ?.addEventListener("click", async () => {
           this.service.cleanup();
-          await this.renderPlayerRegistrationView();
+          this.service.navigateToRegistration();
         });
     }
   }

@@ -17,6 +17,7 @@ export type PageConstructor = new (container: HTMLElement) => PageComponent;
 export const routeConfig: Record<string, PageConstructor> = {
   "/": HomePage,
   "/quick-play": QuickPlayPage,
+  "/quick-play/game": QuickPlayPage,
   "/tournament": TournamentPage,
   "/tournament/registration": TournamentPage,
   "/tournament/bracket": TournamentPage,
