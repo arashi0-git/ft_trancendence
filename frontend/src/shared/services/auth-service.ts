@@ -5,7 +5,6 @@ import type {
   AuthResponse,
   UpdateUserSettingsPayload,
   UpdateUserSettingsResponse,
-  FriendsListResponse,
   FriendResponse,
   FriendSummary,
   TwoFactorChallengeResponse,
@@ -362,14 +361,15 @@ export class AuthService {
         },
       );
 
-      const data = await response.json();
-
       if (!response.ok) {
+        const data = await response.json();
         throw new Error(data.error || "Failed to load friends");
       }
 
-      const listResponse = data as FriendsListResponse;
-      return listResponse.friends ?? [];
+      const { friends } = (await response.json()) as {
+        friends: FriendSummary[];
+      };
+      return friends;
     } catch (error) {
       console.error("Get friends error:", error);
       throw error;
