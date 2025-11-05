@@ -47,15 +47,6 @@ CREATE TABLE IF NOT EXISTS tournaments (
 );
 
 
-CREATE TABLE IF NOT EXISTS friendships (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    requester_id INTEGER,
-    addressee_id INTEGER,
-    status TEXT CHECK(status IN ('pending', 'accepted', 'blocked')) DEFAULT 'pending',
-    FOREIGN KEY (requester_id) REFERENCES users(id),
-    FOREIGN KEY (addressee_id) REFERENCES users(id)
-);
-
 CREATE TABLE IF NOT EXISTS user_follows (
     follower_id INTEGER NOT NULL,
     following_id INTEGER NOT NULL,

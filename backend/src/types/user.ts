@@ -65,6 +65,6 @@ export interface UpdateUserSettingsRequest extends UpdateUserProfileRequest {
   newPassword?: string;
 }
 
-export interface FollowUserRequest {
+export interface FriendUserRequest {
   username: string;
 }
