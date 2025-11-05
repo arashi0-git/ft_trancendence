@@ -64,14 +64,17 @@ export class QuickPlayPage extends SpacePageBase {
         // (URL変更によるrenderの再呼び出しを避ける)
       } else {
         // ゲームが初期化されていないのに/quick-play/gameにアクセスした場合
-        console.warn(
-          "URL is /quick-play/game but game is not initialized. Redirecting to registration.",
-        );
-        this.service.navigateToRegistration();
+        // プレイヤー登録画面にリダイレクト
+        this.currentStep = "registration";
+        // 次のフレームでリダイレクト（isRenderingフラグがリセットされた後）
+        setTimeout(() => {
+          this.service.navigateToRegistration();
+        }, 0);
         return;
       }
     } else if (currentPath === "/quick-play") {
       // プレイヤー登録画面
+      this.currentStep = "registration";
       await this.renderPlayerRegistrationView();
     }
 
