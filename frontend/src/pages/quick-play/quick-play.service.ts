@@ -141,7 +141,7 @@ export class QuickPlayService extends BaseGameService {
       );
     }
 
-    const teamIndices = winner === 1 ? [0, 2] : [1, 3];
+    const teamIndices = winner === 1 || winner === 3 ? [0, 2] : [1, 3];
     const names = teamIndices
       .map((idx) =>
         idx < this.playerSelections.length

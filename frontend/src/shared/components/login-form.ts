@@ -138,7 +138,6 @@ export class LoginForm {
 
     this.attachLoginListeners();
     setupPasswordToggles(this.container, eyeIconUrl);
-    setupPasswordToggles(this.container, eyeIconUrl);
   }
 
   private renderTwoFactorView(): void {
