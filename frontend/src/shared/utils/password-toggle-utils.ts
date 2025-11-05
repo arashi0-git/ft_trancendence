@@ -21,7 +21,7 @@ export const setupPasswordToggles = (
   toggles.forEach((toggle) => {
     const targetId = toggle.dataset.target;
     const input = targetId
-      ? container.querySelector<HTMLInputElement>(`#${targetId}`)
+      ? container.querySelector<HTMLInputElement>(`#${CSS.escape(targetId)}`)
       : null;
 
     if (!input) {

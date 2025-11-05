@@ -58,9 +58,15 @@ export class AppHeader {
     `;
   }
 
-  //認証状態に基づき、ボタンのHTMLを生成します。
   private getAuthButtonsTemplate(): string {
     const currentPath = window.location.pathname;
+    if (
+      currentPath === "/quick-play/game" ||
+      currentPath.startsWith("/tournament/match")
+    ) {
+      return "";
+    }
+
     if (currentPath === "/login" || currentPath === "/register") {
       return "";
     }
