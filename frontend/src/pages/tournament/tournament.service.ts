@@ -117,25 +117,6 @@ export class TournamentService {
     this.navigationCopy = this.buildNavigationCopy();
 
     if (this.contentContainer) {
-      if (this.currentStep === "match" && this.gameManager.isGameActive()) {
-        console.warn(
-          "Language change during active match. Updating UI text manually.",
-        );
-
-        const tButtons = this.t.buttons || {};
-        //added some translations here for be ablet o switch language while in match
-        const startBtn = document.getElementById("start-tournament-game");
-        if (startBtn)
-          startBtn.textContent = tButtons.startMatch || "Start Match";
-
-        const pauseBtn = document.getElementById("pause-tournament-game");
-        if (pauseBtn) pauseBtn.textContent = tButtons.pause || "Pause";
-
-        const resetBtn = document.getElementById("reset-tournament-game");
-        if (resetBtn) resetBtn.textContent = tButtons.reset || "Reset";
-
-        return;
-      }
       this.initializeCurrentView();
     }
   }
@@ -184,7 +165,7 @@ export class TournamentService {
       fallback: {
         pageTitle: "Tournament Mode",
         backButtonLabel: "Back",
-      },   
+      },
     };
 
     const translator = this.translateFn;
@@ -509,38 +490,20 @@ export class TournamentService {
       return;
     }
 
-    // 現在のラウンドのマッチのみ表示
     const currentRoundMatches = this.tournamentData.getCurrentRoundMatches();
     const bracket = this.t.bracket || {};
     const buttons = this.t.buttons || {};
-    const tSelector = i18next.t("playerSelector", { 
-      returnObjects: true 
-    }) as PlayerSelectorTranslations;
+
     const matchesHtml = currentRoundMatches
       .map((match) => {
         const player1 = this.tournamentData.getPlayer(match.player1Id);
         const player2 = this.tournamentData.getPlayer(match.player2Id);
-        let player1Alias: string;
-        if (player1 && player1.isAI && player1.aiDifficulty) {
-          const difficultyLabel = tSelector.difficulty?.[player1.aiDifficulty] || player1.aiDifficulty;
-          const template = tSelector.aiDisplayName || "AI Player {{index}} ({{difficulty}})";
-          const aliasMatch = player1.alias.match(/(\d+)/); 
-          const playerIndex = aliasMatch ? aliasMatch[1] : '?';
-          player1Alias = template.replace("{{index}}", playerIndex).replace("{{difficulty}}", difficultyLabel);
-        } else {
-          player1Alias = player1?.alias || bracket.unknownPlayer || "Unknown";
-        }
-        
-        let player2Alias: string;
-        if (player2 && player2.isAI && player2.aiDifficulty) {
-          const difficultyLabel = tSelector.difficulty?.[player2.aiDifficulty] || player2.aiDifficulty;
-          const template = tSelector.aiDisplayName || "AI Player {{index}} ({{difficulty}})";
-          const aliasMatch = player2.alias.match(/(\d+)/);
-          const playerIndex = aliasMatch ? aliasMatch[1] : '?';
-          player2Alias = template.replace("{{index}}", playerIndex).replace("{{difficulty}}", difficultyLabel);
-        } else {
-          player2Alias = player2?.alias || bracket.unknownPlayer || "Unknown";
-        }
+
+        const player1Alias =
+          player1?.alias || bracket.unknownPlayer || "Unknown";
+        const player2Alias =
+          player2?.alias || bracket.unknownPlayer || "Unknown";
+
         return `
         <div class="bg-black bg-opacity-30 p-4 rounded border border-cyan-400 border-opacity-50">
           <div class="flex justify-between items-center">
@@ -911,14 +874,17 @@ export class TournamentService {
 
       const winnerPlayer = this.tournamentData.getPlayer(winnerId);
       let winnerAlias: string;
-      
+
       if (winnerPlayer && winnerPlayer.isAI && winnerPlayer.aiDifficulty) {
-        const tSelector = i18next.t("playerSelector", { 
-          returnObjects: true 
+        const tSelector = i18next.t("playerSelector", {
+          returnObjects: true,
         }) as PlayerSelectorTranslations;
-        const difficultyLabel = tSelector.difficulty?.[winnerPlayer.aiDifficulty] || winnerPlayer.aiDifficulty;
-        const playerIndex = winner; 
-        const template = tSelector.aiDisplayName || "AI Player {{index}} ({{difficulty}})";
+        const difficultyLabel =
+          tSelector.difficulty?.[winnerPlayer.aiDifficulty] ||
+          winnerPlayer.aiDifficulty;
+        const playerIndex = winner;
+        const template =
+          tSelector.aiDisplayName || "AI Player {{index}} ({{difficulty}})";
         winnerAlias = template
           .replace("{{index}}", playerIndex.toString())
           .replace("{{difficulty}}", difficultyLabel);

@@ -196,6 +196,28 @@
       "results": "Výsledky turnaje",
       "mode": "Turnajový režim"
     },
+    "navigation": {
+      "registration": {
+        "pageTitle": "Registrace hráčů",
+        "backButtonLabel": "Domů"
+      },
+      "bracket": {
+        "pageTitle": "Pavouk turnaje",
+        "backButtonLabel": "Zpět"
+      },
+      "match": {
+        "pageTitle": "Turnajový zápas",
+        "backButtonLabel": "Zpět"
+      },
+      "results": {
+        "pageTitle": "Výsledky turnaje",
+        "backButtonLabel": "Zpět"
+      },
+      "fallback": {
+        "pageTitle": "Turnajový režim",
+        "backButtonLabel": "Zpět"
+      }
+    },
     "buttons": {
       "home": "Domů",
       "back": "Zpět",

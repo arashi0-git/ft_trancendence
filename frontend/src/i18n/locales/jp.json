@@ -196,6 +196,28 @@
       "results": "トーナメント結果",
       "mode": "トーナメントモード"
     },
+    "navigation": {
+      "registration": {
+        "pageTitle": "プレイヤー登録",
+        "backButtonLabel": "ホーム"
+      },
+      "bracket": {
+        "pageTitle": "トーナメント表",
+        "backButtonLabel": "戻る"
+      },
+      "match": {
+        "pageTitle": "トーナメント試合",
+        "backButtonLabel": "戻る"
+      },
+      "results": {
+        "pageTitle": "トーナメント結果",
+        "backButtonLabel": "戻る"
+      },
+      "fallback": {
+        "pageTitle": "トーナメントモード",
+        "backButtonLabel": "戻る"
+      }
+    },
     "buttons": {
       "home": "ホーム",
       "back": "戻る",

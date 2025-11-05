@@ -219,7 +219,7 @@ export class QuickPlayPage extends SpacePageBase {
     const controls = this.t.controls || {};
     const p1Controls = `<p>${controls.playerLeftOuter || '<strong class="text-white">Player 1 (Left-Outer):</strong> W/S'}</p>`;
     const p2Controls = `<p>${controls.playerRightOuter || '<strong class="text-white">Player 2 (Right-Outer):</strong> ↑/↓'}</p>`;
-    
+
     if (playerCount === 4) {
       const p3Controls = `<p>${controls.playerLeftInner || '<strong class="text-white">Player 3 (Left-Inner):</strong> R/F'}</p>`;
       const p4Controls = `<p>${controls.playerRightInner || '<strong class="text-white">Player 4 (Right-Inner):</strong> I/K'}</p>`;
@@ -338,44 +338,6 @@ export class QuickPlayPage extends SpacePageBase {
 
     if (this.currentStep === "registration") {
       void this.renderPlayerRegistrationView();
-    } else if (this.currentStep === "game") {
-      //when playing game dont reset the game and only change language for these buttons
-      console.warn(
-        "QuickPlay: Language change during active match. Updating UI text manually.",
-      );
-      this.updateHeader();
-
-      const startBtn = document.getElementById("start-game");
-      if (startBtn) startBtn.textContent = this.t.startGame || "Start Game";
-
-      const pauseBtn = document.getElementById("pause-game");
-      if (pauseBtn) pauseBtn.textContent = this.t.pauseGame || "Pause";
-
-      const resetBtn = document.getElementById("reset-game");
-      if (resetBtn) resetBtn.textContent = this.t.resetGame || "Reset";
-
-      const modalTitle = document.querySelector("#game-over-modal h2");
-      if (modalTitle)
-        modalTitle.textContent = this.t.gameOverTitle || "Game finished!";
-
-      const controlsDiv = document.getElementById("quick-play-controls");
-      if (controlsDiv) {
-        controlsDiv.innerHTML = this.getControlsTemplate(this.selectedPlayerCount);
-
-      const modalTitle = document.getElementById("game-over-title");
-      if (modalTitle)
-        modalTitle.textContent = this.t.gameOverTitle || "Game finished!";
-      
-      const winnerLabel = document.getElementById("game-over-winner-label");
-      if (winnerLabel) winnerLabel.textContent = this.t.winner || "Winner:";
-      
-      const scoreLabel = document.getElementById("game-over-score-label");
-      if (scoreLabel) scoreLabel.textContent = this.t.finalScore || "Final Score:";
-      
-      const modalResetBtn = document.getElementById("reset-game-modal-btn");
-      if (modalResetBtn) 
-        modalResetBtn.textContent = this.t.resetGameButton || this.t.resetGame || "Reset Game";
-      }
     }
   }
 

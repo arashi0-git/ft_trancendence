@@ -196,6 +196,28 @@
       "results": "Tournament Results",
       "mode": "Tournament Mode"
     },
+    "navigation": {
+      "registration": {
+        "pageTitle": "Player Registration",
+        "backButtonLabel": "Home"
+      },
+      "bracket": {
+        "pageTitle": "Tournament Bracket",
+        "backButtonLabel": "Back"
+      },
+      "match": {
+        "pageTitle": "Tournament Match",
+        "backButtonLabel": "Back"
+      },
+      "results": {
+        "pageTitle": "Tournament Results",
+        "backButtonLabel": "Back"
+      },
+      "fallback": {
+        "pageTitle": "Tournament Mode",
+        "backButtonLabel": "Back"
+      }
+    },
     "buttons": {
       "home": "Home",
       "back": "Back",
