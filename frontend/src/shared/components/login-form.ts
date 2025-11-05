@@ -8,6 +8,7 @@ import type {
   TwoFactorChallengeResponse,
 } from "../types/user";
 import { setupPasswordToggles } from "../utils/password-toggle-utils";
+import { escapeHtml } from "../utils/html-utils";
 
 const eyeIconUrl = new URL("../../../images/icon/eye_icon.png", import.meta.url)
   .href;
@@ -19,7 +20,7 @@ export class LoginForm {
 
   private onLoginSuccessCallback: (user: PublicUser) => void = (user) => {
     console.log("User logged in:", user);
-    alert(`Welcome back, ${user?.username || "User"}!`);
+    alert(`Welcome back, ${escapeHtml(user?.username) || "User"}!`);
   };
 
   private onShowRegisterCallback: () => void = () => {
