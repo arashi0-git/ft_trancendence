@@ -50,6 +50,8 @@ export class BabylonRender {
   private scoreBoard2: Mesh | null = null;
   private scoreTexture1: TextBlock | null = null;
   private scoreTexture2: TextBlock | null = null;
+  private scoreBoardTexture: AdvancedDynamicTexture | null = null;
+  private glowLayer: GlowLayer | null = null;
   private prevScore1 = -1;
   private prevScore2 = -1;
   private gameWidth: number;
@@ -310,6 +312,13 @@ export class BabylonRender {
     this.ballMesh?.dispose();
     this.scoreBoard1?.dispose();
     this.scoreBoard2?.dispose();
+
+    // AdvancedDynamicTextureとGlowLayerをdispose（白が濃くなるバグの原因）
+    this.scoreBoardTexture?.dispose();
+    this.scoreBoardTexture = null;
+    this.glowLayer?.dispose();
+    this.glowLayer = null;
+
     this.recreateField();
     this.recreateCenterLine();
 
@@ -558,11 +567,12 @@ export class BabylonRender {
     this.scoreBoard1.rotation.x = Math.PI / 6; // 少し下向きに傾ける
 
     // DynamicTextureを使用してスコアボードを描画
-    const texture = AdvancedDynamicTexture.CreateForMesh(
+    this.scoreBoardTexture = AdvancedDynamicTexture.CreateForMesh(
       this.scoreBoard1,
       textureWidth,
       textureHeight,
     );
+    const texture = this.scoreBoardTexture;
 
     // 外枠コンテナ
     const container = new Rectangle("scoreContainer");
@@ -649,8 +659,8 @@ export class BabylonRender {
     this.scoreBoard1.material = scoreMaterial;
 
     // GlowLayerを追加して発光効果を追加（強度を下げる）
-    const glowLayer = new GlowLayer("glow", this.scene);
-    glowLayer.intensity = 0.3;
+    this.glowLayer = new GlowLayer("glow", this.scene);
+    this.glowLayer.intensity = 0.3;
 
     // scoreBoard2は使用しない
     this.scoreBoard2 = null;
@@ -724,6 +734,16 @@ export class BabylonRender {
 
   public render() {
     this.scene.render();
+  }
+
+  public onReady(callback: () => void): void {
+    this.scene.executeWhenReady(() => {
+      callback();
+    });
+  }
+
+  public isReady(): boolean {
+    return this.scene.isReady();
   }
 
   public dispose() {

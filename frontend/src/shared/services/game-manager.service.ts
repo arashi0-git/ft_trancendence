@@ -36,6 +36,7 @@ export class GameManagerService {
   private aiPlayer2: AiPlayer | null = null;
   private aiPlayer3: AiPlayer | null = null;
   private aiPlayer4: AiPlayer | null = null;
+  private isResetting: boolean = false;
 
   initializeGame(config: GameConfig): void {
     try {
@@ -191,23 +192,33 @@ export class GameManagerService {
   }
 
   resetGame(): void {
-    if (!this.pongGame) {
-      throw new Error("Game not initialized");
+    // 連打による並行実行を防止
+    if (this.isResetting) {
+      return;
     }
-    this.pongGame.resetGame();
+    this.isResetting = true;
 
-    // AIプレイヤーをリセット
-    if (this.aiPlayer1) {
-      this.aiPlayer1.reset();
-    }
-    if (this.aiPlayer2) {
-      this.aiPlayer2.reset();
-    }
-    if (this.aiPlayer3) {
-      this.aiPlayer3.reset();
-    }
-    if (this.aiPlayer4) {
-      this.aiPlayer4.reset();
+    try {
+      if (!this.pongGame) {
+        throw new Error("Game not initialized");
+      }
+      this.pongGame.resetGame();
+
+      // AIプレイヤーをリセット
+      if (this.aiPlayer1) {
+        this.aiPlayer1.reset();
+      }
+      if (this.aiPlayer2) {
+        this.aiPlayer2.reset();
+      }
+      if (this.aiPlayer3) {
+        this.aiPlayer3.reset();
+      }
+      if (this.aiPlayer4) {
+        this.aiPlayer4.reset();
+      }
+    } finally {
+      this.isResetting = false;
     }
   }
 

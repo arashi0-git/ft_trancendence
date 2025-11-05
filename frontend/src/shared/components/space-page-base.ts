@@ -12,6 +12,12 @@ export abstract class SpacePageBase {
   }
 
   protected initializeSpaceBackground(): void {
+    // 既存のSpaceBackgroundがあれば先にクリーンアップ（WebGLエラー防止）
+    if (this.spaceBackground) {
+      this.spaceBackground.dispose();
+      this.spaceBackground = null;
+    }
+
     // 即座に黒背景を適用（ちらつき防止）
     document.body.style.backgroundColor = "#0a0a0a";
 

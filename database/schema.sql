@@ -47,26 +47,17 @@ CREATE TABLE IF NOT EXISTS tournaments (
 );
 
 
-CREATE TABLE IF NOT EXISTS friendships (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    requester_id INTEGER,
-    addressee_id INTEGER,
-    status TEXT CHECK(status IN ('pending', 'accepted', 'blocked')) DEFAULT 'pending',
-    FOREIGN KEY (requester_id) REFERENCES users(id),
-    FOREIGN KEY (addressee_id) REFERENCES users(id)
-);
-
-CREATE TABLE IF NOT EXISTS user_follows (
-    follower_id INTEGER NOT NULL,
-    following_id INTEGER NOT NULL,
+CREATE TABLE IF NOT EXISTS user_friends (
+    user_id INTEGER NOT NULL,
+    friend_id INTEGER NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (follower_id, following_id),
-    FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE
+    PRIMARY KEY (user_id, friend_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_user_follows_follower ON user_follows(follower_id);
-CREATE INDEX IF NOT EXISTS idx_user_follows_following ON user_follows(following_id);
+CREATE INDEX IF NOT EXISTS idx_user_friends_user ON user_friends(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_friends_friend ON user_friends(friend_id);
 
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);

@@ -1,8 +1,8 @@
 import { FastifyInstance } from "fastify";
 import { authenticateToken } from "../middleware/auth";
 import { UserService } from "../services/userService";
-import { FollowService } from "../services/followService";
-import { FollowUserRequest, UpdateUserSettingsRequest } from "../types/user";
+import { FriendService } from "../services/friendService";
+import { FriendUserRequest, UpdateUserSettingsRequest } from "../types/user";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
@@ -303,7 +303,7 @@ export async function userRoutes(fastify: FastifyInstance) {
   );
 
   fastify.get(
-    "/me/following",
+    "/me/friends",
     { preHandler: authenticateToken },
     async (request, reply) => {
       try {
@@ -311,21 +311,19 @@ export async function userRoutes(fastify: FastifyInstance) {
           return reply.status(401).send({ error: "User not authenticated" });
         }
 
-        const following = await FollowService.listFollowing(request.user.id);
+        const friends = await FriendService.listFriends(request.user.id);
         return reply.send({
-          following: FollowService.toFollowSummaries(following),
+          friends: FriendService.toFriendSummaries(friends),
         });
       } catch (error) {
         fastify.log.error(error);
-        return reply
-          .status(500)
-          .send({ error: "Failed to load following list" });
+        return reply.status(500).send({ error: "Failed to load friends list" });
       }
     },
   );
 
-  fastify.post<{ Body: FollowUserRequest }>(
-    "/me/following",
+  fastify.post<{ Body: FriendUserRequest }>(
+    "/me/friends",
     { preHandler: authenticateToken },
     async (request, reply) => {
       try {
@@ -333,18 +331,18 @@ export async function userRoutes(fastify: FastifyInstance) {
           return reply.status(401).send({ error: "User not authenticated" });
         }
 
-        const followedUser = await FollowService.followByUsername(
+        const friend = await FriendService.addFriendByUsername(
           request.user.id,
           request.body?.username || "",
         );
 
         return reply.send({
-          user: FollowService.toFollowSummary(followedUser),
+          user: FriendService.toFriendSummary(friend),
         });
       } catch (error) {
         fastify.log.error(error);
         const message =
-          error instanceof Error ? error.message : "Failed to follow user";
+          error instanceof Error ? error.message : "Failed to add friend";
 
         let statusCode = 500;
         if (message.includes("required")) {
@@ -361,7 +359,7 @@ export async function userRoutes(fastify: FastifyInstance) {
   );
 
   fastify.delete<{ Params: { userId: string } }>(
-    "/me/following/:userId",
+    "/me/friends/:userId",
     { preHandler: authenticateToken },
     async (request, reply) => {
       try {
@@ -374,12 +372,12 @@ export async function userRoutes(fastify: FastifyInstance) {
           return reply.status(400).send({ error: "Invalid user id" });
         }
 
-        await FollowService.unfollow(request.user.id, userId);
+        await FriendService.removeFriend(request.user.id, userId);
         return reply.send({ success: true });
       } catch (error) {
         fastify.log.error(error);
         const message =
-          error instanceof Error ? error.message : "Failed to remove follow";
+          error instanceof Error ? error.message : "Failed to remove friend";
 
         const statusCode = message.includes("not found") ? 404 : 500;
         return reply.status(statusCode).send({ error: message });

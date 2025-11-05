@@ -138,6 +138,7 @@ export class LoginForm {
 
     this.attachLoginListeners();
     setupPasswordToggles(this.container, eyeIconUrl);
+    setupPasswordToggles(this.container, eyeIconUrl);
   }
 
   private renderTwoFactorView(): void {
@@ -256,7 +257,7 @@ export class LoginForm {
       errorDiv.classList.remove("hidden");
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = "Login";
+      submitBtn.textContent = this.t.submit || "Login";
     }
   }
 
