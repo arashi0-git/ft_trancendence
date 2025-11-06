@@ -2,12 +2,14 @@ import { QuickPlayService } from "./quick-play.service";
 import { SpacePageBase } from "../../shared/components/space-page-base";
 import { PlayerRegistrationWithCountSelector } from "../../shared/components/player-registration-with-count-selector";
 import type { PlayerOption } from "../../shared/types/tournament";
+import {
+  formatTemplate,
+  type TranslationSection,
+} from "../../shared/types/translations";
 import { i18next, onLanguageChange } from "../../i18n";
 import { AppHeader } from "../../shared/components/app-header";
 
 type QuickPlayStep = "registration" | "game";
-
-type TranslationSection = Record<string, string>;
 
 interface QuickPlayTranslations {
   pageTitleRegistration?: string;
@@ -176,7 +178,7 @@ export class QuickPlayPage extends SpacePageBase {
       const registrationSubtitleTemplate =
         this.t.registrationSubtitle || this.registrationCopy.subtitle || "";
       const registrationSubtitle = registrationSubtitleTemplate
-        ? this.formatText(registrationSubtitleTemplate, {
+        ? formatTemplate(registrationSubtitleTemplate, {
             count: this.selectedPlayerCount,
           })
         : "";
@@ -378,16 +380,5 @@ export class QuickPlayPage extends SpacePageBase {
     if (this.currentStep === "registration") {
       void this.renderPlayerRegistrationView();
     }
-  }
-
-  private formatText(
-    template: string,
-    variables: Record<string, string | number>,
-  ): string {
-    return Object.entries(variables).reduce(
-      (acc, [key, value]) =>
-        acc.replace(new RegExp(`{{\\s*${key}\\s*}}`, "g"), String(value)),
-      template,
-    );
   }
 }

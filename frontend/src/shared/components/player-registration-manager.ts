@@ -1,7 +1,10 @@
 import { PlayerSelector } from "./player-selector";
 import type { PlayerOption } from "../types/tournament";
-
-type TranslationSection = Record<string, string>;
+import {
+  escapeHtml,
+  formatTemplate,
+  type TranslationSection,
+} from "../types/translations";
 
 interface ManagerTranslations {
   selector?: TranslationSection;
@@ -36,10 +39,10 @@ export class PlayerRegistrationManager {
       }
 
       const titleHtml = config.title
-        ? `<h3 class="text-lg font-semibold">${this.escapeHtml(config.title)}</h3>`
+        ? `<h3 class="text-lg font-semibold">${escapeHtml(config.title)}</h3>`
         : "";
       const subtitleHtml = config.subtitle
-        ? `<p class="text-sm text-gray-300">${this.escapeHtml(config.subtitle)}</p>`
+        ? `<p class="text-sm text-gray-300">${escapeHtml(config.subtitle)}</p>`
         : "";
 
       config.container.innerHTML = `
@@ -155,7 +158,7 @@ export class PlayerRegistrationManager {
     });
 
     if (missingPlayers > 0) {
-      return this.formatText(
+      return formatTemplate(
         validationMessages.missingPlayers ||
           "{{count}} players are not selected",
         { count: missingPlayers },
@@ -180,28 +183,6 @@ export class PlayerRegistrationManager {
     });
     this.playerSelectors = [];
     this.playerSelections = [];
-  }
-
-  private formatText(
-    template: string,
-    variables: Record<string, string | number>,
-  ): string {
-    return Object.entries(variables).reduce(
-      (acc, [key, value]) =>
-        acc.replace(new RegExp(`{{\\s*${key}\\s*}}`, "g"), String(value)),
-      template,
-    );
-  }
-
-  private escapeHtml(text: string): string {
-    const map: Record<string, string> = {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;",
-    };
-    return String(text).replace(/[&<>"']/g, (ch) => map[ch] ?? ch);
   }
 
   public getPlayerSelections(): (PlayerOption | null)[] {

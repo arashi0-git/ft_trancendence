@@ -1,4 +1,5 @@
 import { AuthService } from "../services/auth-service";
+import { escapeHtml } from "../types/translations";
 
 interface RegistrationButtonConfig {
   id?: string;
@@ -36,7 +37,7 @@ export class PlayerRegistrationUI {
     const startButtonId = config.startButton.id ?? "player-registration-start";
 
     const subtitleHtml = config.subtitle
-      ? `<p class="text-sm text-gray-300">${this.escapeHtml(config.subtitle)}</p>`
+      ? `<p class="text-sm text-gray-300">${escapeHtml(config.subtitle)}</p>`
       : "";
 
     config.container.innerHTML = `
@@ -51,14 +52,14 @@ export class PlayerRegistrationUI {
           id="${backButtonId}"
           class="${config.backButton.classes}"
         >
-          ${this.escapeHtml(config.backButton.text)}
+          ${escapeHtml(config.backButton.text)}
         </button>
         <button
           id="${startButtonId}"
           class="${config.startButton.classes}"
           disabled
         >
-          ${this.escapeHtml(config.startButton.text)}
+          ${escapeHtml(config.startButton.text)}
         </button>
       </div>
     `;
@@ -105,7 +106,10 @@ export class PlayerRegistrationUI {
         };
       }
     } catch (error) {
-      console.warn("Failed to load current user for player registration:", error);
+      console.warn(
+        "Failed to load current user for player registration:",
+        error,
+      );
     }
 
     const initialAliases = this.config?.initialAliases ?? [];
@@ -125,17 +129,17 @@ export class PlayerRegistrationUI {
           type="text"
           id="player-${i}-alias"
           list="player-${i}-options"
-          placeholder="${this.escapeHtml(placeholder)}"
+          placeholder="${escapeHtml(placeholder)}"
           maxlength="20"
           required
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          value="${this.escapeHtml(defaultValue)}"
+          value="${escapeHtml(defaultValue)}"
         >
         ${
           currentUser
             ? `
         <datalist id="player-${i}-options">
-          <option value="${this.escapeHtml(currentUser.username)}">${this.escapeHtml(currentUser.username)} (You)</option>
+          <option value="${escapeHtml(currentUser.username)}">${escapeHtml(currentUser.username)} (You)</option>
         </datalist>
         `
             : ""
@@ -220,16 +224,5 @@ export class PlayerRegistrationUI {
     if (!element) return;
     element.addEventListener(event, handler);
     this.eventListeners.push({ element, event, handler });
-  }
-
-  private escapeHtml(text: string): string {
-    const map: Record<string, string> = {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;",
-    };
-    return String(text).replace(/[&<>"']/g, (ch) => map[ch] ?? ch);
   }
 }

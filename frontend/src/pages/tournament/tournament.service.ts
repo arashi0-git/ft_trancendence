@@ -3,19 +3,12 @@ import { NotificationService } from "../../shared/services/notification.service"
 import { router } from "../../routes/router";
 import { TournamentDataService } from "../../shared/services/tournament-data.service";
 import { PlayerRegistrationWithCountSelector } from "../../shared/components/player-registration-with-count-selector";
+import {
+  escapeHtml,
+  type PlayerSelectorTranslations,
+  type TranslationSection,
+} from "../../shared/types/translations";
 import { onLanguageChange, translate, i18next } from "../../i18n";
-
-type TranslationSection = Record<string, string>;
-
-interface DifficultyTranslations {
-  easy?: string;
-  medium?: string;
-  hard?: string;
-}
-interface PlayerSelectorTranslations {
-  difficulty?: DifficultyTranslations;
-  aiDisplayName?: string;
-}
 interface TournamentTranslations {
   titles?: TranslationSection;
   buttons?: TranslationSection;
@@ -430,17 +423,6 @@ export class TournamentService {
     return `<button id="back-button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">${backText}</button>`;
   }
 
-  private escapeHtml(text: string): string {
-    const map: Record<string, string> = {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;",
-    };
-    return String(text).replace(/[&<>"']/g, (ch) => map[ch] ?? ch);
-  }
-
   private addEventListenerWithTracking(
     element: HTMLElement,
     event: string,
@@ -508,12 +490,12 @@ export class TournamentService {
         <div class="bg-black bg-opacity-30 p-4 rounded border border-cyan-400 border-opacity-50">
           <div class="flex justify-between items-center">
             <div class="text-center flex-1">
-              <div class="font-semibold text-white">${this.escapeHtml(player1Alias)}</div>
+              <div class="font-semibold text-white">${escapeHtml(player1Alias)}</div>
               ${match.score ? `<div class="text-sm text-gray-600">${match.score.player1}</div>` : ""}
             </div>
             <div class="mx-4 text-gray-300">${bracket.vs || "VS"}</div>
             <div class="text-center flex-1">
-              <div class="font-semibold text-white">${this.escapeHtml(player2Alias)}</div>
+              <div class="font-semibold text-white">${escapeHtml(player2Alias)}</div>
               ${match.score ? `<div class="text-sm text-gray-600">${match.score.player2}</div>` : ""}
             </div>
             <div class="ml-4">
@@ -600,17 +582,17 @@ export class TournamentService {
       ? (this.translateFn("tournament.match.details", {
           id: matchId,
         }) as string)
-      : `Match ${this.escapeHtml(matchId)} - First to 5 points wins`;
+      : `Match ${escapeHtml(matchId)} - First to 5 points wins`;
     const controlsLeft = this.translateFn
       ? (this.translateFn("tournament.match.controlsLeft", {
           player: p1Alias,
         }) as string)
-      : `<strong>${this.escapeHtml(p1Alias)}:</strong> W/S (Up/Down)`;
+      : `<strong>${escapeHtml(p1Alias)}:</strong> W/S (Up/Down)`;
     const controlsRight = this.translateFn
       ? (this.translateFn("tournament.match.controlsRight", {
           player: p2Alias,
         }) as string)
-      : `<strong>${this.escapeHtml(p2Alias)}:</strong> ↑/↓ (Up/Down)`;
+      : `<strong>${escapeHtml(p2Alias)}:</strong> ↑/↓ (Up/Down)`;
 
     container.innerHTML = `
       <!-- コンパクトなヘッダー -->
@@ -665,7 +647,7 @@ export class TournamentService {
       ? (this.translateFn("tournament.results.winner", {
           name: winner.alias,
         }) as string)
-      : `Winner: ${this.escapeHtml(winner.alias)}`;
+      : `Winner: ${escapeHtml(winner.alias)}`;
     const recordText = this.translateFn
       ? (this.translateFn("tournament.results.record", {
           wins: winner.wins,

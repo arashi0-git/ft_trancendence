@@ -1,3 +1,5 @@
+import { escapeHtml } from "../types/translations";
+
 export type NotificationType = "success" | "info" | "warning" | "error";
 
 export interface NotificationOptions {
@@ -112,7 +114,7 @@ export class NotificationService {
           </div>
           <div style="margin-left: 0.75rem; flex: 1; min-width: 0;">
             <p style="font-size: 0.875rem; font-weight: 500; color: #111827; margin: 0;">
-              ${this.escapeHtml(message)}
+              ${escapeHtml(message)}
             </p>
           </div>
           <div style="margin-left: 1rem; flex-shrink: 0; display: flex;">
@@ -145,17 +147,6 @@ export class NotificationService {
         notification.parentNode.removeChild(notification);
       }
     }, 300);
-  }
-
-  private escapeHtml(text: string): string {
-    const map: Record<string, string> = {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;",
-    };
-    return text.replace(/[&<>"']/g, (char) => map[char] ?? char);
   }
 
   // 便利メソッド

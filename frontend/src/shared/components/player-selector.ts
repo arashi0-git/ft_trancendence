@@ -1,23 +1,7 @@
 import type { PlayerOption } from "../types/tournament";
+import { escapeHtml, formatTemplate } from "../types/translations";
+import type { PlayerSelectorTranslations } from "../types/translations";
 import { AuthService } from "../services/auth-service";
-
-interface DifficultyTranslations {
-  easy?: string;
-  medium?: string;
-  hard?: string;
-}
-interface PlayerSelectorTranslations {
-  label?: string;
-  selectPlaceholder?: string;
-  aiOption?: string;
-  customOption?: string;
-  aiDifficulty?: string;
-  difficulty?: DifficultyTranslations;
-  customAlias?: string;
-  customPlaceholder?: string;
-  currentUser?: string;
-  aiDisplayName?: string;
-}
 
 export interface PlayerSelectorConfig {
   translations: PlayerSelectorTranslations;
@@ -40,15 +24,6 @@ export class PlayerSelector {
   constructor(container: HTMLElement, playerIndex: number) {
     this.container = container;
     this.playerIndex = playerIndex;
-  }
-
-  private escapeHtml(unsafe: string): string {
-    return unsafe
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
   }
 
   private addEventListener(
@@ -74,7 +49,7 @@ export class PlayerSelector {
 
     const playerOptions = await this.getPlayerOptions();
 
-    const label = this.formatText(this.t.label || "Player {{index}}", {
+    const label = formatTemplate(this.t.label || "Player {{index}}", {
       index: this.playerIndex,
     });
     const placeholder = this.t.selectPlaceholder || "Select player or AI";
@@ -89,40 +64,40 @@ export class PlayerSelector {
         const label = this.getDifficultyLabel(difficulty);
         return `
             <button type="button" class="ai-difficulty-btn px-3 py-1 text-xs rounded border" data-difficulty="${difficulty}">
-              ${this.escapeHtml(label)}
+              ${escapeHtml(label)}
             </button>`;
       })
       .join("");
 
     this.container.innerHTML = `
       <div class="player-selector">
-        <label class="block text-sm font-medium text-white mb-1">${this.escapeHtml(label)}</label>
+        <label class="block text-sm font-medium text-white mb-1">${escapeHtml(label)}</label>
         <div class="relative">
           <select id="player-${this.playerIndex}-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
-            <option value="">${this.escapeHtml(placeholder)}</option>
+            <option value="">${escapeHtml(placeholder)}</option>
             ${playerOptions
               .map(
                 (option) =>
-                  `<option value="${this.escapeHtml(option.id)}" data-is-ai="${option.isAI}" data-ai-difficulty="${this.escapeHtml(option.aiDifficulty || "")}" data-user-id="${option.userId ?? ""}">${this.escapeHtml(option.displayName)}</option>`,
+                  `<option value="${escapeHtml(option.id)}" data-is-ai="${option.isAI}" data-ai-difficulty="${escapeHtml(option.aiDifficulty || "")}" data-user-id="${option.userId ?? ""}">${escapeHtml(option.displayName)}</option>`,
               )
               .join("")}
-            <option value="custom">${this.escapeHtml(customOptionLabel)}</option>
+            <option value="custom">${escapeHtml(customOptionLabel)}</option>
           </select>
         </div>
         
         <div id="ai-difficulty-${this.playerIndex}" class="mt-2 hidden">
-          <label class="block text-sm font-medium text-white mb-1">${this.escapeHtml(difficultyLabel)}</label>
+          <label class="block text-sm font-medium text-white mb-1">${escapeHtml(difficultyLabel)}</label>
           <div class="flex space-x-2">
             ${difficultyButtonsHtml}
           </div>
         </div>
         
         <div id="custom-alias-${this.playerIndex}" class="mt-2 hidden">
-          <label class="block text-sm font-medium text-white mb-1">${this.escapeHtml(customAliasLabel)}</label>
+          <label class="block text-sm font-medium text-white mb-1">${escapeHtml(customAliasLabel)}</label>
           <input
             type="text"
             id="custom-alias-input-${this.playerIndex}"
-            placeholder="${this.escapeHtml(customAliasPlaceholder)}"
+            placeholder="${escapeHtml(customAliasPlaceholder)}"
             maxlength="20"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           >
@@ -142,7 +117,7 @@ export class PlayerSelector {
         const user = await AuthService.getCurrentUser();
         options.push({
           id: `user-${user.id}`,
-          displayName: this.formatText(this.t.currentUser || "{{username}}", {
+          displayName: formatTemplate(this.t.currentUser || "{{username}}", {
             username: user.username,
           }),
           isAI: false,
@@ -202,7 +177,7 @@ export class PlayerSelector {
           const difficultyLabel = this.getDifficultyLabel(datasetDifficulty);
           this.currentSelection = {
             id: value,
-            displayName: this.formatText(
+            displayName: formatTemplate(
               this.t.aiDisplayName || "AI ({{difficulty}})",
               {
                 index: this.playerIndex,
@@ -246,7 +221,7 @@ export class PlayerSelector {
 
         if (this.currentSelection?.isAI) {
           this.currentSelection.aiDifficulty = difficulty;
-          this.currentSelection.displayName = this.formatText(
+          this.currentSelection.displayName = formatTemplate(
             this.t.aiDisplayName || "AI ({{difficulty}})",
             {
               index: this.playerIndex,
@@ -291,17 +266,6 @@ export class PlayerSelector {
         btn.classList.remove("bg-blue-500", "text-white");
       }
     });
-  }
-
-  private formatText(
-    template: string,
-    variables: Record<string, string | number>,
-  ): string {
-    return Object.entries(variables).reduce(
-      (acc, [key, value]) =>
-        acc.replace(new RegExp(`{{\\s*${key}\\s*}}`, "g"), String(value)),
-      template,
-    );
   }
 
   private getDifficultyLabel(difficulty: "easy" | "medium" | "hard"): string {
