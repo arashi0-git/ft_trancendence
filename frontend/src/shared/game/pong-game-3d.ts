@@ -174,9 +174,17 @@ export class PongGame3D {
     this.initializeGame();
     this.setupEventListeners();
 
-    // レンダリングループ開始
-    this.engine.runRenderLoop(() => {
-      this.renderer.render();
+    // シーン準備完了を待ってからレンダリングループ開始
+    this.renderer.onReady(() => {
+      if (this.engine.isDisposed) {
+        return;
+      }
+      this.engine.runRenderLoop(() => {
+        if (!this.renderer.isReady()) {
+          return;
+        }
+        this.renderer.render();
+      });
     });
   }
 

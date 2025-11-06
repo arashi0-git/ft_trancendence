@@ -1,13 +1,30 @@
 import { HomeService } from "./home.service";
 import { SpacePageBase } from "../../shared/components/space-page-base";
-import { translate } from "../../i18n";
+import { i18next, onLanguageChange } from "../../i18n";
+
+interface HomeTranslations {
+  intro?: string;
+  quickPlay?: string;
+  quickPlayDescription?: string;
+  tournament?: string;
+  tournamentDescription?: string;
+  gameSettings?: string;
+  gameSettingsDescription?: string;
+}
 
 export class HomePage extends SpacePageBase {
   private service: HomeService;
+  private t: HomeTranslations = {};
+  private unsubscribeLanguageChange?: () => void;
 
   constructor(container: HTMLElement) {
     super(container);
     this.service = new HomeService();
+
+    this.loadTranslations();
+    this.unsubscribeLanguageChange = onLanguageChange(
+      this.handleLanguageChange.bind(this),
+    );
   }
 
   render(): void {
@@ -17,14 +34,29 @@ export class HomePage extends SpacePageBase {
     this.initializeSpaceBackground();
   }
 
+  private loadTranslations(): void {
+    this.t =
+      (i18next.t("home", {
+        returnObjects: true,
+      }) as HomeTranslations) || {};
+  }
+
+  private handleLanguageChange(): void {
+    this.loadTranslations();
+    this.render();
+  }
+
   private getTemplate(): string {
-    const intro = translate("home.intro");
-    const quickPlay = translate("home.quickPlay");
-    const quickPlayDescription = translate("home.quickPlayDescription");
-    const tournament = translate("home.tournament");
-    const tournamentDescription = translate("home.tournamentDescription");
-    const gameSettings = translate("home.gameSettings");
-    const gameSettingsDescription = translate("home.gameSettingsDescription");
+    const intro = this.t.intro || "Select how you want to play Pong!";
+    const quickPlay = this.t.quickPlay || "🎮 Quick Play";
+    const quickPlayDescription =
+      this.t.quickPlayDescription || "Play a 2 or 4 player match";
+    const tournament = this.t.tournament || "🏆 Tournament";
+    const tournamentDescription =
+      this.t.tournamentDescription || "2, 4, or 8 player tournament";
+    const gameSettings = this.t.gameSettings || "⚙️ Game Settings";
+    const gameSettingsDescription =
+      this.t.gameSettingsDescription || "Customize your game";
 
     const content = `
         <p class="text-center text-gray-300 mb-6">${intro}</p>
@@ -106,5 +138,6 @@ export class HomePage extends SpacePageBase {
   destroy(): void {
     this.cleanupSpaceBackground();
     this.cleanupAppHeader();
+    this.unsubscribeLanguageChange?.();
   }
 }

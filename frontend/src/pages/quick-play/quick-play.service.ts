@@ -97,16 +97,61 @@ export class QuickPlayService extends BaseGameService {
     const pauseBtn = this.getPauseButton();
 
     if (modal && winnerNameEl && finalScoreEl) {
-      winnerNameEl.textContent = `Player ${data.winner}`;
+      winnerNameEl.textContent = this.getWinnerDisplayName(data.winner);
       finalScoreEl.textContent = `${data.score1} - ${data.score2}`;
       modal.classList.remove("hidden");
 
       startBtn?.classList.add("hidden");
       pauseBtn?.classList.add("hidden");
     } else {
-      this.notificationService.success(`Player ${data.winner} wins! 🎉`);
+      this.notificationService.success(
+        `${this.getWinnerDisplayName(data.winner)} wins! 🎉`,
+      );
     }
     this.updateButtonStates(false);
+  }
+  // this displays the winner's name based on player selections
+  private getWinnerDisplayName(winner: number): string {
+    const formatName = (selection: PlayerOption | null, index: number) => {
+      if (!selection) {
+        return `Player ${index + 1}`;
+      }
+      if (selection.displayName?.trim()) {
+        return selection.displayName.trim();
+      }
+      if (selection.isAI) {
+        const difficulty = selection.aiDifficulty
+          ? selection.aiDifficulty.charAt(0).toUpperCase() +
+            selection.aiDifficulty.slice(1)
+          : "AI";
+        return `AI (${difficulty})`;
+      }
+      return `Player ${index + 1}`;
+    };
+
+    if (this.playerSelections.length <= 0) {
+      return `Player ${winner}`;
+    }
+
+    if (this.playerSelections.length <= 2) {
+      const winnerIndex = Math.max(0, Math.min(winner - 1, 1));
+      return formatName(
+        this.playerSelections[winnerIndex] ?? null,
+        winnerIndex,
+      );
+    }
+
+    const teamIndices = winner === 1 || winner === 3 ? [0, 2] : [1, 3];
+    const names = teamIndices
+      .map((idx) =>
+        idx < this.playerSelections.length
+          ? formatName(this.playerSelections[idx] ?? null, idx)
+          : null,
+      )
+      .filter((name): name is string => !!name)
+      .filter((name, idx, arr) => arr.indexOf(name) === idx);
+
+    return names.length ? names.join(" & ") : `Player ${winner}`;
   }
 
   private async saveGameHistory(data: {
@@ -224,7 +269,11 @@ export class QuickPlayService extends BaseGameService {
     router.navigate(path);
   }
 
-  // 認証関連のメソッドは共通ヘッダーに移動したため削除
+  navigateToGameView(): void {
+    this.navigate("/quick-play/game");
+  }
 
-  // cleanup()はBaseGameServiceから継承
+  navigateToRegistration(): void {
+    this.navigate("/quick-play");
+  }
 }

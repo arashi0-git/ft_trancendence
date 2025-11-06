@@ -3,10 +3,13 @@ import { NotificationService } from "../../shared/services/notification.service"
 import { router } from "../../routes/router";
 import { TournamentDataService } from "../../shared/services/tournament-data.service";
 import { PlayerRegistrationWithCountSelector } from "../../shared/components/player-registration-with-count-selector";
+import {
+  type PlayerSelectorTranslations,
+  type TranslationSection,
+} from "../../shared/types/translations";
 import { onLanguageChange, translate, i18next } from "../../i18n";
 import { escapeHtml } from "../../shared/utils/html-utils";
 
-type TranslationSection = Record<string, string>;
 interface TournamentTranslations {
   titles?: TranslationSection;
   buttons?: TranslationSection;
@@ -91,7 +94,7 @@ export class TournamentService {
       results: this.renderResultsView.bind(this),
     };
     this.unsubscribeLanguageChange = onLanguageChange(
-      this.handleLanguageChange.bind(this),
+      this.handleLanguageChange.bind(this)
     );
   }
 
@@ -108,25 +111,6 @@ export class TournamentService {
     this.navigationCopy = this.buildNavigationCopy();
 
     if (this.contentContainer) {
-      if (this.currentStep === "match" && this.gameManager.isGameActive()) {
-        console.warn(
-          "Language change during active match. Updating UI text manually.",
-        );
-
-        const tButtons = this.t.buttons || {};
-        //added some translations here for be ablet o switch language while in match
-        const startBtn = document.getElementById("start-tournament-game");
-        if (startBtn)
-          startBtn.textContent = tButtons.startMatch || "Start Match";
-
-        const pauseBtn = document.getElementById("pause-tournament-game");
-        if (pauseBtn) pauseBtn.textContent = tButtons.pause || "Pause";
-
-        const resetBtn = document.getElementById("reset-tournament-game");
-        if (resetBtn) resetBtn.textContent = tButtons.reset || "Reset";
-
-        return;
-      }
       this.initializeCurrentView();
     }
   }
@@ -193,7 +177,7 @@ export class TournamentService {
   // 翻訳データのマージ
   private mergeNavigationCopy(
     base: NavigationCopy,
-    localized: unknown,
+    localized: unknown
   ): NavigationCopy {
     if (!localized || typeof localized !== "object") {
       return base;
@@ -237,7 +221,7 @@ export class TournamentService {
   // IDによる要素検索
   private queryElement<T extends HTMLElement>(
     id: string,
-    elementConstructor?: ElementConstructor<T>,
+    elementConstructor?: ElementConstructor<T>
   ): T | null {
     const element = document.getElementById(id);
     if (!element) {
@@ -248,7 +232,7 @@ export class TournamentService {
       console.warn(
         `Element with ID '${id}' is not instance of ${
           elementConstructor.name || "expected type"
-        }`,
+        }`
       );
       return null;
     }
@@ -269,7 +253,7 @@ export class TournamentService {
     const message = this.queryElement<HTMLElement>("game-over-message");
     const continueButton = this.queryElement<HTMLButtonElement>(
       "game-over-continue-btn",
-      HTMLButtonElement,
+      HTMLButtonElement
     );
 
     if (modal && title && message && continueButton) {
@@ -291,14 +275,14 @@ export class TournamentService {
     elementId: string,
     handler: () => void,
     element?: T | null,
-    elementConstructor?: ElementConstructor<T>,
+    elementConstructor?: ElementConstructor<T>
   ): void {
     this.clearEventListenersForId(elementId, "click");
     const target =
       element ?? this.queryElement<T>(elementId, elementConstructor);
     if (!target) {
       console.warn(
-        `Element with ID '${elementId}' not found for click binding.`,
+        `Element with ID '${elementId}' not found for click binding.`
       );
       return;
     }
@@ -315,15 +299,15 @@ export class TournamentService {
     return {
       startButton: this.queryElement<HTMLButtonElement>(
         "start-tournament-game",
-        HTMLButtonElement,
+        HTMLButtonElement
       ),
       pauseButton: this.queryElement<HTMLButtonElement>(
         "pause-tournament-game",
-        HTMLButtonElement,
+        HTMLButtonElement
       ),
       resetButton: this.queryElement<HTMLButtonElement>(
         "reset-tournament-game",
-        HTMLButtonElement,
+        HTMLButtonElement
       ),
     };
   }
@@ -365,7 +349,7 @@ export class TournamentService {
         onSubmit: (data) => {
           if (!data.tournamentName) {
             this.notificationService.error(
-              setup.missingName || "Please enter tournament name",
+              setup.missingName || "Please enter tournament name"
             );
             return;
           }
@@ -373,7 +357,7 @@ export class TournamentService {
           // トーナメントを作成
           this.tournamentData.createTournament(
             data.tournamentName,
-            data.playerCount,
+            data.playerCount
           );
 
           // プレイヤー登録
@@ -405,7 +389,7 @@ export class TournamentService {
     } catch (error) {
       console.error("Failed to render registration view:", error);
       this.notificationService.error(
-        reg.error || "Failed to render registration view",
+        reg.error || "Failed to render registration view"
       );
       router.navigate("/");
     }
@@ -443,7 +427,7 @@ export class TournamentService {
   private addEventListenerWithTracking(
     element: HTMLElement,
     event: string,
-    handler: EventListener,
+    handler: EventListener
   ): void {
     element.addEventListener(event, handler);
     this.eventListeners.push({ element, event, handler });
@@ -453,7 +437,7 @@ export class TournamentService {
     elementId: string,
     event: string,
     handler: EventListener,
-    required: boolean = true,
+    required: boolean = true
   ): void {
     const element = document.getElementById(elementId);
     if (!element) {
@@ -489,18 +473,20 @@ export class TournamentService {
       return;
     }
 
-    // 現在のラウンドのマッチのみ表示
     const currentRoundMatches = this.tournamentData.getCurrentRoundMatches();
     const bracket = this.t.bracket || {};
     const buttons = this.t.buttons || {};
+
     const matchesHtml = currentRoundMatches
       .map((match) => {
         const player1 = this.tournamentData.getPlayer(match.player1Id);
         const player2 = this.tournamentData.getPlayer(match.player2Id);
+
         const player1Alias =
           player1?.alias || bracket.unknownPlayer || "Unknown";
         const player2Alias =
           player2?.alias || bracket.unknownPlayer || "Unknown";
+
         return `
         <div class="bg-black bg-opacity-30 p-4 rounded border border-cyan-400 border-opacity-50">
           <div class="flex justify-between items-center">
@@ -561,7 +547,7 @@ export class TournamentService {
         if (matchId) {
           this.navigateToMatch(matchId);
         }
-      },
+      }
     );
 
     this.attachEventListenerSafely("new-tournament-btn", "click", () => {
@@ -713,7 +699,7 @@ export class TournamentService {
   private attachEventListenersToElements(
     selector: string,
     event: string,
-    handler: (element: HTMLElement) => void,
+    handler: (element: HTMLElement) => void
   ): void {
     const elements = document.querySelectorAll(selector);
     elements.forEach((element) => {
@@ -721,7 +707,7 @@ export class TournamentService {
       this.addEventListenerWithTracking(
         element as HTMLElement,
         event,
-        wrappedHandler,
+        wrappedHandler
       );
     });
   }
@@ -771,10 +757,10 @@ export class TournamentService {
     const player2 = this.tournamentData.getPlayer(match.player2Id);
 
     console.log(
-      `Player 1: ${player1?.alias}, isAI: ${player1?.isAI}, difficulty: ${player1?.aiDifficulty}`,
+      `Player 1: ${player1?.alias}, isAI: ${player1?.isAI}, difficulty: ${player1?.aiDifficulty}`
     );
     console.log(
-      `Player 2: ${player2?.alias}, isAI: ${player2?.isAI}, difficulty: ${player2?.aiDifficulty}`,
+      `Player 2: ${player2?.alias}, isAI: ${player2?.isAI}, difficulty: ${player2?.aiDifficulty}`
     );
 
     // AIプレイヤー設定を構築
@@ -785,13 +771,13 @@ export class TournamentService {
     if (player1?.isAI && player1.aiDifficulty) {
       aiPlayers.player1 = { difficulty: player1.aiDifficulty };
       console.log(
-        `Setting AI for player1 with difficulty: ${player1.aiDifficulty}`,
+        `Setting AI for player1 with difficulty: ${player1.aiDifficulty}`
       );
     }
     if (player2?.isAI && player2.aiDifficulty) {
       aiPlayers.player2 = { difficulty: player2.aiDifficulty };
       console.log(
-        `Setting AI for player2 with difficulty: ${player2.aiDifficulty}`,
+        `Setting AI for player2 with difficulty: ${player2.aiDifficulty}`
       );
     }
 
@@ -824,7 +810,7 @@ export class TournamentService {
         if (pauseButton) pauseButton.disabled = false;
       },
       startButton,
-      HTMLButtonElement,
+      HTMLButtonElement
     );
 
     this.bindClick(
@@ -835,7 +821,7 @@ export class TournamentService {
         if (pauseButton) pauseButton.disabled = true;
       },
       pauseButton,
-      HTMLButtonElement,
+      HTMLButtonElement
     );
 
     this.bindClick(
@@ -846,14 +832,14 @@ export class TournamentService {
         if (pauseButton) pauseButton.disabled = true;
       },
       resetButton,
-      HTMLButtonElement,
+      HTMLButtonElement
     );
   }
 
   private handleMatchEnd(
     matchId: string,
     winner: number,
-    score: { player1: number; player2: number },
+    score: { player1: number; player2: number }
   ): void {
     console.log(`Handling Match End: ${matchId}`);
     const tNotifications = this.t.notifications || {};
@@ -870,7 +856,24 @@ export class TournamentService {
       this.tournamentData.completeMatch(matchId, winnerId, score);
 
       const winnerPlayer = this.tournamentData.getPlayer(winnerId);
-      const winnerAlias = winnerPlayer?.alias || "Player";
+      let winnerAlias: string;
+
+      if (winnerPlayer && winnerPlayer.isAI && winnerPlayer.aiDifficulty) {
+        const tSelector = i18next.t("playerSelector", {
+          returnObjects: true,
+        }) as PlayerSelectorTranslations;
+        const difficultyLabel =
+          tSelector.difficulty?.[winnerPlayer.aiDifficulty] ||
+          winnerPlayer.aiDifficulty;
+        const playerIndex = winner;
+        const template =
+          tSelector.aiDisplayName || "AI Player {{index}} ({{difficulty}})";
+        winnerAlias = template
+          .replace("{{index}}", playerIndex.toString())
+          .replace("{{difficulty}}", difficultyLabel);
+      } else {
+        winnerAlias = winnerPlayer?.alias || "Player";
+      }
       const modalTitle = this.translateFn
         ? (this.translateFn("tournament.modal.playerWins", {
             index: winner,
@@ -890,7 +893,7 @@ export class TournamentService {
         if (this.tournamentData.isTournamentComplete()) {
           console.log("Tournament completed, navigating to results.");
           this.notificationService.success(
-            tNotifications.tournamentComplete || "Tournament completed! 🏆",
+            tNotifications.tournamentComplete || "Tournament completed! 🏆"
           );
           this.navigateToResults();
         } else if (this.tournamentData.canAdvanceToNextRound()) {
@@ -908,7 +911,7 @@ export class TournamentService {
                 ? (this.translateFn("tournament.notifications.roundBegins", {
                     roundName: roundName,
                   }) as string)
-                : `${roundName} begins! 🥊`,
+                : `${roundName} begins! 🥊`
             );
           }
           this.navigateToBracket();
@@ -929,7 +932,7 @@ export class TournamentService {
       console.error("Error in handleMatchEnd:", error);
       this.notificationService.error(
         tErrors.criticalMatch ||
-          "A critical error occurred while saving the match.",
+          "A critical error occurred while saving the match."
       );
       this.navigateToBracket();
     }
@@ -938,7 +941,7 @@ export class TournamentService {
   private showGameOverModal(
     modalTitleText: string,
     modalMessageText: string,
-    onContinue: () => void,
+    onContinue: () => void
   ): void {
     const modalElements = this.getGameOverModalElements();
 
@@ -959,7 +962,7 @@ export class TournamentService {
           onContinue();
         },
         continueButton,
-        HTMLButtonElement,
+        HTMLButtonElement
       );
       return;
     }

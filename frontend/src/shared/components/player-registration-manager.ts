@@ -1,6 +1,7 @@
 import { PlayerSelector } from "./player-selector";
 import type { PlayerOption } from "../types/tournament";
 import { escapeHtml } from "../utils/html-utils";
+import { formatTemplate } from "../types/translations";
 
 type TranslationSection = Record<string, string>;
 
@@ -156,7 +157,7 @@ export class PlayerRegistrationManager {
     });
 
     if (missingPlayers > 0) {
-      return this.formatText(
+      return formatTemplate(
         validationMessages.missingPlayers ||
           "{{count}} players are not selected",
         { count: missingPlayers },
@@ -181,17 +182,6 @@ export class PlayerRegistrationManager {
     });
     this.playerSelectors = [];
     this.playerSelections = [];
-  }
-
-  private formatText(
-    template: string,
-    variables: Record<string, string | number>,
-  ): string {
-    return Object.entries(variables).reduce(
-      (acc, [key, value]) =>
-        acc.replace(new RegExp(`{{\\s*${key}\\s*}}`, "g"), String(value)),
-      template,
-    );
   }
 
   public getPlayerSelections(): (PlayerOption | null)[] {

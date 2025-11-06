@@ -1,24 +1,8 @@
 import type { PlayerOption } from "../types/tournament";
+import { formatTemplate } from "../types/translations";
+import type { PlayerSelectorTranslations } from "../types/translations";
 import { AuthService } from "../services/auth-service";
 import { escapeHtml } from "../utils/html-utils";
-
-interface DifficultyTranslations {
-  easy?: string;
-  medium?: string;
-  hard?: string;
-}
-interface PlayerSelectorTranslations {
-  label?: string;
-  selectPlaceholder?: string;
-  aiOption?: string;
-  customOption?: string;
-  aiDifficulty?: string;
-  difficulty?: DifficultyTranslations;
-  customAlias?: string;
-  customPlaceholder?: string;
-  currentUser?: string;
-  aiDisplayName?: string;
-}
 
 export interface PlayerSelectorConfig {
   translations: PlayerSelectorTranslations;
@@ -66,7 +50,7 @@ export class PlayerSelector {
 
     const playerOptions = await this.getPlayerOptions();
 
-    const label = this.formatText(this.t.label || "Player {{index}}", {
+    const label = formatTemplate(this.t.label || "Player {{index}}", {
       index: this.playerIndex,
     });
     const placeholder = this.t.selectPlaceholder || "Select player or AI";
@@ -134,7 +118,7 @@ export class PlayerSelector {
         const user = await AuthService.getCurrentUser();
         options.push({
           id: `user-${user.id}`,
-          displayName: this.formatText(this.t.currentUser || "{{username}}", {
+          displayName: formatTemplate(this.t.currentUser || "{{username}}", {
             username: user.username,
           }),
           isAI: false,
@@ -194,7 +178,7 @@ export class PlayerSelector {
           const difficultyLabel = this.getDifficultyLabel(datasetDifficulty);
           this.currentSelection = {
             id: value,
-            displayName: this.formatText(
+            displayName: formatTemplate(
               this.t.aiDisplayName || "AI ({{difficulty}})",
               {
                 index: this.playerIndex,
@@ -238,7 +222,7 @@ export class PlayerSelector {
 
         if (this.currentSelection?.isAI) {
           this.currentSelection.aiDifficulty = difficulty;
-          this.currentSelection.displayName = this.formatText(
+          this.currentSelection.displayName = formatTemplate(
             this.t.aiDisplayName || "AI ({{difficulty}})",
             {
               index: this.playerIndex,
@@ -283,17 +267,6 @@ export class PlayerSelector {
         btn.classList.remove("bg-blue-500", "text-white");
       }
     });
-  }
-
-  private formatText(
-    template: string,
-    variables: Record<string, string | number>,
-  ): string {
-    return Object.entries(variables).reduce(
-      (acc, [key, value]) =>
-        acc.replace(new RegExp(`{{\\s*${key}\\s*}}`, "g"), String(value)),
-      template,
-    );
   }
 
   private getDifficultyLabel(difficulty: "easy" | "medium" | "hard"): string {

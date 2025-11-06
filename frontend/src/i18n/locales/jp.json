@@ -55,10 +55,10 @@
     "registrationError": "プレイヤー登録画面の表示に失敗しました。",
     "gameOverTitle": "ゲーム終了！",
     "controls": {
-      "playerLeftOuter": "プレイヤー1(左外):{{keys}}",
-      "playerRightOuter": "プレイヤー2(右外）：{{keys}}",
-      "playerLeftInner": "プレイヤー3(左内）：{{keys}}",
-      "playerRightInner": "プレイヤー4(右内）：{{keys}}"
+      "playerLeftOuter": "プレイヤー1(左外):W/S",
+      "playerRightOuter": "プレイヤー2(右外）：↑/↓",
+      "playerLeftInner": "プレイヤー3(左内）： R/F",
+      "playerRightInner": "プレイヤー4(右内）： I/K"
     }
   },
   "playerSelector": {
@@ -195,6 +195,28 @@
       "match": "トーナメント試合",
       "results": "トーナメント結果",
       "mode": "トーナメントモード"
+    },
+    "navigation": {
+      "registration": {
+        "pageTitle": "プレイヤー登録",
+        "backButtonLabel": "ホーム"
+      },
+      "bracket": {
+        "pageTitle": "トーナメント表",
+        "backButtonLabel": "戻る"
+      },
+      "match": {
+        "pageTitle": "トーナメント試合",
+        "backButtonLabel": "戻る"
+      },
+      "results": {
+        "pageTitle": "トーナメント結果",
+        "backButtonLabel": "戻る"
+      },
+      "fallback": {
+        "pageTitle": "トーナメントモード",
+        "backButtonLabel": "戻る"
+      }
     },
     "buttons": {
       "home": "ホーム",

@@ -35,10 +35,6 @@ export class AppHeader {
   private getTemplate(): string {
     const authButtons = this.getAuthButtonsTemplate();
     const title = i18next.t("header.title", "ft_transcendence");
-    const subtitle = i18next.t(
-      "header.subtitle",
-      "The Ultimate Pong Experience",
-    );
 
     return `
       <header class="p-4 bg-transparent">
@@ -48,7 +44,6 @@ export class AppHeader {
             <h1 class="text-3xl font-bold text-white cursor-pointer" id="app-title">
               ${title}
             </h1>
-            <p class="text-sm text-gray-400 mt-1">${subtitle}</p>
           </div>
           <div class="flex justify-end items-center space-x-3">
             ${authButtons}
@@ -58,9 +53,15 @@ export class AppHeader {
     `;
   }
 
-  //認証状態に基づき、ボタンのHTMLを生成します。
   private getAuthButtonsTemplate(): string {
     const currentPath = window.location.pathname;
+    if (
+      currentPath === "/quick-play/game" ||
+      currentPath.startsWith("/tournament/match")
+    ) {
+      return "";
+    }
+
     if (currentPath === "/login" || currentPath === "/register") {
       return "";
     }

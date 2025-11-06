@@ -75,7 +75,7 @@ export class NotificationService {
 
   private createNotification(
     message: string,
-    type: NotificationType,
+    type: NotificationType
   ): HTMLElement {
     const notification = document.createElement("div");
     notification.style.cssText = `
