@@ -247,7 +247,6 @@ export class SecuritySection {
 
     dialogContent.innerHTML = "";
     this.twoFactorComponent = new TwoFactorVerification(dialogContent, {
-      mode: "modal",
       message: this.buildTwoFactorMessage(challenge),
       resendLabel: "Resend Code",
       cancelLabel: "Cancel",

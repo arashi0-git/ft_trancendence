@@ -101,18 +101,18 @@ export class HistorySection {
 
     return `
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-900/40 rounded border border-cyan-500/20">
-        <div class="text-center">
-          <p class="text-2xl font-bold text-cyan-400">${this.stats.totalGames}</p>
-          <p class="text-xs text-gray-400">Total Games</p>
-        </div>
-        <div class="text-center">
-          <p class="text-2xl font-bold text-green-400">${this.stats.wins}</p>
-          <p class="text-xs text-gray-400">Wins</p>
-        </div>
-        <div class="text-center">
-          <p class="text-2xl font-bold text-red-400">${this.stats.losses}</p>
-          <p class="text-xs text-gray-400">Losses</p>
-        </div>
+      <div class="text-center">
+      <p class="text-2xl font-bold text-green-400">${this.stats.wins}</p>
+      <p class="text-xs text-gray-400">Wins</p>
+      </div>
+      <div class="text-center">
+      <p class="text-2xl font-bold text-red-400">${this.stats.losses}</p>
+      <p class="text-xs text-gray-400">Losses</p>
+      </div>
+      <div class="text-center">
+        <p class="text-2xl font-bold text-cyan-400">${this.stats.totalGames}</p>
+        <p class="text-xs text-gray-400">Total Games</p>
+      </div>
         <div class="text-center">
           <p class="text-2xl font-bold text-purple-400">${this.stats.winRate.toFixed(1)}%</p>
           <p class="text-xs text-gray-400">Win Rate</p>
