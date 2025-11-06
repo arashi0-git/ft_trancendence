@@ -207,6 +207,8 @@ export class QuickPlayPage extends SpacePageBase {
         startButtonText,
         backButtonText,
         requireHumanPlayer: false,
+        playerCountOptions: [2, 4], // クイックプレイは2人と4人
+        defaultPlayerCount: 2, // デフォルトは2人
         translations: {
           setup: setupTranslations,
           playerSelector: this.playerSelectorCopy,

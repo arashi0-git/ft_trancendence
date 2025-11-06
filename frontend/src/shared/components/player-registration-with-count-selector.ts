@@ -18,6 +18,8 @@ export interface PlayerRegistrationWithCountConfig {
   startButtonText?: string;
   backButtonText?: string;
   requireHumanPlayer?: boolean;
+  playerCountOptions?: number[]; // 利用可能なプレイヤー数のオプション（例: [2, 4] または [4, 8]）
+  defaultPlayerCount?: number; // デフォルトのプレイヤー数
 
   translations?: RegistrationTranslations;
 
@@ -48,7 +50,8 @@ export class PlayerRegistrationWithCountSelector {
     this.destroy();
     this.playerRegistrationManager = new PlayerRegistrationManager();
     this.config = config;
-    this.currentPlayerCount = 2;
+    // 設定から取得、なければデフォルト値を使用
+    this.currentPlayerCount = config.defaultPlayerCount ?? 2;
 
     if (!config.container) {
       throw new Error("Container element is required");
@@ -136,7 +139,9 @@ export class PlayerRegistrationWithCountSelector {
   }
 
   private getPlayerCountOptionsHtml(setup: TranslationSection): string {
-    return [2, 4]
+    // 設定から取得、なければデフォルト値[2, 4]を使用
+    const options = this.config?.playerCountOptions ?? [2, 4];
+    return options
       .map((count) => {
         const labelTemplate = setup.playerOption || "{{count}} Players";
         const label = formatTemplate(labelTemplate, {

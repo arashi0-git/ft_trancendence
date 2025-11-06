@@ -338,6 +338,8 @@ export class TournamentService {
         startButtonText: buttons.startTournament || "Start Tournament",
         backButtonText: buttons.home || "Back to Home",
         requireHumanPlayer: true,
+        playerCountOptions: [4, 8], // トーナメントは4人と8人
+        defaultPlayerCount: 4, // デフォルトは4人
         translations: {
           setup: setup,
           playerSelector: playerSelector,
