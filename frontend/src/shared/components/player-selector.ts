@@ -53,7 +53,6 @@ export class PlayerSelector {
     const label = formatTemplate(this.t.label || "Player {{index}}", {
       index: this.playerIndex,
     });
-    const placeholder = this.t.selectPlaceholder || "Select player or AI";
     const customOptionLabel = this.t.customOption || "Enter custom alias";
     const difficultyLabel = this.t.aiDifficulty || "AI Difficulty";
     const customAliasLabel = this.t.customAlias || "Custom Alias";
@@ -75,7 +74,6 @@ export class PlayerSelector {
         <label class="block text-sm font-medium text-white mb-1">${escapeHtml(label)}</label>
         <div class="relative">
           <select id="player-${this.playerIndex}-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
-            <option value="">${escapeHtml(placeholder)}</option>
             ${playerOptions
               .map(
                 (option) =>
@@ -106,7 +104,7 @@ export class PlayerSelector {
       </div>
     `;
 
-    this.attachEventListeners();
+    this.attachEventListeners(this.getDefaultAlias());
   }
 
   private async getPlayerOptions(): Promise<PlayerOption[]> {
@@ -140,7 +138,7 @@ export class PlayerSelector {
     return options;
   }
 
-  private attachEventListeners(): void {
+  private attachEventListeners(defaultAlias?: string): void {
     const select = this.container.querySelector(
       `#player-${this.playerIndex}-select`,
     ) as HTMLSelectElement;
@@ -251,6 +249,10 @@ export class PlayerSelector {
         }
       });
     }
+
+    if (defaultAlias) {
+      this.setDefaultCustomAlias(defaultAlias);
+    }
   }
 
   private setAIDifficultyButtons(
@@ -275,6 +277,31 @@ export class PlayerSelector {
       difficultyLabels[difficulty] ??
       difficulty.charAt(0).toUpperCase() + difficulty.slice(1)
     );
+  }
+
+  private getDefaultAlias(): string {
+    return `guest${this.playerIndex}`;
+  }
+
+  private setDefaultCustomAlias(defaultAlias: string): void {
+    const select = this.container.querySelector(
+      `#player-${this.playerIndex}-select`,
+    ) as HTMLSelectElement;
+    const customAliasContainer = this.container.querySelector(
+      `#custom-alias-${this.playerIndex}`,
+    ) as HTMLElement;
+    const customAliasInput = this.container.querySelector(
+      `#custom-alias-input-${this.playerIndex}`,
+    ) as HTMLInputElement;
+
+    if (!select || !customAliasContainer || !customAliasInput) {
+      return;
+    }
+
+    select.value = "custom";
+    customAliasContainer.classList.remove("hidden");
+    customAliasInput.value = defaultAlias;
+    customAliasInput.dispatchEvent(new Event("input"));
   }
 
   public setOnSelectionChange(
@@ -306,6 +333,6 @@ export class PlayerSelector {
     customAliasContainer?.classList.add("hidden");
 
     this.currentSelection = null;
-    this.onSelectionChange?.(null);
+    this.setDefaultCustomAlias(this.getDefaultAlias());
   }
 }
