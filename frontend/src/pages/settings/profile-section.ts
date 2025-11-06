@@ -1,5 +1,6 @@
 import { AuthService } from "../../shared/services/auth-service";
 import { NotificationService } from "../../shared/services/notification.service";
+import { escapeHtml } from "../../shared/types/translations";
 import type { PublicUser } from "../../shared/types/user";
 
 export class ProfileSection {
@@ -10,15 +11,6 @@ export class ProfileSection {
 
   constructor(container: HTMLElement) {
     this.container = container;
-  }
-
-  private escapeHtml(unsafe: string): string {
-    return unsafe
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
   }
 
   render(user: PublicUser): void {
@@ -66,7 +58,7 @@ export class ProfileSection {
             type="text"
             id="username"
             name="username"
-            value="${this.escapeHtml(user.username)}"
+            value="${escapeHtml(user.username)}"
             class="w-full bg-gray-900/70 border border-cyan-500/30 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
             autocomplete="username"
           />
@@ -78,7 +70,7 @@ export class ProfileSection {
             type="email"
             id="email"
             name="email"
-            value="${this.escapeHtml(user.email)}"
+            value="${escapeHtml(user.email)}"
             class="w-full bg-gray-900/70 border border-cyan-500/30 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
             autocomplete="email"
           />

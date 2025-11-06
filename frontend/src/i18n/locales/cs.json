@@ -44,7 +44,7 @@
     "gameFinished": "Hra skončila!",
     "winner": "Vítěz",
     "finalScore": "Konečné skóre",
-    "resetGameButton": "Resetovat hru",
+    "resetGameButton": "Nová hra",
     "selectPlayers": "Počet hráčů",
     "playerOption": "{{count}} hráči",
     "next": "Další",
@@ -55,10 +55,10 @@
     "registrationError": "Nepodařilo se zobrazit obrazovku registrace hráčů.",
     "gameOverTitle": "Hra skončila!",
     "controls": {
-      "playerLeftOuter": "Hráč 1 (levý krajní): {{keys}}",
-      "playerRightOuter": "Hráč 2 (pravý krajní): {{keys}}",
-      "playerLeftInner": "Hráč 3 (levý vnitřní): {{keys}}",
-      "playerRightInner": "Hráč 4 (pravý vnitřní): {{keys}}"
+      "playerLeftOuter": "Hráč 1 (levý krajní): W/S",
+      "playerRightOuter": "Hráč 2 (pravý krajní): ↑/↓",
+      "playerLeftInner": "Hráč 3 (levý vnitřní): R/F",
+      "playerRightInner": "Hráč 4 (pravý vnitřní): I/K"
     }
   },
   "playerSelector": {
@@ -195,6 +195,28 @@
       "match": "Turnajový zápas",
       "results": "Výsledky turnaje",
       "mode": "Turnajový režim"
+    },
+    "navigation": {
+      "registration": {
+        "pageTitle": "Registrace hráčů",
+        "backButtonLabel": "Domů"
+      },
+      "bracket": {
+        "pageTitle": "Pavouk turnaje",
+        "backButtonLabel": "Zpět"
+      },
+      "match": {
+        "pageTitle": "Turnajový zápas",
+        "backButtonLabel": "Zpět"
+      },
+      "results": {
+        "pageTitle": "Výsledky turnaje",
+        "backButtonLabel": "Zpět"
+      },
+      "fallback": {
+        "pageTitle": "Turnajový režim",
+        "backButtonLabel": "Zpět"
+      }
     },
     "buttons": {
       "home": "Domů",

@@ -51,6 +51,7 @@ export class GameSettingsPage extends SpacePageBase {
 
   render(): void {
     this.container.innerHTML = this.getTemplate();
+    this.initializeAppHeader();
     this.attachEventListeners();
     this.initializeSpaceBackground();
   }
@@ -331,6 +332,7 @@ export class GameSettingsPage extends SpacePageBase {
     this.unsubscribeSettings = undefined;
     this.unsubscribeLanguage?.();
     this.unsubscribeLanguage = undefined;
+    this.cleanupAppHeader();
     this.cleanupSpaceBackground();
   }
 }

@@ -1,5 +1,6 @@
 import { AuthService } from "../services/auth-service";
 import { TwoFactorVerification } from "./two-factor-verification";
+import { i18next } from "../../i18n";
 import type {
   AuthResponse,
   AuthResult,
@@ -12,10 +13,38 @@ import { setupPasswordToggles } from "../utils/password-toggle-utils";
 const eyeIconUrl = new URL("../../../images/icon/eye_icon.png", import.meta.url)
   .href;
 
+interface LoginErrorTranslations {
+  required?: string;
+  generic?: string;
+  twoFactorInvalid?: string;
+  twoFactorUnexpected?: string;
+  twoFactorGeneric?: string;
+  twoFactorMissing?: string;
+}
+
+interface LoginStatusTranslations {
+  loggingIn?: string;
+  verifying?: string;
+}
+
+interface LoginTranslations {
+  title?: string;
+  emailLabel?: string;
+  emailPlaceholder?: string;
+  passwordLabel?: string;
+  passwordPlaceholder?: string;
+  submit?: string;
+  register?: string;
+  home?: string;
+  errors?: LoginErrorTranslations;
+  status?: LoginStatusTranslations;
+}
+
 export class LoginForm {
   private container: HTMLElement;
   private twoFactorChallenge: TwoFactorChallengeResponse | null = null;
   private twoFactorComponent: TwoFactorVerification | null = null;
+  private t: LoginTranslations = {};
 
   private onLoginSuccessCallback: (user: PublicUser) => void = (user) => {
     console.log("User logged in:", user);
@@ -32,6 +61,11 @@ export class LoginForm {
 
   constructor(container: HTMLElement) {
     this.container = container;
+    this.t =
+      (i18next.t("login", {
+        returnObjects: true,
+      }) as LoginTranslations) || {};
+
     this.renderLoginView();
   }
 
@@ -41,21 +75,21 @@ export class LoginForm {
 
     this.container.innerHTML = `
       <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold mb-4 text-center">Login</h2>
+        <h2 class="text-2xl font-bold mb-4 text-center">${this.t.title || "Login"}</h2>
         <form id="login-form" class="space-y-4">
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+            <label for="email" class="block text-sm font-medium text-gray-700">${this.t.emailLabel || "Email"}</label>
             <input
               type="email"
               id="email"
               name="email"
               required
               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter your email"
+              placeholder="${this.t.emailPlaceholder || "Enter your email"}"
             >
           </div>
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+            <label for="password" class="block text-sm font-medium text-gray-700">${this.t.passwordLabel || "Password"}</label>
             <div class="mt-1 relative">
               <input
                 type="password"
@@ -63,7 +97,7 @@ export class LoginForm {
                 name="password"
                 required
                 class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter your password"
+                placeholder="${this.t.passwordPlaceholder || "Enter your password"}"
               >
               <button
                 type="button"
@@ -81,21 +115,21 @@ export class LoginForm {
               id="login-submit"
               class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              Login
+              ${this.t.submit || "Login"}
             </button>
             <button 
               type="button" 
               id="show-register"
               class="w-full bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-700"
             >
-              Don't have an account? Register
+              ${this.t.register || "Don't have an account? Register"}
             </button>
             <button 
               type="button" 
               id="show-home"
               class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
-              Back to Home
+              ${this.t.home || "Back to Home"}
             </button>
           </div>
         </form>
@@ -222,7 +256,7 @@ export class LoginForm {
       errorDiv.classList.remove("hidden");
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = "Login";
+      submitBtn.textContent = this.t.submit || "Login";
     }
   }
 

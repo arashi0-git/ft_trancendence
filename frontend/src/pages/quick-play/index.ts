@@ -2,12 +2,14 @@ import { QuickPlayService } from "./quick-play.service";
 import { SpacePageBase } from "../../shared/components/space-page-base";
 import { PlayerRegistrationWithCountSelector } from "../../shared/components/player-registration-with-count-selector";
 import type { PlayerOption } from "../../shared/types/tournament";
+import {
+  formatTemplate,
+  type TranslationSection,
+} from "../../shared/types/translations";
 import { i18next, onLanguageChange } from "../../i18n";
 import { AppHeader } from "../../shared/components/app-header";
 
 type QuickPlayStep = "registration" | "game";
-
-type TranslationSection = Record<string, string>;
 
 interface QuickPlayTranslations {
   pageTitleRegistration?: string;
@@ -21,7 +23,11 @@ interface QuickPlayTranslations {
   registrationSubtitle?: string;
   selectPlayers?: string;
   playerOption?: string;
+  controls?: TranslationSection;
   gameOverTitle?: string;
+  winner?: string;
+  finalScore?: string;
+  resetGameButton?: string;
 }
 
 export class QuickPlayPage extends SpacePageBase {
@@ -120,19 +126,25 @@ export class QuickPlayPage extends SpacePageBase {
           <canvas id="pong-canvas" class="border-2 border-gray-300 bg-black max-w-full h-auto"></canvas>
         </div>
 
-        <div class="text-center text-sm text-gray-300">
+        <div id="quick-play-controls" class="text-center text-sm text-gray-300">
           ${this.getControlsTemplate(playerCount)}
         </div>
 
         <div id="game-over-modal" class="hidden absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-75 z-50">
           <div class="bg-white p-8 rounded-lg shadow-xl text-center text-black">
-            <h2 class="text-3xl font-bold mb-4">Game finished!</h2>
-            <p class="text-xl mb-2">Winner: <span id="winner-name" class="font-semibold"></span></p>
-            <p class="text-lg mb-6">Final Score: <span id="final-score" class="font-semibold"></span></p>
+            <h2 id="game-over-title" class="text-3xl font-bold mb-4">${this.t.gameOverTitle || "Game finished!"}</h2>
+            <p class="text-xl mb-2">
+              <span id="game-over-winner-label">${this.t.winner || "Winner:"}</span>
+              <span id="winner-name" class="font-semibold"></span>
+            </p>
+            <p class="text-lg mb-6">
+              <span id="game-over-score-label">${this.t.finalScore || "Final Score:"}</span>
+              <span id="final-score" class="font-semibold"></span>
+            </p>
             <button id="reset-game-modal-btn" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded">
-              Reset Game
+              ${this.t.resetGameButton || this.t.resetGame || "Reset Game"}
             </button>
-          </div>
+          </div>  
         </div>
       </div>
     `;
@@ -166,7 +178,7 @@ export class QuickPlayPage extends SpacePageBase {
       const registrationSubtitleTemplate =
         this.t.registrationSubtitle || this.registrationCopy.subtitle || "";
       const registrationSubtitle = registrationSubtitleTemplate
-        ? this.formatText(registrationSubtitleTemplate, {
+        ? formatTemplate(registrationSubtitleTemplate, {
             count: this.selectedPlayerCount,
           })
         : "";
@@ -230,11 +242,13 @@ export class QuickPlayPage extends SpacePageBase {
   }
 
   private getControlsTemplate(playerCount: number): string {
-    const p1Controls = `<p><strong class="text-white">Player 1 (Left-Outer):</strong> W/S</p>`;
-    const p2Controls = `<p><strong class="text-white">Player 2 (Right-Outer):</strong> ↑/↓</p>`;
+    const controls = this.t.controls || {};
+    const p1Controls = `<p>${controls.playerLeftOuter || '<strong class="text-white">Player 1 (Left-Outer):</strong> W/S'}</p>`;
+    const p2Controls = `<p>${controls.playerRightOuter || '<strong class="text-white">Player 2 (Right-Outer):</strong> ↑/↓'}</p>`;
+
     if (playerCount === 4) {
-      const p3Controls = `<p><strong class="text-white">Player 3 (Left-Inner):</strong> R/F</p>`;
-      const p4Controls = `<p><strong class="text-white">Player 4 (Right-Inner):</strong> I/K</p>`;
+      const p3Controls = `<p>${controls.playerLeftInner || '<strong class="text-white">Player 3 (Left-Inner):</strong> R/F'}</p>`;
+      const p4Controls = `<p>${controls.playerRightInner || '<strong class="text-white">Player 4 (Right-Inner):</strong> I/K'}</p>`;
       return `${p1Controls}${p2Controls}${p3Controls}${p4Controls}`;
     }
     return `${p1Controls}${p2Controls}`;
@@ -365,36 +379,6 @@ export class QuickPlayPage extends SpacePageBase {
 
     if (this.currentStep === "registration") {
       void this.renderPlayerRegistrationView();
-    } else if (this.currentStep === "game") {
-      //when playing game dont reset the game and only change language for these buttons
-      console.warn(
-        "QuickPlay: Language change during active match. Updating UI text manually.",
-      );
-      this.updateHeader();
-
-      const startBtn = document.getElementById("start-game");
-      if (startBtn) startBtn.textContent = this.t.startGame || "Start Game";
-
-      const pauseBtn = document.getElementById("pause-game");
-      if (pauseBtn) pauseBtn.textContent = this.t.pauseGame || "Pause";
-
-      const resetBtn = document.getElementById("reset-game");
-      if (resetBtn) resetBtn.textContent = this.t.resetGame || "Reset";
-
-      const modalTitle = document.querySelector("#game-over-modal h2");
-      if (modalTitle)
-        modalTitle.textContent = this.t.gameOverTitle || "Game finished!";
     }
-  }
-
-  private formatText(
-    template: string,
-    variables: Record<string, string | number>,
-  ): string {
-    return Object.entries(variables).reduce(
-      (acc, [key, value]) =>
-        acc.replace(new RegExp(`{{\\s*${key}\\s*}}`, "g"), String(value)),
-      template,
-    );
   }
 }
