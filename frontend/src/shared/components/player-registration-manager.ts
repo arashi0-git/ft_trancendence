@@ -1,10 +1,9 @@
 import { PlayerSelector } from "./player-selector";
 import type { PlayerOption } from "../types/tournament";
-import {
-  escapeHtml,
-  formatTemplate,
-  type TranslationSection,
-} from "../types/translations";
+import { escapeHtml } from "../utils/html-utils";
+import { formatTemplate } from "../types/translations";
+
+type TranslationSection = Record<string, string>;
 
 interface ManagerTranslations {
   selector?: TranslationSection;

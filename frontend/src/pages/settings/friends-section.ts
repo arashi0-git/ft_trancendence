@@ -2,6 +2,7 @@ import { AuthService } from "../../shared/services/auth-service";
 import { NotificationService } from "../../shared/services/notification.service";
 import { router } from "../../routes/router";
 import type { FriendSummary } from "../../shared/types/user";
+import { escapeHtml } from "../../shared/utils/html-utils";
 
 export class FriendsSection {
   private container: HTMLElement;
@@ -96,7 +97,7 @@ export class FriendsSection {
         <div class="flex items-center space-x-3">
           ${this.renderFriendAvatar(user)}
           <div>
-            <p class="text-sm font-semibold text-white">${user.username}</p>
+            <p class="text-sm font-semibold text-white">${escapeHtml(user.username)}</p>
             <p class="text-xs text-gray-400">${user.is_online ? "Online" : "Offline"}</p>
           </div>
         </div>
@@ -105,7 +106,7 @@ export class FriendsSection {
           class="text-xs font-semibold text-red-300 hover:text-red-200 border border-red-400/40 px-3 py-1.5 rounded transition disabled:opacity-60 disabled:cursor-not-allowed"
           data-friend-action="remove"
           data-user-id="${user.id}"
-          aria-label="Remove ${user.username} from friends list"
+          aria-label="Remove ${escapeHtml(user.username)} from friends list"
         >
           Remove
         </button>
@@ -124,7 +125,7 @@ export class FriendsSection {
         <div class="w-10 h-10 rounded-full overflow-hidden border border-cyan-500/20">
           <img
             src="${imageUrl}"
-            alt="${user.username}'s avatar"
+            alt="${escapeHtml(user.username)}'s avatar"
             class="w-full h-full object-cover"
           />
         </div>
@@ -133,7 +134,7 @@ export class FriendsSection {
 
     return `
       <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 flex items-center justify-center text-cyan-300 font-bold">
-        ${user.username.charAt(0).toUpperCase()}
+        ${escapeHtml(user.username.charAt(0).toUpperCase())}
       </div>
     `;
   }

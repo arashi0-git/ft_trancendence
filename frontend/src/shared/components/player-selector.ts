@@ -1,7 +1,8 @@
 import type { PlayerOption } from "../types/tournament";
-import { escapeHtml, formatTemplate } from "../types/translations";
+import { formatTemplate } from "../types/translations";
 import type { PlayerSelectorTranslations } from "../types/translations";
 import { AuthService } from "../services/auth-service";
+import { escapeHtml } from "../utils/html-utils";
 
 export interface PlayerSelectorConfig {
   translations: PlayerSelectorTranslations;

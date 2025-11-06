@@ -60,7 +60,12 @@ export class AuthUtils {
 
       return payload;
     } catch (error) {
-      throw new Error("Invalid token");
+      // Use error to provide more specific error message without exposing internals
+      const isExpired =
+        error instanceof Error && error.message.includes("expired");
+      const errorMessage = isExpired ? "Token expired" : "Invalid token";
+
+      throw new Error(errorMessage);
     }
   }
 

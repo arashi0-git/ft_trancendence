@@ -1,6 +1,7 @@
 import { HistoryService } from "../../shared/services/history-service";
 import { NotificationService } from "../../shared/services/notification.service";
 import type { GameHistory, GameHistoryStats } from "../../shared/types/history";
+import { escapeHtml } from "../../shared/utils/html-utils";
 
 export class HistorySection {
   private container: HTMLElement;
@@ -173,7 +174,7 @@ export class HistorySection {
       : `<span class="text-xs text-blue-400">⚡ Quick Match</span>`;
 
     const teamInfo = game.teammate
-      ? `<p class="text-xs text-gray-400">With: ${game.teammate}</p>`
+      ? `<p class="text-xs text-gray-400">With: ${escapeHtml(game.teammate)}</p>`
       : "";
 
     return `
@@ -187,7 +188,7 @@ export class HistorySection {
         </div>
         <div class="text-sm text-white">
           <p>Score: <span class="font-semibold text-cyan-400">${game.myScore}</span> - <span class="font-semibold text-red-400">${game.opponentScore}</span></p>
-          <p class="text-xs text-gray-400">vs ${game.opponentInfo}</p>
+          <p class="text-xs text-gray-400">vs ${escapeHtml(game.opponentInfo)}</p>
           ${teamInfo}
         </div>
       </div>

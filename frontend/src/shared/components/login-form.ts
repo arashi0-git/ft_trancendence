@@ -46,9 +46,8 @@ export class LoginForm {
   private twoFactorComponent: TwoFactorVerification | null = null;
   private t: LoginTranslations = {};
 
-  private onLoginSuccessCallback: (user: PublicUser) => void = (user) => {
-    console.log("User logged in:", user);
-    alert(`Welcome back, ${user?.username || "User"}!`);
+  private onLoginSuccessCallback: (user: PublicUser) => void = () => {
+    // Default: do nothing. Override via setOnLoginSuccess()
   };
 
   private onShowRegisterCallback: () => void = () => {

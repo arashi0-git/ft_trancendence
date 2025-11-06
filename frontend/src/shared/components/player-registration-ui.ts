@@ -1,5 +1,5 @@
 import { AuthService } from "../services/auth-service";
-import { escapeHtml } from "../types/translations";
+import { escapeHtml } from "../utils/html-utils";
 
 interface RegistrationButtonConfig {
   id?: string;

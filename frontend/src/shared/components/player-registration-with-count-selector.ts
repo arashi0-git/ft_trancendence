@@ -1,10 +1,7 @@
 import { PlayerRegistrationManager } from "./player-registration-manager";
 import type { PlayerOption } from "../types/tournament";
-import {
-  escapeHtml,
-  formatTemplate,
-  type TranslationSection,
-} from "../types/translations";
+import { escapeHtml } from "../utils/html-utils";
+import { formatTemplate, type TranslationSection } from "../types/translations";
 
 interface RegistrationTranslations {
   setup?: TranslationSection;
@@ -185,7 +182,7 @@ export class PlayerRegistrationWithCountSelector {
   private attachEventListeners(): void {
     // プレイ人数選択
     const playerCountSelect = document.getElementById(
-      "player-count-select",
+      "player-count-select"
     ) as HTMLSelectElement;
     if (playerCountSelect) {
       this.addEventListener(playerCountSelect, "change", async () => {
@@ -215,7 +212,7 @@ export class PlayerRegistrationWithCountSelector {
     // トーナメント名入力（バリデーション用）
     if (this.config?.showTournamentName) {
       const tournamentNameInput = document.getElementById(
-        "tournament-name-input",
+        "tournament-name-input"
       ) as HTMLInputElement;
       if (tournamentNameInput) {
         this.addEventListener(tournamentNameInput, "input", () => {
@@ -243,7 +240,7 @@ export class PlayerRegistrationWithCountSelector {
 
   private validateForm(): void {
     const startButton = document.getElementById(
-      "start-button",
+      "start-button"
     ) as HTMLButtonElement;
     if (!startButton) return;
 
@@ -257,7 +254,7 @@ export class PlayerRegistrationWithCountSelector {
     // トーナメント名のバリデーション
     if (this.config?.showTournamentName) {
       const tournamentNameInput = document.getElementById(
-        "tournament-name-input",
+        "tournament-name-input"
       ) as HTMLInputElement;
       if (tournamentNameInput && !tournamentNameInput.value.trim()) {
         isValid = false;
@@ -281,7 +278,7 @@ export class PlayerRegistrationWithCountSelector {
     let tournamentName: string | undefined;
     if (this.config.showTournamentName) {
       const tournamentNameInput = document.getElementById(
-        "tournament-name-input",
+        "tournament-name-input"
       ) as HTMLInputElement;
       if (tournamentNameInput) {
         tournamentName = tournamentNameInput.value.trim();
@@ -302,7 +299,7 @@ export class PlayerRegistrationWithCountSelector {
   private addEventListener(
     element: Element,
     type: string,
-    handler: EventListener,
+    handler: EventListener
   ): void {
     element.addEventListener(type, handler);
     this.eventListeners.push({ element, type, handler });
@@ -321,7 +318,7 @@ export class PlayerRegistrationWithCountSelector {
 
     if (this.config?.showTournamentName) {
       const tournamentNameInput = document.getElementById(
-        "tournament-name-input",
+        "tournament-name-input"
       ) as HTMLInputElement;
       if (tournamentNameInput && !tournamentNameInput.value.trim()) {
         isValid = false;

@@ -1,7 +1,7 @@
 import { AuthService } from "../../shared/services/auth-service";
 import { NotificationService } from "../../shared/services/notification.service";
-import { escapeHtml } from "../../shared/types/translations";
 import type { PublicUser } from "../../shared/types/user";
+import { escapeHtml } from "../../shared/utils/html-utils";
 
 export class ProfileSection {
   private container: HTMLElement;

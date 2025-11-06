@@ -1,4 +1,4 @@
-import { escapeHtml } from "../types/translations";
+import { escapeHtml } from "../utils/html-utils";
 
 export type NotificationType = "success" | "info" | "warning" | "error";
 
@@ -75,7 +75,7 @@ export class NotificationService {
 
   private createNotification(
     message: string,
-    type: NotificationType,
+    type: NotificationType
   ): HTMLElement {
     const notification = document.createElement("div");
     notification.style.cssText = `

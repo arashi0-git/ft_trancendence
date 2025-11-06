@@ -48,7 +48,12 @@ export async function authenticateToken(
       email: decoded.email,
     };
   } catch (error) {
-    return reply.status(401).send({ error: "Invalid token" });
+    // Use error to determine specific failure type without logging sensitive details
+    const isExpired =
+      error instanceof Error && error.message.includes("expired");
+    const errorMessage = isExpired ? "Token expired" : "Invalid token";
+
+    return reply.status(401).send({ error: errorMessage });
   }
 }
 
@@ -84,7 +89,7 @@ export async function optionalAuth(
       username: decoded.username,
       email: decoded.email,
     };
-  } catch (error) {
+  } catch {
     // Swallow errors for optional auth
   }
 }
