@@ -1,3 +1,5 @@
+import type { PasswordToggleTranslations } from "../types/translations";
+
 const createToggleIcon = (isVisible: boolean, eyeIconUrl: string): string => {
   const slashMarkup = isVisible
     ? ""
@@ -14,7 +16,10 @@ const createToggleIcon = (isVisible: boolean, eyeIconUrl: string): string => {
 export const setupPasswordToggles = (
   container: HTMLElement,
   eyeIconUrl: string,
+  labels?: PasswordToggleTranslations,
 ): void => {
+  const showLabel = labels?.show || "Show password";
+  const hideLabel = labels?.hide || "Hide password";
   const toggles =
     container.querySelectorAll<HTMLButtonElement>(".password-toggle");
 
@@ -32,10 +37,7 @@ export const setupPasswordToggles = (
     const applyState = (visible: boolean) => {
       input.type = visible ? "text" : "password";
       toggle.dataset.visible = String(visible);
-      toggle.setAttribute(
-        "aria-label",
-        visible ? "Hide password" : "Show password",
-      );
+      toggle.setAttribute("aria-label", visible ? hideLabel : showLabel);
       toggle.innerHTML = createToggleIcon(visible, eyeIconUrl);
     };
 

@@ -158,32 +158,38 @@
     }
   },
   "register": {
-    "pageTitle": "Vytvořit účet",
-    "homeButton": "Domů",
+    "page": {
+      "heading": "Vytvořit účet",
+      "home": "Domů"
+    },
     "form": {
-      "title": "Vytvořit účet",
+      "title": "Vytvořte si účet",
       "usernameLabel": "Uživatelské jméno",
-      "usernamePlaceholder": "Zvol si uživatelské jméno",
+      "usernamePlaceholder": "Zvolte uživatelské jméno",
       "emailLabel": "E-mail",
-      "emailPlaceholder": "ty@example.com",
+      "emailPlaceholder": "vas@example.com",
       "passwordLabel": "Heslo",
-      "passwordPlaceholder": "Zadej bezpečné heslo",
-      "passwordHint": "Alespoň 6 znaků.",
-      "confirmPasswordLabel": "Potvrzení hesla",
-      "confirmPasswordPlaceholder": "Zadej heslo znovu",
+      "passwordPlaceholder": "Zadejte bezpečné heslo",
+      "passwordHelp": "Nejméně 6 znaků.",
+      "confirmLabel": "Potvrzení hesla",
+      "confirmPlaceholder": "Zadejte heslo znovu",
       "submit": "Vytvořit účet",
-      "showLogin": "Už máš účet? Přihlas se",
-      "showHome": "Zpět na hlavní stránku",
+      "login": "Máte už účet? Přihlaste se",
+      "home": "Zpět domů",
       "status": {
-        "submitting": "Vytvářím účet..."
+        "submitting": "Vytváření účtu..."
       },
       "errors": {
-        "allRequired": "Všechna pole jsou povinná.",
-        "usernameLength": "Uživatelské jméno musí mít {{min}} až {{max}} znaků.",
-        "emailInvalid": "Zadej platnou e-mailovou adresu.",
-        "passwordLength": "Heslo musí mít alespoň {{min}} znaků.",
+        "required": "Vyplňte prosím všechna pole.",
+        "usernameLength": "Uživatelské jméno musí mít 3 až 20 znaků.",
+        "emailInvalid": "Zadejte platnou e-mailovou adresu.",
+        "passwordLength": "Heslo musí mít alespoň 6 znaků.",
         "passwordMismatch": "Hesla se neshodují.",
-        "generic": "Registrace se nezdařila"
+        "generic": "Registrace se nezdařila."
+      },
+      "passwordToggle": {
+        "show": "Zobrazit heslo",
+        "hide": "Skrýt heslo"
       }
     }
   },
@@ -258,8 +264,9 @@
       "vs": "versus"
     },
     "match": {
-      "heading": "{{player1}} vs {{player2}}",
-      "details": "Zápas {{id}} - vítězí první na 5 bodů",
+      "heading": "{{player1}} versus {{player2}}",
+      "details": "{{identifier}} - vítězí první na {{points}} bodů",
+      "identifier": "Kolo {{roundNumber}} - Zápas {{matchNumber}}",
       "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>: W/S (nahoru/dolů)",
       "controlsRight": "<strong class=\"text-white\">{{player}}</strong>: ↑/↓ (nahoru/dolů)",
       "playerDefault": "Hráč {{index}}"
@@ -280,7 +287,7 @@
       "roundBegins": "{{roundName}} začíná! 🥊"
     },
     "modal": {
-      "playerWins": "Hráč {{index}} vyhrál!",
+      "playerWins": "Vítěz: {{player}}!",
       "matchResult": "{{player}} vyhrává zápas {{score1}} - {{score2}}!"
     }
   }
