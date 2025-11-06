@@ -1,5 +1,6 @@
 import { PlayerRegistrationManager } from "./player-registration-manager";
 import type { PlayerOption } from "../types/tournament";
+import { escapeHtml } from "../utils/html-utils";
 
 type TranslationSection = Record<string, string>;
 
@@ -57,10 +58,10 @@ export class PlayerRegistrationWithCountSelector {
     const setup = translations.setup || {};
 
     const titleHtml = config.title
-      ? `<h3 class="text-lg font-semibold text-white mb-2">${this.escapeHtml(config.title)}</h3>`
+      ? `<h3 class="text-lg font-semibold text-white mb-2">${escapeHtml(config.title)}</h3>`
       : "";
     const subtitleHtml = config.subtitle
-      ? `<p class="text-sm text-gray-300 mb-4">${this.escapeHtml(config.subtitle)}</p>`
+      ? `<p class="text-sm text-gray-300 mb-4">${escapeHtml(config.subtitle)}</p>`
       : "";
 
     const tournamentLabel = setup.nameLabel || "Tournament Name";
@@ -70,13 +71,13 @@ export class PlayerRegistrationWithCountSelector {
     const tournamentNameHtml = config.showTournamentName
       ? `
         <div class="mb-4">
-          <label class="block text-sm font-medium text-white mb-1">${this.escapeHtml(tournamentLabel)}</label>
+          <label class="block text-sm font-medium text-white mb-1">${escapeHtml(tournamentLabel)}</label>
           <input
             type="text"
             id="tournament-name-input"
-            placeholder="${this.escapeHtml(tournamentPlaceholder)}"
+            placeholder="${escapeHtml(tournamentPlaceholder)}"
             maxlength="50"
-            value="${this.escapeHtml(config.tournamentNameValue || "")}"
+            value="${escapeHtml(config.tournamentNameValue || "")}"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           >
         </div>
@@ -98,7 +99,7 @@ export class PlayerRegistrationWithCountSelector {
       ${tournamentNameHtml}
 
       <div class="mb-4">
-        <label class="block text-sm font-medium text-white mb-1">${this.escapeHtml(playerCountLabel)}</label>
+        <label class="block text-sm font-medium text-white mb-1">${escapeHtml(playerCountLabel)}</label>
         <select id="player-count-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
           ${playerCountOptions}
         </select>
@@ -113,7 +114,7 @@ export class PlayerRegistrationWithCountSelector {
           type="button"
           class="flex-1 bg-purple-400 hover:bg-purple-600 text-white py-2 px-4 rounded border border-purple-400 shadow-lg"
         >
-          ${this.escapeHtml(backButtonText)}
+          ${escapeHtml(backButtonText)}
         </button>
         <button
           id="start-button"
@@ -121,7 +122,7 @@ export class PlayerRegistrationWithCountSelector {
           class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg"
           disabled
         >
-          ${this.escapeHtml(startButtonText)}
+          ${escapeHtml(startButtonText)}
         </button>
       </div>
     `;
@@ -144,7 +145,7 @@ export class PlayerRegistrationWithCountSelector {
         });
         const selected =
           count === this.currentPlayerCount ? ' selected="selected"' : "";
-        return `<option value="${count}"${selected}>${this.escapeHtml(label)}</option>`;
+        return `<option value="${count}"${selected}>${escapeHtml(label)}</option>`;
       })
       .join("");
   }
@@ -314,17 +315,6 @@ export class PlayerRegistrationWithCountSelector {
   ): void {
     element.addEventListener(type, handler);
     this.eventListeners.push({ element, type, handler });
-  }
-
-  private escapeHtml(text: string): string {
-    const map: Record<string, string> = {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;",
-    };
-    return String(text).replace(/[&<>"']/g, (ch) => map[ch] ?? ch);
   }
 
   public getCurrentPlayerCount(): number {

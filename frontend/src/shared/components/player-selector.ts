@@ -1,5 +1,6 @@
 import type { PlayerOption } from "../types/tournament";
 import { AuthService } from "../services/auth-service";
+import { escapeHtml } from "../utils/html-utils";
 
 interface DifficultyTranslations {
   easy?: string;
@@ -42,15 +43,6 @@ export class PlayerSelector {
     this.playerIndex = playerIndex;
   }
 
-  private escapeHtml(unsafe: string): string {
-    return unsafe
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
   private addEventListener(
     element: Element,
     type: string,
@@ -89,40 +81,40 @@ export class PlayerSelector {
         const label = this.getDifficultyLabel(difficulty);
         return `
             <button type="button" class="ai-difficulty-btn px-3 py-1 text-xs rounded border" data-difficulty="${difficulty}">
-              ${this.escapeHtml(label)}
+              ${escapeHtml(label)}
             </button>`;
       })
       .join("");
 
     this.container.innerHTML = `
       <div class="player-selector">
-        <label class="block text-sm font-medium text-white mb-1">${this.escapeHtml(label)}</label>
+        <label class="block text-sm font-medium text-white mb-1">${escapeHtml(label)}</label>
         <div class="relative">
           <select id="player-${this.playerIndex}-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
-            <option value="">${this.escapeHtml(placeholder)}</option>
+            <option value="">${escapeHtml(placeholder)}</option>
             ${playerOptions
               .map(
                 (option) =>
-                  `<option value="${this.escapeHtml(option.id)}" data-is-ai="${option.isAI}" data-ai-difficulty="${this.escapeHtml(option.aiDifficulty || "")}" data-user-id="${option.userId ?? ""}">${this.escapeHtml(option.displayName)}</option>`,
+                  `<option value="${escapeHtml(option.id)}" data-is-ai="${option.isAI}" data-ai-difficulty="${escapeHtml(option.aiDifficulty || "")}" data-user-id="${option.userId ?? ""}">${escapeHtml(option.displayName)}</option>`,
               )
               .join("")}
-            <option value="custom">${this.escapeHtml(customOptionLabel)}</option>
+            <option value="custom">${escapeHtml(customOptionLabel)}</option>
           </select>
         </div>
         
         <div id="ai-difficulty-${this.playerIndex}" class="mt-2 hidden">
-          <label class="block text-sm font-medium text-white mb-1">${this.escapeHtml(difficultyLabel)}</label>
+          <label class="block text-sm font-medium text-white mb-1">${escapeHtml(difficultyLabel)}</label>
           <div class="flex space-x-2">
             ${difficultyButtonsHtml}
           </div>
         </div>
         
         <div id="custom-alias-${this.playerIndex}" class="mt-2 hidden">
-          <label class="block text-sm font-medium text-white mb-1">${this.escapeHtml(customAliasLabel)}</label>
+          <label class="block text-sm font-medium text-white mb-1">${escapeHtml(customAliasLabel)}</label>
           <input
             type="text"
             id="custom-alias-input-${this.playerIndex}"
-            placeholder="${this.escapeHtml(customAliasPlaceholder)}"
+            placeholder="${escapeHtml(customAliasPlaceholder)}"
             maxlength="20"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           >

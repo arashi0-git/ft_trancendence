@@ -1,5 +1,6 @@
 import { PlayerSelector } from "./player-selector";
 import type { PlayerOption } from "../types/tournament";
+import { escapeHtml } from "../utils/html-utils";
 
 type TranslationSection = Record<string, string>;
 
@@ -36,10 +37,10 @@ export class PlayerRegistrationManager {
       }
 
       const titleHtml = config.title
-        ? `<h3 class="text-lg font-semibold">${this.escapeHtml(config.title)}</h3>`
+        ? `<h3 class="text-lg font-semibold">${escapeHtml(config.title)}</h3>`
         : "";
       const subtitleHtml = config.subtitle
-        ? `<p class="text-sm text-gray-300">${this.escapeHtml(config.subtitle)}</p>`
+        ? `<p class="text-sm text-gray-300">${escapeHtml(config.subtitle)}</p>`
         : "";
 
       config.container.innerHTML = `
@@ -191,17 +192,6 @@ export class PlayerRegistrationManager {
         acc.replace(new RegExp(`{{\\s*${key}\\s*}}`, "g"), String(value)),
       template,
     );
-  }
-
-  private escapeHtml(text: string): string {
-    const map: Record<string, string> = {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;",
-    };
-    return String(text).replace(/[&<>"']/g, (ch) => map[ch] ?? ch);
   }
 
   public getPlayerSelections(): (PlayerOption | null)[] {
