@@ -70,11 +70,11 @@ export async function historyRoutes(fastify: FastifyInstance) {
       }
       if (
         filters.limit !== undefined &&
-        (isNaN(filters.limit) || filters.limit <= 0)
+        (isNaN(filters.limit) || filters.limit <= 0 || filters.limit > 10)
       ) {
-        return reply
-          .status(400)
-          .send({ error: "Invalid limit (must be greater than 0)" });
+        return reply.status(400).send({
+          error: "Invalid limit (must be between 1 and 10)",
+        });
       }
       if (
         filters.offset !== undefined &&
