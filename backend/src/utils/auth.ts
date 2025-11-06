@@ -60,6 +60,7 @@ export class AuthUtils {
 
       return payload;
     } catch (error) {
+      console.error("Token verification failed:", error);
       throw new Error("Invalid token");
     }
   }

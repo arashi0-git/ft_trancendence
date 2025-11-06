@@ -48,6 +48,7 @@ export async function authenticateToken(
       email: decoded.email,
     };
   } catch (error) {
+    console.error("Token verification failed:", error);
     return reply.status(401).send({ error: "Invalid token" });
   }
 }
@@ -84,7 +85,7 @@ export async function optionalAuth(
       username: decoded.username,
       email: decoded.email,
     };
-  } catch (error) {
+  } catch {
     // Swallow errors for optional auth
   }
 }
