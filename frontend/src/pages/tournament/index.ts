@@ -3,6 +3,7 @@ import { SpacePageBase } from "../../shared/components/space-page-base";
 
 export class TournamentPage extends SpacePageBase {
   private service: TournamentService;
+  private popstateHandler: (() => void) | null = null;
 
   constructor(container: HTMLElement) {
     super(container);
@@ -34,7 +35,7 @@ export class TournamentPage extends SpacePageBase {
     const header =
       headerTitle || headerActions
         ? `
-        <div class="flex justify-between items-center mb-2">
+        <div class="flex justify-center items-center mb-2">
           ${headerTitle}
           ${headerActions}
         </div>`
@@ -62,10 +63,34 @@ export class TournamentPage extends SpacePageBase {
       this.service.handleBackNavigation();
     });
 
+    // ブラウザの戻るボタンをハンドリング
+    this.popstateHandler = () => {
+      const currentPath = window.location.pathname;
+      const state = window.history.state;
+
+      // 試合画面からブラケット画面に戻ろうとした場合、代わりに登録画面に遷移
+      if (state?.fromMatch && currentPath === "/tournament/bracket") {
+        // フラグをクリアして登録画面に遷移
+        window.history.replaceState(null, "", "/tournament");
+        this.service.setCurrentPath("/tournament");
+        this.render();
+      } else {
+        // 通常の履歴移動の場合は、そのパスをレンダリング
+        this.service.setCurrentPath(currentPath);
+        this.render();
+      }
+    };
+    window.addEventListener("popstate", this.popstateHandler);
+
     // 認証関連のイベントリスナーは共通ヘッダーで処理されるため削除
   }
 
   destroy(): void {
+    // popstateリスナーをクリーンアップ
+    if (this.popstateHandler) {
+      window.removeEventListener("popstate", this.popstateHandler);
+      this.popstateHandler = null;
+    }
     this.service.cleanup();
     this.cleanupSpaceBackground();
     this.cleanupAppHeader();
