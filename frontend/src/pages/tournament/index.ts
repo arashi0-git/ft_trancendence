@@ -64,6 +64,10 @@ export class TournamentPage extends SpacePageBase {
     });
 
     // ブラウザの戻るボタンをハンドリング
+    // 既存のリスナーを削除してから新しいハンドラを登録（累積を防止）
+    if (this.popstateHandler) {
+      window.removeEventListener("popstate", this.popstateHandler);
+    }
     this.popstateHandler = () => {
       const currentPath = window.location.pathname;
       const state = window.history.state;
