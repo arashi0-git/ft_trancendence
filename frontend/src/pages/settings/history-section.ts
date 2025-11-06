@@ -9,7 +9,9 @@ export class HistorySection {
   private history: GameHistory[] = [];
   private historyLoaded = false;
   private isLoading = false;
-  private showAll = false;
+  private offset = 0;
+  private hasMore = true;
+  private readonly BATCH_SIZE = 10;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -68,18 +70,17 @@ export class HistorySection {
     this.isLoading = true;
 
     try {
-      // Load both stats and history in parallel
+      // Load both stats and initial history in parallel
       const [stats, history] = await Promise.all([
         HistoryService.getMyStats(),
-        HistoryService.getMyHistory({ limit: 10 }),
+        HistoryService.getMyHistory({ limit: this.BATCH_SIZE, offset: 0 }),
       ]);
 
       this.stats = stats;
       this.history = history;
+      this.offset = this.BATCH_SIZE;
+      this.hasMore = history.length === this.BATCH_SIZE;
       this.historyLoaded = true;
-
-      // Render with loaded data
-      this.renderContent();
     } catch (error) {
       console.error("Failed to load match history:", error);
       NotificationService.getInstance().error("Failed to load match history");
@@ -89,8 +90,48 @@ export class HistorySection {
           <p class="text-sm text-red-400">Failed to load match history. Please try again later.</p>
         </section>
       `;
+      return;
     } finally {
       this.isLoading = false;
+    }
+
+    this.renderContent();
+  }
+
+  async loadMoreHistory(): Promise<void> {
+    if (this.isLoading || !this.hasMore) {
+      return;
+    }
+
+    this.isLoading = true;
+
+    // Update button to show loading state
+    const historyContainer = this.container.querySelector("#history-container");
+    if (historyContainer) {
+      historyContainer.innerHTML = this.renderHistory();
+      this.attachListeners();
+    }
+
+    try {
+      const newHistory = await HistoryService.getMyHistory({
+        limit: this.BATCH_SIZE,
+        offset: this.offset,
+      });
+
+      this.history = [...this.history, ...newHistory];
+      this.offset += this.BATCH_SIZE;
+      this.hasMore = newHistory.length === this.BATCH_SIZE;
+    } catch (error) {
+      console.error("Failed to load more history:", error);
+      NotificationService.getInstance().error("Failed to load more games");
+    } finally {
+      this.isLoading = false;
+
+      // Re-render history section with updated state
+      if (historyContainer) {
+        historyContainer.innerHTML = this.renderHistory();
+        this.attachListeners();
+      }
     }
   }
 
@@ -130,25 +171,22 @@ export class HistorySection {
       `;
     }
 
-    const displayHistory = this.showAll
-      ? this.history
-      : this.history.slice(0, 5);
-
     return `
       <div class="space-y-2">
         <h4 class="text-sm font-semibold text-cyan-300">Recent Matches</h4>
         <div class="space-y-2">
-          ${displayHistory.map((game) => this.renderGameCard(game)).join("")}
+          ${this.history.map((game) => this.renderGameCard(game)).join("")}
         </div>
         ${
-          this.history.length > 5
+          this.hasMore
             ? `
           <button
             type="button"
-            data-action="toggle-history"
-            class="w-full text-sm text-cyan-400 hover:text-cyan-300 py-2 transition"
+            data-action="load-more"
+            class="w-full bg-cyan-600 hover:bg-cyan-500 text-white text-sm py-2 px-4 rounded transition ${this.isLoading ? "opacity-50 cursor-not-allowed" : ""}"
+            ${this.isLoading ? "disabled" : ""}
           >
-            ${this.showAll ? "Show Less" : `Show All (${this.history.length})`}
+            ${this.isLoading ? "Loading..." : "Load More"}
           </button>
         `
             : ""
@@ -166,50 +204,48 @@ export class HistorySection {
     });
 
     const resultBadge = game.isWinner
-      ? '<span class="px-2 py-1 bg-green-600/30 text-green-400 text-xs rounded">Win</span>'
-      : '<span class="px-2 py-1 bg-red-600/30 text-red-400 text-xs rounded">Loss</span>';
+      ? '<span class="px-2 py-0.5 bg-green-600/30 text-green-400 text-[12px] rounded">Win</span>'
+      : '<span class="px-2 py-0.5 bg-red-600/30 text-red-400 text-[12px] rounded">Loss</span>';
 
     const gameType = game.tournamentId
-      ? `<span class="text-xs text-purple-400">🏆 Tournament</span>`
-      : `<span class="text-xs text-blue-400">⚡ Quick Match</span>`;
+      ? `<span class="text-[12px] text-purple-400">🏆 Tournament</span>`
+      : `<span class="text-[12px] text-blue-400">⚡ Quick Match</span>`;
 
     const teamInfo = game.teammate
-      ? `<p class="text-xs text-gray-400">With: ${escapeHtml(game.teammate)}</p>`
+      ? ` · With: ${escapeHtml(game.teammate)}`
       : "";
 
     return `
-      <div class="p-3 bg-gray-900/40 rounded border border-cyan-500/20 hover:border-cyan-500/40 transition">
-        <div class="flex justify-between items-start mb-2">
-          <div>
-            ${gameType}
-            <p class="text-xs text-gray-500 mt-1">${formattedDate} ${formattedTime}</p>
-          </div>
-          ${resultBadge}
+    <div class="p-2 bg-gray-900/40 rounded border border-cyan-500/20 hover:border-cyan-500/40 transition">
+      <div class="flex justify-between items-center mb-1">
+        <div class="flex items-center gap-2">
+          ${gameType}
+          <span class="text-[12px] text-gray-400">
+            ${formattedDate} ${formattedTime}
+          </span>
         </div>
-        <div class="text-sm text-white">
-          <p>Score: <span class="font-semibold text-cyan-400">${game.myScore}</span> - <span class="font-semibold text-red-400">${game.opponentScore}</span></p>
-          <p class="text-xs text-gray-400">vs ${escapeHtml(game.opponentInfo)}</p>
-          ${teamInfo}
-        </div>
+        ${resultBadge}
       </div>
-    `;
+
+      <div class="text-[13px] text-gray-100">
+        <p>
+          Score:
+          <span class="font-semibold text-cyan-400">${game.myScore}</span>
+          -
+          <span class="font-semibold text-red-400">${game.opponentScore}</span>
+          &nbsp;vs&nbsp;${escapeHtml(game.opponentInfo)}${teamInfo}
+        </p>
+      </div>
+    </div>
+  `;
   }
 
   private attachListeners(): void {
-    const toggleButton = this.container.querySelector(
-      '[data-action="toggle-history"]',
+    const loadMoreButton = this.container.querySelector(
+      '[data-action="load-more"]',
     );
-    if (toggleButton) {
-      toggleButton.addEventListener("click", () => this.handleToggle());
-    }
-  }
-
-  private handleToggle(): void {
-    this.showAll = !this.showAll;
-    const historyContainer = this.container.querySelector("#history-container");
-    if (historyContainer) {
-      historyContainer.innerHTML = this.renderHistory();
-      this.attachListeners();
+    if (loadMoreButton) {
+      loadMoreButton.addEventListener("click", () => this.loadMoreHistory());
     }
   }
 
@@ -220,6 +256,7 @@ export class HistorySection {
     this.history = [];
     this.historyLoaded = false;
     this.isLoading = false;
-    this.showAll = false;
+    this.offset = 0;
+    this.hasMore = true;
   }
 }
