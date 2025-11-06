@@ -213,6 +213,12 @@ export class HistorySection {
   }
 
   destroy(): void {
-    // Cleanup if needed
+    // Clear container content (removes event listeners attached to child elements)
+    this.container.innerHTML = "";
+    this.stats = null;
+    this.history = [];
+    this.historyLoaded = false;
+    this.isLoading = false;
+    this.showAll = false;
   }
 }
