@@ -22,8 +22,11 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     container_name: ft_transcendence_backend
+    # DEVELOPMENT ONLY: Expose port 3000 for Vite dev server proxy
+    # To run local backend alongside Docker: stop Docker or change local backend port
+    # PRODUCTION: Comment out the ports section to prevent direct backend access
     ports:
-      - "3000:3000"
+      - "3000:3000"  # Remove this in production deployment
     volumes:
       # - /app/node_modules
       - ./backend/src:/app/src

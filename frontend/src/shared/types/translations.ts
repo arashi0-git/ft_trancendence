@@ -17,6 +17,8 @@ export interface PlayerSelectorTranslations {
   customPlaceholder?: string;
   currentUser?: string;
   aiDisplayName?: string;
+  leftSideLabel?: string;
+  rightSideLabel?: string;
 }
 
 export type TemplateVariables = Record<string, string | number>;

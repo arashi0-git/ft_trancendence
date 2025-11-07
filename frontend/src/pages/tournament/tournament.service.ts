@@ -338,6 +338,8 @@ export class TournamentService {
         tournamentNameValue: setup.nameDefault || "Pong Tournament",
         startButtonText: buttons.startTournament || "Start Tournament",
         backButtonText: buttons.home || "Back to Home",
+        backButtonClassName:
+          "flex-1 bg-yellow-600 bg-opacity-30 hover:bg-opacity-50 text-white py-2 px-4 rounded border border-yellow-500 shadow-lg transition-all duration-200",
         requireHumanPlayer: true,
         playerCountOptions: [4, 8], // トーナメントは4人と8人
         defaultPlayerCount: 4, // デフォルトは4人
@@ -407,7 +409,7 @@ export class TournamentService {
   }
 
   getPageTitle(): string {
-    if (this.currentStep === "registration") {
+    if (this.currentStep === "registration" || this.currentStep === "match") {
       return "";
     }
 
@@ -498,7 +500,7 @@ export class TournamentService {
             <div class="ml-4">
               ${
                 match.status === "pending"
-                  ? `<button data-match-id="${match.id}" class="play-match-btn bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">${buttons.playMatch || "Play"}</button>`
+                  ? `<button data-match-id="${match.id}" class="play-match-btn bg-green-700 bg-opacity-30 hover:bg-opacity-50 text-white px-3 py-1 rounded text-sm border border-green-600 shadow transition-all duration-200">${buttons.playMatch || "Play"}</button>`
                   : match.status === "completed"
                     ? `<span class="text-green-600 font-semibold">✓</span>`
                     : `<span class="text-blue-600">${buttons.playing || "Playing..."}</span>`
@@ -528,7 +530,7 @@ export class TournamentService {
         ${matchesHtml}
       </div>
       <div class="text-center">
-        <button id="new-tournament-btn" class="bg-purple-400 hover:bg-purple-600 text-white px-6 py-2 rounded">
+        <button id="new-tournament-btn" class="bg-pink-900 bg-opacity-30 hover:bg-opacity-50 text-white px-6 py-2 rounded border border-pink-400 shadow-lg transition-all duration-200">
           ${buttons.newTournament || "New Tournament"}
         </button>
       </div>
@@ -560,6 +562,7 @@ export class TournamentService {
       return;
     }
     const tMatch = this.t.match || {};
+    const tTitles = this.t.titles || {};
     const tButtons = this.t.buttons || {};
 
     const player1 = this.tournamentData.getPlayer(match.player1Id);
@@ -609,24 +612,45 @@ export class TournamentService {
           player: p2Alias,
         }) as string)
       : `<strong>${escapeHtml(p2Alias)}:</strong> ↑/↓ (Up/Down)`;
+    const tournamentName =
+      this.tournamentData.getCurrentTournament()?.name ||
+      tTitles.match ||
+      tTitles.pageTitle ||
+      "Tournament";
+    const vsLabel =
+      (this.translateFn
+        ? (this.translateFn("tournament.bracket.vs", {}) as string)
+        : undefined) ||
+      this.t.bracket?.vs ||
+      "VS";
+
+    const combinedHeading = `
+      <div class="flex flex-wrap items-center justify-center gap-3 text-center mb-3 text-white">
+        <span class="text-2xl font-semibold tracking-wide">${escapeHtml(tournamentName)}</span>
+        <span class="text-2xl font-semibold text-gray-500">•</span>
+        <span class="flex flex-wrap items-center justify-center gap-2" aria-label="${escapeHtml(heading)}">
+          <span class="text-2xl font-semibold tracking-wide text-blue-300">${escapeHtml(p1Alias)}</span>
+          <span class="text-2xl font-semibold tracking-wide text-white">${escapeHtml(vsLabel)}</span>
+          <span class="text-2xl font-semibold tracking-wide text-red-300">${escapeHtml(p2Alias)}</span>
+        </span>
+      </div>
+    `;
 
     container.innerHTML = `
-      <!-- コンパクトなヘッダー -->
-      <div class="text-center mb-2">
-        <h3 class="text-lg font-medium text-white">${heading}</h3>
-        <p class="text-sm text-gray-400">${details}</p>
-      </div>
+      <!-- Combined heading -->
+      ${combinedHeading}
+      <p class="text-sm text-gray-400 text-center mb-3">${details}</p>
 
       <!-- コンパクトなボタン -->
       <div class="mb-2 text-center">
         <div class="space-x-2">
-          <button id="start-tournament-game" class="bg-green-500 hover:bg-green-600 text-white px-4 py-1 text-sm rounded">
+          <button id="start-tournament-game" class="bg-green-900 bg-opacity-30 hover:bg-opacity-50 text-white px-4 py-1 text-sm rounded border border-green-400 shadow-lg transition-all duration-200">
             ${tButtons.startMatch || "Start Match"}
           </button>
-          <button id="pause-tournament-game" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-1 text-sm rounded" disabled>
+          <button id="pause-tournament-game" class="bg-purple-700 bg-opacity-30 hover:bg-opacity-50 text-white px-4 py-1 text-sm rounded border border-purple-400 shadow-lg transition-all duration-200 disabled:bg-opacity-20 disabled:text-gray-400 disabled:border-purple-300" disabled>
             ${tButtons.pause || "Pause"}
           </button>
-          <button id="reset-tournament-game" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 text-sm rounded">
+          <button id="reset-tournament-game" class="bg-red-900 bg-opacity-30 hover:bg-opacity-50 text-white px-4 py-1 text-sm rounded border border-red-400 shadow-lg transition-all duration-200">
             ${tButtons.reset || "Reset"}
           </button>
         </div>

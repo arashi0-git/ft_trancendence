@@ -1,6 +1,6 @@
 {
   "common": {
-    "language": "🌐 Language",
+    "language": "🌐",
     "submit": "Submit",
     "cancel": "Cancel"
   },
@@ -27,7 +27,7 @@
     "settings": "Settings",
     "logout": "Logout",
     "login": "Login",
-    "language": "🌐 Language",
+    "language": "🌐",
     "logoutSuccess": "Logged out successfully",
     "logoutError": "Logout error: {{message}}",
     "logoutErrorFallback": "An error occurred during logout",
@@ -59,7 +59,7 @@
     "backToSetup": "Back to Setup",
     "startGameButton": "Start Game",
     "registrationTitle": "Player Registration",
-    "registrationSubtitle": "Quick Play ({{count}} players)",
+    "registrationSubtitle": "Quick Play",
     "registrationError": "Failed to display the player registration screen.",
     "gameOverTitle": "Game Finished!",
     "controls": {
@@ -73,7 +73,7 @@
     "label": "Player {{index}}",
     "selectPlaceholder": "Select player or AI",
     "aiOption": "AI",
-    "customOption": "Enter custom alias",
+    "customOption": "guest player",
     "aiDifficulty": "AI Difficulty",
     "difficulty": {
       "easy": "Easy",
@@ -83,7 +83,9 @@
     "customAlias": "Custom Alias",
     "customPlaceholder": "Enter custom alias",
     "currentUser": "{{username}} (You)",
-    "aiDisplayName": "AI {{index}} ({{difficulty}})"
+    "aiDisplayName": "AI {{index}} ({{difficulty}})",
+    "leftSideLabel": "Left Side",
+    "rightSideLabel": "Right Side"
   },
   "playerRegistration": {
     "missingPlayers": "{{count}} players are not selected",
@@ -257,7 +259,7 @@
     },
     "registration": {
       "title": "Player Registration",
-      "subtitle": "Tournament: {{name}} ({{count}} players)",
+      "subtitle": "Tournament",
       "error": "Failed to display the player registration screen."
     },
     "errors": {
@@ -276,7 +278,8 @@
       "identifier": "Round {{roundNumber}} - Match {{matchNumber}}",
       "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>: W/S (Up/Down)",
       "controlsRight": "<strong class=\"text-white\">{{player}}</strong>: ↑/↓ (Up/Down)",
-      "playerDefault": "Player {{index}}"
+      "playerDefault": "Player {{index}}",
+      "matchNumber": "Match {{number}}"
     },
     "results": {
       "title": "🏆 Tournament Complete!",

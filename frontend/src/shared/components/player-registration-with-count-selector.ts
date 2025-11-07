@@ -17,11 +17,13 @@ export interface PlayerRegistrationWithCountConfig {
   tournamentNameValue?: string;
   startButtonText?: string;
   backButtonText?: string;
+  backButtonClassName?: string;
   requireHumanPlayer?: boolean;
   playerCountOptions?: number[]; // 利用可能なプレイヤー数のオプション（例: [2, 4] または [4, 8]）
   defaultPlayerCount?: number; // デフォルトのプレイヤー数
 
   translations?: RegistrationTranslations;
+  singleVsForFourPlayers?: boolean;
 
   onBack: () => void;
   onSubmit: (data: {
@@ -72,16 +74,18 @@ export class PlayerRegistrationWithCountSelector {
 
     const tournamentNameHtml = config.showTournamentName
       ? `
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-white mb-1">${escapeHtml(tournamentLabel)}</label>
-          <input
-            type="text"
-            id="tournament-name-input"
-            placeholder="${escapeHtml(tournamentPlaceholder)}"
-            maxlength="50"
-            value="${escapeHtml(config.tournamentNameValue || "")}"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          >
+        <div class="mb-4 flex justify-center">
+          <div class="w-full max-w-sm">
+            <label class="block text-sm font-medium text-white mb-1 text-center">${escapeHtml(tournamentLabel)}</label>
+            <input
+              type="text"
+              id="tournament-name-input"
+              placeholder="${escapeHtml(tournamentPlaceholder)}"
+              maxlength="50"
+              value="${escapeHtml(config.tournamentNameValue || "")}"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+          </div>
         </div>
       `
       : "";
@@ -100,11 +104,13 @@ export class PlayerRegistrationWithCountSelector {
 
       ${tournamentNameHtml}
 
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-white mb-1">${escapeHtml(playerCountLabel)}</label>
-        <select id="player-count-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
-          ${playerCountOptions}
-        </select>
+      <div class="mb-4 flex justify-center">
+        <div class="w-full max-w-sm">
+          <label class="block text-sm font-medium text-white mb-1 text-center">${escapeHtml(playerCountLabel)}</label>
+          <select id="player-count-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
+            ${playerCountOptions}
+          </select>
+        </div>
       </div>
 
       <div id="player-registration-container" class="mb-4">
@@ -114,14 +120,17 @@ export class PlayerRegistrationWithCountSelector {
         <button
           id="back-button"
           type="button"
-          class="flex-1 bg-purple-400 hover:bg-purple-600 text-white py-2 px-4 rounded border border-purple-400 shadow-lg"
+          class="${escapeHtml(
+            this.config.backButtonClassName ||
+              "flex-1 bg-purple-400 hover:bg-purple-600 text-white py-2 px-4 rounded border border-purple-400 shadow-lg",
+          )}"
         >
           ${escapeHtml(backButtonText)}
         </button>
         <button
           id="start-button"
           type="button"
-          class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded border border-green-400 shadow-lg"
+          class="flex-1 bg-green-700 bg-opacity-30 hover:bg-opacity-50 text-white py-2 px-4 rounded border border-green-700 shadow-lg transition-all duration-200 disabled:bg-opacity-20 disabled:text-gray-400 disabled:border-green-200"
           disabled
         >
           ${escapeHtml(startButtonText)}
@@ -170,6 +179,7 @@ export class PlayerRegistrationWithCountSelector {
         playerCount: this.currentPlayerCount,
         startButtonId: "start-button",
         requireHumanPlayer: this.config.requireHumanPlayer,
+        singleVsForFourPlayers: this.config.singleVsForFourPlayers,
         translations: {
           selector: playerSelectorTranslations,
           validation: playerRegistrationTranslations,
@@ -187,7 +197,7 @@ export class PlayerRegistrationWithCountSelector {
   private attachEventListeners(): void {
     // プレイ人数選択
     const playerCountSelect = document.getElementById(
-      "player-count-select"
+      "player-count-select",
     ) as HTMLSelectElement;
     if (playerCountSelect) {
       this.addEventListener(playerCountSelect, "change", async () => {
@@ -217,7 +227,7 @@ export class PlayerRegistrationWithCountSelector {
     // トーナメント名入力（バリデーション用）
     if (this.config?.showTournamentName) {
       const tournamentNameInput = document.getElementById(
-        "tournament-name-input"
+        "tournament-name-input",
       ) as HTMLInputElement;
       if (tournamentNameInput) {
         this.addEventListener(tournamentNameInput, "input", () => {
@@ -245,7 +255,7 @@ export class PlayerRegistrationWithCountSelector {
 
   private validateForm(): void {
     const startButton = document.getElementById(
-      "start-button"
+      "start-button",
     ) as HTMLButtonElement;
     if (!startButton) return;
 
@@ -259,7 +269,7 @@ export class PlayerRegistrationWithCountSelector {
     // トーナメント名のバリデーション
     if (this.config?.showTournamentName) {
       const tournamentNameInput = document.getElementById(
-        "tournament-name-input"
+        "tournament-name-input",
       ) as HTMLInputElement;
       if (tournamentNameInput && !tournamentNameInput.value.trim()) {
         isValid = false;
@@ -283,7 +293,7 @@ export class PlayerRegistrationWithCountSelector {
     let tournamentName: string | undefined;
     if (this.config.showTournamentName) {
       const tournamentNameInput = document.getElementById(
-        "tournament-name-input"
+        "tournament-name-input",
       ) as HTMLInputElement;
       if (tournamentNameInput) {
         tournamentName = tournamentNameInput.value.trim();
@@ -304,7 +314,7 @@ export class PlayerRegistrationWithCountSelector {
   private addEventListener(
     element: Element,
     type: string,
-    handler: EventListener
+    handler: EventListener,
   ): void {
     element.addEventListener(type, handler);
     this.eventListeners.push({ element, type, handler });
@@ -323,7 +333,7 @@ export class PlayerRegistrationWithCountSelector {
 
     if (this.config?.showTournamentName) {
       const tournamentNameInput = document.getElementById(
-        "tournament-name-input"
+        "tournament-name-input",
       ) as HTMLInputElement;
       if (tournamentNameInput && !tournamentNameInput.value.trim()) {
         isValid = false;
