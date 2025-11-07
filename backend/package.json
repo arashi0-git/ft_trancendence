@@ -5,7 +5,6 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx src/index.ts",
-    "dev:3001": "PORT=3001 tsx src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "eslint 'src/**/*.ts'",
