@@ -60,7 +60,7 @@ export class SecuritySection {
       </section>
 
       <!-- Two-Factor Dialog -->
-      <div id="twofactor-dialog" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div id="twofactor-dialog" class="hidden fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 pt-96">
         <div class="w-full max-w-md" id="twofactor-dialog-content"></div>
       </div>
     `;
@@ -116,9 +116,6 @@ export class SecuritySection {
       }
 
       if ("requiresTwoFactor" in result && result.requiresTwoFactor) {
-        NotificationService.getInstance().info(
-          "Enter the verification code we emailed you.",
-        );
         this.showTwoFactorDialog(result, () => {
           NotificationService.getInstance().success(
             "Two-factor authentication is now enabled.",
@@ -166,9 +163,6 @@ export class SecuritySection {
       }
 
       if ("requiresTwoFactor" in result && result.requiresTwoFactor) {
-        NotificationService.getInstance().info(
-          "Enter the verification code we emailed you.",
-        );
         this.showTwoFactorDialog(result, () => {
           NotificationService.getInstance().success(
             "Two-factor authentication has been disabled.",
@@ -309,11 +303,7 @@ export class SecuritySection {
     if (this.activeTwoFactorChallenge?.purpose === "email_change") {
       this.onEmailRestore();
     }
-
     this.hideTwoFactorDialog();
-    NotificationService.getInstance().info(
-      "Two-factor verification canceled. Your changes were not applied.",
-    );
   }
 
   private buildTwoFactorMessage(challenge: TwoFactorChallengeResponse): string {

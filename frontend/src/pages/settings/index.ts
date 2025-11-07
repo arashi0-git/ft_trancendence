@@ -187,9 +187,6 @@ export class UserSettingsPage extends SpacePageBase {
 
       // Handle 2FA challenge for email change
       if ("requiresTwoFactor" in response && response.requiresTwoFactor) {
-        NotificationService.getInstance().info(
-          "Enter the verification code we emailed you.",
-        );
         this.securitySection?.showTwoFactorDialogForEmailChange(
           response,
           () => {

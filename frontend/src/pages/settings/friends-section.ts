@@ -180,7 +180,6 @@ export class FriendsSection {
 
     const username = friendInput.value.trim();
     if (username.length === 0) {
-      NotificationService.getInstance().info("Please enter a username to add.");
       return;
     }
 
@@ -192,14 +191,11 @@ export class FriendsSection {
         submitButton.textContent = "Adding...";
       }
 
-      const user = await this.addFriend(username);
+      await this.addFriend(username);
       friendInput.value = "";
       friendInput.focus();
       this.friendsLoaded = true;
       this.updateFriendsList();
-      NotificationService.getInstance().success(
-        `Added ${user.username} to your friends list!`,
-      );
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to add that friend.";
@@ -229,7 +225,6 @@ export class FriendsSection {
     const userId = parseInt(dataUserId, 10);
     if (isNaN(userId)) return;
 
-    const friend = this.friends.find((u) => u.id === userId);
     const originalText = button.textContent ?? "Remove";
 
     button.disabled = true;
@@ -238,10 +233,6 @@ export class FriendsSection {
     try {
       await this.removeFriend(userId);
       this.updateFriendsList();
-      const displayName = friend?.username ?? "that user";
-      NotificationService.getInstance().info(
-        `Removed ${displayName} from your friends list.`,
-      );
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to remove that user.";
