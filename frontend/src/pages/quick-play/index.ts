@@ -127,7 +127,7 @@ export class QuickPlayPage extends SpacePageBase {
         </div>
 
         <div id="quick-play-controls" class="text-center text-sm text-gray-300">
-          ${this.getControlsTemplate(playerCount)}
+          ${this.getControlsTemplate(playerCount, playerSelections)}
         </div>
 
         <div id="game-over-modal" class="hidden absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-75 z-50">
@@ -243,14 +243,25 @@ export class QuickPlayPage extends SpacePageBase {
     return this.getSpaceTemplate(content);
   }
 
-  private getControlsTemplate(playerCount: number): string {
-    const controls = this.t.controls || {};
-    const p1Controls = `<p>${controls.playerLeftOuter || '<strong class="text-white">Player 1 (Left-Outer):</strong> W/S'}</p>`;
-    const p2Controls = `<p>${controls.playerRightOuter || '<strong class="text-white">Player 2 (Right-Outer):</strong> ↑/↓'}</p>`;
+  private getControlsTemplate(
+    playerCount: number,
+    playerSelections: (PlayerOption | null)[],
+  ): string {
+    const getPlayerName = (index: number): string => {
+      const player = playerSelections[index];
+      return player?.displayName || `Player ${index + 1}`;
+    };
+
+    const p1Name = getPlayerName(0);
+    const p2Name = getPlayerName(1);
+    const p1Controls = `<p><strong class="text-white">${p1Name} (Left-Outer):</strong> W/S</p>`;
+    const p2Controls = `<p><strong class="text-white">${p2Name} (Right-Outer):</strong> ↑/↓</p>`;
 
     if (playerCount === 4) {
-      const p3Controls = `<p>${controls.playerLeftInner || '<strong class="text-white">Player 3 (Left-Inner):</strong> R/F'}</p>`;
-      const p4Controls = `<p>${controls.playerRightInner || '<strong class="text-white">Player 4 (Right-Inner):</strong> I/K'}</p>`;
+      const p3Name = getPlayerName(2);
+      const p4Name = getPlayerName(3);
+      const p3Controls = `<p><strong class="text-white">${p3Name} (Left-Inner):</strong> R/F</p>`;
+      const p4Controls = `<p><strong class="text-white">${p4Name} (Right-Inner):</strong> I/K</p>`;
       return `${p1Controls}${p2Controls}${p3Controls}${p4Controls}`;
     }
     return `${p1Controls}${p2Controls}`;

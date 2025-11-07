@@ -65,7 +65,7 @@
     "label": "Player {{index}}",
     "selectPlaceholder": "Select player or AI",
     "aiOption": "AI",
-    "customOption": "Enter custom alias",
+    "customOption": "guest player",
     "aiDifficulty": "AI Difficulty",
     "difficulty": {
       "easy": "Easy",

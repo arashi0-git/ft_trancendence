@@ -21,6 +21,7 @@ export class PlayerSelector {
     handler: EventListener;
   }> = [];
   private t: PlayerSelectorTranslations = {};
+  private loginUsername: string = "";
 
   constructor(container: HTMLElement, playerIndex: number) {
     this.container = container;
@@ -50,9 +51,13 @@ export class PlayerSelector {
 
     const playerOptions = await this.getPlayerOptions();
 
-    const label = formatTemplate(this.t.label || "Player {{index}}", {
-      index: this.playerIndex,
-    });
+    // Generate label: odd numbers = Left 1, Left 2, etc. / even numbers = Right 1, Right 2, etc.
+    const side = this.playerIndex % 2 === 1 ? "Left" : "Right";
+    const sideNumber = Math.ceil(this.playerIndex / 2);
+    const defaultLabel = `${side} ${sideNumber}`;
+
+    // Always use the Left/Right naming scheme, ignore translations for player labels
+    const label = defaultLabel;
     const customOptionLabel = this.t.customOption || "Enter custom alias";
     const difficultyLabel = this.t.aiDifficulty || "AI Difficulty";
     const customAliasLabel = this.t.customAlias || "Custom Alias";
@@ -60,10 +65,11 @@ export class PlayerSelector {
       this.t.customPlaceholder || "Enter custom alias";
 
     const difficultyButtonsHtml = (["easy", "medium", "hard"] as const)
-      .map((difficulty) => {
+      .map((difficulty, index) => {
         const label = this.getDifficultyLabel(difficulty);
+        const borderLeft = index > 0 ? "border-l border-gray-300" : "";
         return `
-            <button type="button" class="ai-difficulty-btn px-3 py-1 text-xs rounded border" data-difficulty="${difficulty}">
+            <button type="button" class="ai-difficulty-btn flex-1 px-3 py-2 text-sm ${borderLeft}" data-difficulty="${difficulty}">
               ${escapeHtml(label)}
             </button>`;
       })
@@ -74,32 +80,39 @@ export class PlayerSelector {
         <label class="block text-sm font-medium text-white mb-1">${escapeHtml(label)}</label>
         <div class="relative">
           <select id="player-${this.playerIndex}-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
+            <option value="custom">${escapeHtml(customOptionLabel)}</option>
             ${playerOptions
               .map(
                 (option) =>
                   `<option value="${escapeHtml(option.id)}" data-is-ai="${option.isAI}" data-ai-difficulty="${escapeHtml(option.aiDifficulty || "")}" data-user-id="${option.userId ?? ""}">${escapeHtml(option.displayName)}</option>`,
               )
               .join("")}
-            <option value="custom">${escapeHtml(customOptionLabel)}</option>
           </select>
         </div>
-        
-        <div id="ai-difficulty-${this.playerIndex}" class="mt-2 hidden">
-          <label class="block text-sm font-medium text-white mb-1">${escapeHtml(difficultyLabel)}</label>
-          <div class="flex space-x-2">
-            ${difficultyButtonsHtml}
+
+        <div id="player-details-${this.playerIndex}" class="mt-2 h-[80px]">
+          <div id="custom-alias-${this.playerIndex}">
+            <label class="block text-sm font-medium text-white mb-1">${escapeHtml(customAliasLabel)}</label>
+            <input
+              type="text"
+              id="custom-alias-input-${this.playerIndex}"
+              placeholder="${escapeHtml(customAliasPlaceholder)}"
+              maxlength="20"
+              class="w-full min-w-[280px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
           </div>
-        </div>
-        
-        <div id="custom-alias-${this.playerIndex}" class="mt-2 hidden">
-          <label class="block text-sm font-medium text-white mb-1">${escapeHtml(customAliasLabel)}</label>
-          <input
-            type="text"
-            id="custom-alias-input-${this.playerIndex}"
-            placeholder="${escapeHtml(customAliasPlaceholder)}"
-            maxlength="20"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          >
+
+          <div id="ai-difficulty-${this.playerIndex}" class="hidden">
+            <label class="block text-sm font-medium text-white mb-1">${escapeHtml(difficultyLabel)}</label>
+            <div class="flex w-full min-w-[280px] h-[42px] border border-gray-300 rounded-md bg-white overflow-hidden">
+              ${difficultyButtonsHtml}
+            </div>
+          </div>
+
+          <div id="user-info-${this.playerIndex}" class="hidden">
+            <label class="block text-sm font-medium text-white mb-1">Username</label>
+            <div id="user-name-display-${this.playerIndex}" class="w-full min-w-[280px] px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-700 overflow-hidden truncate"></div>
+          </div>
         </div>
       </div>
     `;
@@ -110,30 +123,30 @@ export class PlayerSelector {
   private async getPlayerOptions(): Promise<PlayerOption[]> {
     const options: PlayerOption[] = [];
 
-    // ログインユーザーを追加
-    try {
-      if (AuthService.isAuthenticated()) {
-        const user = await AuthService.getCurrentUser();
-        options.push({
-          id: `user-${user.id}`,
-          displayName: formatTemplate(this.t.currentUser || "{{username}}", {
-            username: user.username,
-          }),
-          isAI: false,
-          userId: user.id,
-        });
-      }
-    } catch (error) {
-      console.warn("Failed to load current user:", error);
-    }
-
-    // AIオプションを1つだけ追加
+    // 1. AIオプションを最初に追加
     options.push({
       id: "ai",
       displayName: this.t.aiOption || "AI",
       isAI: true,
       aiDifficulty: "medium", // デフォルト難易度
     });
+
+    // 2. ログインユーザーを追加（存在する場合）
+    try {
+      if (AuthService.isAuthenticated()) {
+        const user = await AuthService.getCurrentUser();
+        options.push({
+          id: `user-${user.id}`,
+          displayName: "Login User",
+          isAI: false,
+          userId: user.id,
+        });
+        // Store the actual username for later display
+        this.loginUsername = user.username;
+      }
+    } catch (error) {
+      console.warn("Failed to load current user:", error);
+    }
 
     return options;
   }
@@ -148,6 +161,12 @@ export class PlayerSelector {
     const customAliasContainer = this.container.querySelector(
       `#custom-alias-${this.playerIndex}`,
     ) as HTMLElement;
+    const userInfoContainer = this.container.querySelector(
+      `#user-info-${this.playerIndex}`,
+    ) as HTMLElement;
+    const userNameDisplay = this.container.querySelector(
+      `#user-name-display-${this.playerIndex}`,
+    ) as HTMLElement;
     const customAliasInput = this.container.querySelector(
       `#custom-alias-input-${this.playerIndex}`,
     ) as HTMLInputElement;
@@ -159,19 +178,32 @@ export class PlayerSelector {
         const datasetDifficulty = (selectedOption.dataset.aiDifficulty ||
           "medium") as "easy" | "medium" | "hard";
 
-        // コンテナを隠す
+        // Hide all containers first
         aiDifficultyContainer?.classList.add("hidden");
         customAliasContainer?.classList.add("hidden");
+        userInfoContainer?.classList.add("hidden");
 
         if (value === "custom") {
-          // カスタムエイリアス入力を表示
+          // Show custom alias input
           customAliasContainer?.classList.remove("hidden");
-          this.currentSelection = null;
-          this.onSelectionChange?.(null);
+
+          // Check if there's already a value in the input field
+          const existingAlias = customAliasInput?.value.trim();
+          if (existingAlias) {
+            this.currentSelection = {
+              id: `custom-${this.playerIndex}-${Date.now()}`,
+              displayName: existingAlias,
+              isAI: false,
+            };
+            this.onSelectionChange?.(this.currentSelection);
+          } else {
+            this.currentSelection = null;
+            this.onSelectionChange?.(null);
+          }
         } else if (value && selectedOption.dataset.isAi === "true") {
-          // AIが選択された場合、難易度選択を表示
+          // Show AI difficulty buttons
           aiDifficultyContainer?.classList.remove("hidden");
-          this.setAIDifficultyButtons(datasetDifficulty); // デフォルトはmedium
+          this.setAIDifficultyButtons(datasetDifficulty);
 
           const difficultyLabel = this.getDifficultyLabel(datasetDifficulty);
           this.currentSelection = {
@@ -188,10 +220,17 @@ export class PlayerSelector {
           };
           this.onSelectionChange?.(this.currentSelection);
         } else if (value) {
-          // 人間プレイヤーが選択された場合
+          // Show username display
+          userInfoContainer?.classList.remove("hidden");
+          if (userNameDisplay) {
+            // Display the actual username instead of "Login User"
+            userNameDisplay.textContent =
+              this.loginUsername || selectedOption.textContent || "";
+          }
+
           this.currentSelection = {
             id: value,
-            displayName: selectedOption.textContent || "",
+            displayName: this.loginUsername || selectedOption.textContent || "",
             isAI: false,
             userId: selectedOption.dataset.userId
               ? Number.isNaN(parseInt(selectedOption.dataset.userId, 10))
@@ -262,11 +301,11 @@ export class PlayerSelector {
     buttons.forEach((button) => {
       const btn = button as HTMLElement;
       if (btn.dataset.difficulty === selectedDifficulty) {
-        btn.classList.add("bg-blue-500", "text-white");
-        btn.classList.remove("bg-gray-200", "text-gray-700");
+        btn.style.backgroundColor = "#0891b2";
+        btn.style.color = "white";
       } else {
-        btn.classList.add("bg-gray-200", "text-gray-700");
-        btn.classList.remove("bg-blue-500", "text-white");
+        btn.style.backgroundColor = "";
+        btn.style.color = "";
       }
     });
   }
