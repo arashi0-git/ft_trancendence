@@ -161,6 +161,20 @@ export class UserSettingsPage extends SpacePageBase {
       const profileData = this.profileSection?.getFormData();
       const passwordData = this.profileSection?.getPasswordData();
 
+      // Validate password confirmation if attempting to change password
+      if (passwordData?.newPassword || passwordData?.confirmPassword) {
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+          NotificationService.getInstance().error(
+            "New password and confirm password do not match.",
+          );
+          if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.textContent = "Save Changes";
+          }
+          return;
+        }
+      }
+
       if (profileData?.username) payload.username = profileData.username;
       if (profileData?.email) payload.email = profileData.email;
       if (passwordData?.currentPassword)

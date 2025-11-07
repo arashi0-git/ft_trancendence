@@ -27,7 +27,6 @@ export class RegisterForm {
   }
 
   private render(): void {
-    this.translations.confirmPlaceholder || "Re-enter your password";
     const submitLabel = this.translations.submit || "Create account";
     const loginLabel =
       this.translations.login || "Already have an account? Sign in";

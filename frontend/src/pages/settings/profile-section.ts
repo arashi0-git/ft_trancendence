@@ -19,7 +19,11 @@ export class ProfileSection {
 
   constructor(container: HTMLElement) {
     this.container = container;
-    this.unsubscribeLanguage = onLanguageChange(() => this.render(this.user!));
+    this.unsubscribeLanguage = onLanguageChange(() => {
+      if (this.user) {
+        this.render(this.user);
+      }
+    });
   }
 
   render(user: PublicUser): void {
@@ -265,21 +269,11 @@ export class ProfileSection {
     language: SupportedLanguage,
   ): Promise<void> {
     try {
-      await setLanguage(language);
-      // The render will be automatically triggered by the language change subscription
-
-      // Save language preference to backend
-      try {
-        const response = await AuthService.updateSettings({ language });
-        if ("user" in response && response.user) {
-          this.user = response.user;
-        }
-      } catch (error) {
-        console.error("Failed to save language preference to backend:", error);
-        NotificationService.getInstance().warning(
-          "Language changed locally, but failed to save to your account.",
-        );
+      const response = await AuthService.updateSettings({ language });
+      if ("user" in response && response.user) {
+        this.user = response.user;
       }
+      await setLanguage(language);
     } catch (error) {
       console.error("Failed to change language:", error);
       NotificationService.getInstance().error("Failed to change language.");
