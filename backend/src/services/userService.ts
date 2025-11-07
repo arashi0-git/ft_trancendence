@@ -195,7 +195,10 @@ export class UserService {
     const existingUserWithoutPassword = stripPassword(existingUser);
 
     const profileUpdates: Partial<
-      Record<"username" | "email" | "profile_image_url", string | null>
+      Record<
+        "username" | "email" | "profile_image_url" | "language",
+        string | null
+      >
     > = {};
 
     if (typeof updates.username === "string") {
@@ -248,6 +251,17 @@ export class UserService {
 
         profileUpdates.profile_image_url = trimmedValue;
       }
+    }
+
+    if (typeof updates.language === "string") {
+      const trimmedLanguage = updates.language.trim();
+      const validLanguages = ["en", "cs", "jp"];
+
+      if (!validLanguages.includes(trimmedLanguage)) {
+        throw new Error("Invalid language. Must be one of: en, cs, jp");
+      }
+
+      profileUpdates.language = trimmedLanguage;
     }
 
     if (Object.keys(profileUpdates).length === 0) {
@@ -323,6 +337,10 @@ export class UserService {
     }
     if (Object.prototype.hasOwnProperty.call(updates, "profile_image_url")) {
       profileUpdates.profile_image_url = updates.profile_image_url ?? null;
+      profileUpdated = true;
+    }
+    if (Object.prototype.hasOwnProperty.call(updates, "language")) {
+      profileUpdates.language = updates.language;
       profileUpdated = true;
     }
 

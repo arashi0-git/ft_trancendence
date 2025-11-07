@@ -8,6 +8,7 @@ export interface PublicUser {
   is_online: boolean;
   last_login: string | null;
   two_factor_enabled: boolean;
+  language: string;
 }
 
 export interface CreateUserRequest {
@@ -65,6 +66,7 @@ export interface UpdateUserSettingsPayload {
   username?: string;
   email?: string;
   profile_image_url?: string | null;
+  language?: string;
   currentPassword?: string;
   newPassword?: string;
 }

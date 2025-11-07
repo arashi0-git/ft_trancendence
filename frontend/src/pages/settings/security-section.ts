@@ -43,48 +43,11 @@ export class SecuritySection {
 
     this.container.innerHTML = `
       <section class="space-y-4 border-t border-gray-700 pt-4">
-        <h3 class="text-lg font-semibold text-cyan-200">Security</h3>
-        <p class="text-xs text-gray-400">
-          Leave the password fields blank to keep your current password. When changing your password, provide your current password for verification.
-        </p>
-        <div>
-          <label class="block text-sm text-gray-300 mb-1" for="current-password">Current password</label>
-          <input
-            id="current-password"
-            name="currentPassword"
-            type="password"
-            class="w-full bg-gray-900/70 border border-cyan-500/30 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
-            autocomplete="current-password"
-          />
-        </div>
-        <div class="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label class="block text-sm text-gray-300 mb-1" for="new-password">New password</label>
-            <input
-              id="new-password"
-              name="newPassword"
-              type="password"
-              class="w-full bg-gray-900/70 border border-cyan-500/30 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
-              autocomplete="new-password"
-            />
-          </div>
-          <div>
-            <label class="block text-sm text-gray-300 mb-1" for="confirm-password">Confirm new password</label>
-            <input
-              id="confirm-password"
-              name="confirmPassword"
-              type="password"
-              class="w-full bg-gray-900/70 border border-cyan-500/30 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
-              autocomplete="new-password"
-            />
-          </div>
-        </div>
-
+        <h3 class="text-lg font-semibold text-cyan-200">Security - Two-Factor Authentication (2FA)</h3>
         <div class="border border-cyan-500/30 rounded-lg p-4 bg-gray-900/40 space-y-3">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h4 class="text-md font-semibold text-cyan-200">Two-Factor Authentication (2FA)</h4>
-              <p id="twofactor-status-text" class="text-xs text-gray-400">
+              <p id="twofactor-status-text" class="text-sm text-gray-300">
                 ${twoFactorStatus}
               </p>
             </div>
@@ -391,24 +354,6 @@ export class SecuritySection {
 
     if (enableBtn) enableBtn.disabled = disabled;
     if (disableBtn) disableBtn.disabled = disabled;
-  }
-
-  getPasswordData(): {
-    currentPassword?: string;
-    newPassword?: string;
-    confirmPassword?: string;
-  } {
-    const currentPassword = (
-      document.getElementById("current-password") as HTMLInputElement
-    )?.value.trim();
-    const newPassword = (
-      document.getElementById("new-password") as HTMLInputElement
-    )?.value.trim();
-    const confirmPassword = (
-      document.getElementById("confirm-password") as HTMLInputElement
-    )?.value.trim();
-
-    return { currentPassword, newPassword, confirmPassword };
   }
 
   showTwoFactorDialogForEmailChange(

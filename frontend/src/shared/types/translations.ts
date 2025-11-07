@@ -23,11 +23,58 @@ export type TemplateVariables = Record<string, string | number>;
 
 export function formatTemplate(
   template: string,
-  variables: TemplateVariables
+  variables: TemplateVariables,
 ): string {
   return Object.entries(variables).reduce(
     (acc, [key, value]) =>
       acc.replace(new RegExp(`{{\\s*${key}\\s*}}`, "g"), String(value)),
-    template
+    template,
   );
+}
+
+export interface PasswordToggleTranslations {
+  show?: string;
+  hide?: string;
+}
+
+export interface RegisterFormErrorTranslations {
+  required?: string;
+  usernameLength?: string;
+  emailInvalid?: string;
+  passwordLength?: string;
+  passwordMismatch?: string;
+  generic?: string;
+}
+
+export interface RegisterFormStatusTranslations {
+  submitting?: string;
+}
+
+export interface RegisterFormTranslations {
+  title?: string;
+  usernameLabel?: string;
+  usernamePlaceholder?: string;
+  emailLabel?: string;
+  emailPlaceholder?: string;
+  passwordLabel?: string;
+  passwordPlaceholder?: string;
+  passwordHelp?: string;
+  confirmLabel?: string;
+  confirmPlaceholder?: string;
+  submit?: string;
+  login?: string;
+  home?: string;
+  errors?: RegisterFormErrorTranslations;
+  status?: RegisterFormStatusTranslations;
+  passwordToggle?: PasswordToggleTranslations;
+}
+
+export interface RegisterPageTranslations {
+  heading?: string;
+  home?: string;
+}
+
+export interface RegisterTranslations {
+  page?: RegisterPageTranslations;
+  form?: RegisterFormTranslations;
 }

@@ -30,7 +30,15 @@
     "language": "🌐 Language",
     "logoutSuccess": "Logged out successfully",
     "logoutError": "Logout error: {{message}}",
-    "logoutErrorFallback": "An error occurred during logout"
+    "logoutErrorFallback": "An error occurred during logout",
+    "lang": {
+      "en": "English",
+      "cs": "Čeština",
+      "jp": "日本語"
+    }
+  },
+  "settings": {
+    "languageDescription": "Select your preferred language"
   },
   "quickPlay": {
     "pageTitleSetup": "Quick Play Setup",
@@ -158,8 +166,10 @@
     }
   },
   "register": {
-    "pageTitle": "Create Account",
-    "homeButton": "Home",
+    "page": {
+      "heading": "Create Account",
+      "home": "Home"
+    },
     "form": {
       "title": "Create an Account",
       "usernameLabel": "Username",
@@ -168,22 +178,26 @@
       "emailPlaceholder": "you@example.com",
       "passwordLabel": "Password",
       "passwordPlaceholder": "Enter a secure password",
-      "passwordHint": "At least 6 characters.",
-      "confirmPasswordLabel": "Confirm Password",
-      "confirmPasswordPlaceholder": "Re-enter your password",
+      "passwordHelp": "At least 6 characters.",
+      "confirmLabel": "Confirm Password",
+      "confirmPlaceholder": "Re-enter your password",
       "submit": "Create account",
-      "showLogin": "Already have an account? Sign in",
-      "showHome": "Back to Home",
+      "login": "Already have an account? Sign in",
+      "home": "Back to Home",
       "status": {
         "submitting": "Creating account..."
       },
       "errors": {
-        "allRequired": "All fields are required.",
-        "usernameLength": "Username must be between {{min}} and {{max}} characters.",
+        "required": "All fields are required.",
+        "usernameLength": "Username must be between 3 and 20 characters.",
         "emailInvalid": "Please enter a valid email address.",
-        "passwordLength": "Password must be at least {{min}} characters long.",
+        "passwordLength": "Password must be at least 6 characters long.",
         "passwordMismatch": "Passwords do not match.",
         "generic": "Registration failed"
+      },
+      "passwordToggle": {
+        "show": "Show password",
+        "hide": "Hide password"
       }
     }
   },
@@ -258,7 +272,8 @@
     },
     "match": {
       "heading": "{{player1}} vs {{player2}}",
-      "details": "Match {{id}} - First to 5 points wins",
+      "details": "{{identifier}} - First to {{points}} points wins",
+      "identifier": "Round {{roundNumber}} - Match {{matchNumber}}",
       "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>: W/S (Up/Down)",
       "controlsRight": "<strong class=\"text-white\">{{player}}</strong>: ↑/↓ (Up/Down)",
       "playerDefault": "Player {{index}}"
@@ -279,7 +294,7 @@
       "roundBegins": "{{roundName}} begins! 🥊"
     },
     "modal": {
-      "playerWins": "Player {{index}} Wins!",
+      "playerWins": "{{player}} Wins!",
       "matchResult": "{{player}} wins the match {{score1}} - {{score2}}!"
     }
   }
