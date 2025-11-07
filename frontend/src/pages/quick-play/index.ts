@@ -116,9 +116,9 @@ export class QuickPlayPage extends SpacePageBase {
       <div class="space-y-4">
         <div class="text-center">
           <div class="space-x-3">
-            <button id="start-game" class="bg-green-600 hover:bg-green-700 text-white px-4 py-1 text-sm rounded border border-green-400 shadow-lg">${this.t.startGame || "Start Game"}</button>
-            <button id="pause-game" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-1 text-sm rounded border border-yellow-400 shadow-lg" disabled>${this.t.pauseGame || "Pause"}</button>
-            <button id="reset-game" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 text-sm rounded border border-blue-400 shadow-lg">${this.t.resetGame || "Reset"}</button>
+          <button id="start-game" class="bg-green-900 bg-opacity-30 hover:bg-opacity-50 text-white px-4 py-1 text-sm rounded border border-green-400 shadow-lg transition-all duration-200">${this.t.startGame || "Start Game"}</button>
+          <button id="pause-game" class="bg-purple-900 bg-opacity-30 hover:bg-opacity-50 text-white px-4 py-1 text-sm rounded border border-purple-400 shadow-lg transition-all duration-200 disabled:bg-opacity-20 disabled:text-white disabled:border-purple-300" disabled>${this.t.pauseGame || "Pause"}</button>
+          <button id="reset-game" class="bg-red-900 bg-opacity-30 hover:bg-opacity-50 text-white px-4 py-1 text-sm rounded border border-red-400 shadow-lg transition-all duration-200">${this.t.resetGame || "Reset"}</button>
           </div>
         </div>
 
@@ -128,6 +128,12 @@ export class QuickPlayPage extends SpacePageBase {
 
         <div id="quick-play-controls" class="text-center text-sm text-gray-300">
           ${this.getControlsTemplate(playerCount, playerSelections)}
+        </div>
+
+        <div class="flex justify-start">
+          <button id="quick-play-back-to-registration" class="bg-yellow-600 bg-opacity-30 hover:bg-opacity-50 text-white px-4 py-2 text-sm rounded border border-yellow-500 shadow-lg transition-all duration-200">
+            ${this.t.backToRegistration || "Back to Registration"}
+          </button>
         </div>
 
         <div id="game-over-modal" class="hidden absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-75 z-50">
@@ -156,6 +162,12 @@ export class QuickPlayPage extends SpacePageBase {
       playerSelections,
       aiPlayers,
     );
+    document
+      .getElementById("quick-play-back-to-registration")
+      ?.addEventListener("click", () => {
+        this.service.cleanup();
+        this.service.navigateToRegistration();
+      });
   }
 
   private async renderPlayerRegistrationView(): Promise<void> {
@@ -206,9 +218,12 @@ export class QuickPlayPage extends SpacePageBase {
         showTournamentName: false,
         startButtonText,
         backButtonText,
+        backButtonClassName:
+          "flex-1 bg-yellow-600 bg-opacity-30 hover:bg-opacity-50 text-white py-2 px-4 rounded border border-yellow-500 shadow-lg transition-all duration-200",
         requireHumanPlayer: false,
         playerCountOptions: [2, 4], // クイックプレイは2人と4人
         defaultPlayerCount: 2, // デフォルトは2人
+        singleVsForFourPlayers: true,
         translations: {
           setup: setupTranslations,
           playerSelector: this.playerSelectorCopy,
@@ -231,13 +246,13 @@ export class QuickPlayPage extends SpacePageBase {
   private getTemplate(): string {
     const headerTitle =
       this.currentStep === "game"
-        ? `<h2 id="quick-play-page-title" class="text-2xl font-bold text-white">${this.t.pageTitleGame || "Quick Play - Pong"}</h2>`
-        : `<h2 id="quick-play-page-title" class="text-2xl font-bold text-white"></h2>`;
+        ? `<h2 id="quick-play-page-title" class="text-2xl font-bold text-white text-center">${this.t.pageTitleGame || "Quick Play - Pong"}</h2>`
+        : `<h2 id="quick-play-page-title" class="text-2xl font-bold text-white text-center"></h2>`;
     const content = `
-      <div class="flex justify-between items-center mb-4">
+      <div class="flex justify-center items-center mb-4">
         ${headerTitle}
-        <div id="quick-play-header-actions" class="space-x-2"></div>
       </div>
+      <div id="quick-play-header-actions" class="hidden"></div>
       <div id="quick-play-content"></div>
     `;
     return this.getSpaceTemplate(content);
@@ -306,11 +321,8 @@ export class QuickPlayPage extends SpacePageBase {
     const titleElement = this.container.querySelector(
       "#quick-play-page-title",
     ) as HTMLElement | null;
-    const actionsContainer = this.container.querySelector(
-      "#quick-play-header-actions",
-    ) as HTMLElement | null;
 
-    if (!titleElement || !actionsContainer) {
+    if (!titleElement) {
       return;
     }
 
@@ -318,27 +330,8 @@ export class QuickPlayPage extends SpacePageBase {
       this.currentStep === "game"
         ? this.t.pageTitleGame || "Quick Play - Pong"
         : "";
-    let actionsHtml = "";
-
-    if (this.currentStep === "game") {
-      actionsHtml = `
-        <button id="quick-play-header-back" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">
-          ${this.t.backToRegistration || "Back to Registration"}
-        </button>
-      `;
-    }
 
     titleElement.textContent = title;
-    actionsContainer.innerHTML = actionsHtml;
-
-    if (this.currentStep === "game") {
-      document
-        .getElementById("quick-play-header-back")
-        ?.addEventListener("click", async () => {
-          this.service.cleanup();
-          this.service.navigateToRegistration();
-        });
-    }
   }
 
   private ensureBaseTemplate(): HTMLElement | null {

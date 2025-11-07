@@ -1,6 +1,6 @@
 {
   "common": {
-    "language": "🌐 Jazyk",
+    "language": "🌐",
     "submit": "Potvrdit",
     "cancel": "Zrušit"
   },
@@ -27,7 +27,7 @@
     "settings": "Nastavení",
     "logout": "Odhlásit se",
     "login": "Přihlásit se",
-    "language": "🌐 Jazyk",
+    "language": "🌐",
     "logoutSuccess": "Úspěšně jste se odhlásili",
     "logoutError": "Chyba při odhlášení: {{message}}",
     "logoutErrorFallback": "Během odhlášení došlo k chybě"
@@ -51,7 +51,7 @@
     "backToSetup": "Zpět na nastavení",
     "startGameButton": "Spustit hru",
     "registrationTitle": "Registrace hráčů",
-    "registrationSubtitle": "Rychlá hra ({{count}} hráči)",
+    "registrationSubtitle": "Rychlá hra",
     "registrationError": "Nepodařilo se zobrazit obrazovku registrace hráčů.",
     "gameOverTitle": "Hra skončila!",
     "controls": {
@@ -75,7 +75,9 @@
     "customAlias": "Vlastní přezdívka",
     "customPlaceholder": "Zadej vlastní přezdívku",
     "currentUser": "{{username}} (ty)",
-    "aiDisplayName": "AI {{index}} ({{difficulty}})"
+    "aiDisplayName": "AI {{index}} ({{difficulty}})",
+    "leftSideLabel": "Levá strana",
+    "rightSideLabel": "Pravá strana"
   },
   "playerRegistration": {
     "missingPlayers": "{{count}} hráčů není vybráno",
@@ -243,7 +245,7 @@
     },
     "registration": {
       "title": "Registrace hráčů",
-      "subtitle": "Turnaj: {{name}} ({{count}} hráčů)",
+      "subtitle": "Turnaj",
       "error": "Nepodařilo se zobrazit obrazovku registrace hráčů."
     },
     "errors": {
@@ -262,7 +264,8 @@
       "details": "Zápas {{id}} - vítězí první na 5 bodů",
       "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>: W/S (nahoru/dolů)",
       "controlsRight": "<strong class=\"text-white\">{{player}}</strong>: ↑/↓ (nahoru/dolů)",
-      "playerDefault": "Hráč {{index}}"
+      "playerDefault": "Hráč {{index}}",
+      "matchNumber": "Zápas {{number}}"
     },
     "results": {
       "title": "🏆 Turnaj dokončen!",

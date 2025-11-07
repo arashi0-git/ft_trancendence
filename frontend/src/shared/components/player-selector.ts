@@ -51,13 +51,10 @@ export class PlayerSelector {
 
     const playerOptions = await this.getPlayerOptions();
 
-    // Generate label: odd numbers = Left 1, Left 2, etc. / even numbers = Right 1, Right 2, etc.
-    const side = this.playerIndex % 2 === 1 ? "Left" : "Right";
-    const sideNumber = Math.ceil(this.playerIndex / 2);
-    const defaultLabel = `${side} ${sideNumber}`;
-
-    // Always use the Left/Right naming scheme, ignore translations for player labels
-    const label = defaultLabel;
+    const labelTemplate = this.t.label || "Player {{index}}";
+    const label = formatTemplate(labelTemplate, {
+      index: this.playerIndex,
+    });
     const customOptionLabel = this.t.customOption || "Enter custom alias";
     const difficultyLabel = this.t.aiDifficulty || "AI Difficulty";
     const customAliasLabel = this.t.customAlias || "Custom Alias";
@@ -298,10 +295,11 @@ export class PlayerSelector {
     selectedDifficulty: "easy" | "medium" | "hard",
   ): void {
     const buttons = this.container.querySelectorAll(".ai-difficulty-btn");
+    const highlightColor = this.playerIndex % 2 === 1 ? "#1e3a8a" : "#7f1d1d";
     buttons.forEach((button) => {
       const btn = button as HTMLElement;
       if (btn.dataset.difficulty === selectedDifficulty) {
-        btn.style.backgroundColor = "#0891b2";
+        btn.style.backgroundColor = highlightColor;
         btn.style.color = "white";
       } else {
         btn.style.backgroundColor = "";

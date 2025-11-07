@@ -177,7 +177,7 @@ export class GameSettingsPage extends SpacePageBase {
           </div>
         </div>
 
-        <button id="back-to-home" class="mt-8 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">
+        <button id="back-to-home" class="mt-8 bg-yellow-600 bg-opacity-30 hover:bg-opacity-50 text-white px-4 py-2 rounded border border-yellow-500 shadow-lg transition-all duration-200">
           ${homeButtonText}
         </button>
       </div>

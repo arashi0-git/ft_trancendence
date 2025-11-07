@@ -1,6 +1,6 @@
 {
   "common": {
-    "language": "🌐 言語",
+    "language": "🌐",
     "submit": "保存",
     "cancel": "キャンセル"
   },
@@ -27,7 +27,7 @@
     "settings": "設定",
     "logout": "ログアウト",
     "login": "ログイン",
-    "language": "🌐 言語",
+    "language": "🌐",
     "logoutSuccess": "ログアウトしました",
     "logoutError": "ログアウトエラー: {{message}}",
     "logoutErrorFallback": "ログアウト処理でエラーが発生しました"
@@ -51,7 +51,7 @@
     "backToSetup": "設定に戻る",
     "startGameButton": "ゲーム開始",
     "registrationTitle": "プレイヤー登録",
-    "registrationSubtitle": "クイックプレイ（{{count}} 人）",
+    "registrationSubtitle": "クイックプレイ",
     "registrationError": "プレイヤー登録画面の表示に失敗しました。",
     "gameOverTitle": "ゲーム終了！",
     "controls": {
@@ -65,17 +65,19 @@
     "label": "プレイヤー{{index}}",
     "selectPlaceholder": "プレイヤーまたはAIを選択",
     "aiOption": "AI",
-    "customOption": "カスタム名を入力",
+    "customOption": "ゲストプレイヤー",
     "aiDifficulty": "AI難易度",
     "difficulty": {
       "easy": "やさしい",
       "medium": "ふつう",
       "hard": "難しい"
     },
-    "customAlias": "カスタム名",
+    "customAlias": "ニックネーム",
     "customPlaceholder": "カスタム名を入力",
     "currentUser": "{{username}}（あなた）",
-    "aiDisplayName": "AI{{index}}({{difficulty}})"
+    "aiDisplayName": "AI{{index}}({{difficulty}})",
+    "leftSideLabel": "左サイド",
+    "rightSideLabel": "右サイド"
   },
   "playerRegistration": {
     "missingPlayers": "{{count}} 人のプレイヤーが選択されていません",
@@ -243,7 +245,7 @@
     },
     "registration": {
       "title": "プレイヤー登録",
-      "subtitle": "トーナメント: {{name}}({{count}} 人）",
+      "subtitle": "トーナメント",
       "error": "プレイヤー登録画面の表示に失敗しました。"
     },
     "errors": {
@@ -262,7 +264,8 @@
       "details": "試合 {{id}} - 先に5ポイント取った方が勝利",
       "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>:W/S(上下)",
       "controlsRight": "<strong class=\"text-white\">{{player}}</strong>：↑/↓（上下）",
-      "playerDefault": "プレイヤー{{index}}"
+      "playerDefault": "プレイヤー{{index}}",
+      "matchNumber": "第{{number}}試合"
     },
     "results": {
       "title": "🏆 トーナメント終了！",

@@ -7,6 +7,7 @@ import {
   setLanguage,
   onLanguageChange,
 } from "../../i18n";
+import { escapeHtml } from "../utils/html-utils";
 
 export class AppHeader {
   private container: HTMLElement;
@@ -41,8 +42,14 @@ export class AppHeader {
         <div class="grid grid-cols-3 items-center">
           <div></div>
           <div class="text-center">
-            <h1 class="text-3xl font-bold text-white cursor-pointer" id="app-title">
-              ${title}
+            <h1 class="text-3xl font-bold">
+              <a
+                href="/"
+                id="app-title"
+                class="text-white cursor-pointer transition-colors duration-200 hover:text-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white inline-block px-2 py-1 rounded-md"
+              >
+                ${title}
+              </a>
             </h1>
           </div>
           <div class="flex justify-end items-center space-x-3">
@@ -73,23 +80,28 @@ export class AppHeader {
         <button id="header-settings-btn" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded text-sm transition-colors">
           ${settingsLabel}
         </button>
-        <button id="header-logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm transition-colors">
-          ${logoutLabel}
+        <button id="header-logout-btn" class="text-white text-2xl p-2 rounded transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white" aria-label="${escapeHtml(
+          logoutLabel,
+        )}">
+          <span aria-hidden="true">⍈</span>
         </button>
       `;
     }
 
     const loginLabel = i18next.t("header.login", "Login");
     const languageLabel = i18next.t("header.language", "Language");
+    const trimmedLanguageLabel = languageLabel.trim();
+    const languageEmoji = Array.from(trimmedLanguageLabel)[0] || "🌐";
 
     return `
-      <button id="header-login-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm transition-colors">
-        ${loginLabel}
+      <button id="header-login-btn" class="text-white text-2xl p-2 rounded transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white" aria-label="${escapeHtml(loginLabel)}">
+        <span aria-hidden="true">➜]</span>
       </button>
       <div class="relative">
-        <button id="header-language-btn" type="button" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm transition-colors flex items-center space-x-2">
-          <span>${languageLabel}</span>
-          <span aria-hidden="true">▾</span>
+        <button id="header-language-btn" type="button" class="text-white text-2xl p-2 rounded transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white" aria-label="${escapeHtml(
+          languageLabel,
+        )}">
+          <span aria-hidden="true">${languageEmoji}</span>
         </button>
         <div id="header-language-menu" class="hidden absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded shadow-lg overflow-hidden z-10">
           <button type="button" id="header-lang-cs" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700">
@@ -108,7 +120,10 @@ export class AppHeader {
 
   //全てのDOMイベントリスナーを設定します。
   private attachEventListeners(): void {
-    this.bindClick("app-title", () => router.navigate("/"));
+    this.bindClick("app-title", (event) => {
+      event.preventDefault();
+      router.navigate("/");
+    });
 
     if (AuthService.isAuthenticated()) {
       this.bindClick("header-settings-btn", () => router.navigate("/settings"));
