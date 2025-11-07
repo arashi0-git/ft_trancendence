@@ -30,7 +30,15 @@
     "language": "🌐",
     "logoutSuccess": "ログアウトしました",
     "logoutError": "ログアウトエラー: {{message}}",
-    "logoutErrorFallback": "ログアウト処理でエラーが発生しました"
+    "logoutErrorFallback": "ログアウト処理でエラーが発生しました",
+    "lang": {
+      "en": "English",
+      "cs": "Čeština",
+      "jp": "日本語"
+    }
+  },
+  "settings": {
+    "languageDescription": "使用する言語を選択"
   },
   "quickPlay": {
     "pageTitleSetup": "クイックプレイ設定",
@@ -160,32 +168,38 @@
     }
   },
   "register": {
-    "pageTitle": "アカウント作成",
-    "homeButton": "ホーム",
+    "page": {
+      "heading": "アカウント作成",
+      "home": "ホーム"
+    },
     "form": {
-      "title": "アカウント作成",
+      "title": "アカウントを作成",
       "usernameLabel": "ユーザー名",
-      "usernamePlaceholder": "ユーザー名を入力してください",
+      "usernamePlaceholder": "ユーザー名を選択してください",
       "emailLabel": "メールアドレス",
       "emailPlaceholder": "you@example.com",
       "passwordLabel": "パスワード",
       "passwordPlaceholder": "安全なパスワードを入力してください",
-      "passwordHint": "6文字以上必要です。",
-      "confirmPasswordLabel": "パスワードを再入力",
-      "confirmPasswordPlaceholder": "パスワードを再入力してください",
+      "passwordHelp": "6文字以上で入力してください。",
+      "confirmLabel": "パスワードの確認",
+      "confirmPlaceholder": "パスワードを再入力してください",
       "submit": "アカウントを作成",
-      "showLogin": "すでにアカウントをお持ちですか？ ログイン",
-      "showHome": "ホームに戻る",
+      "login": "すでにアカウントをお持ちですか？ ログイン",
+      "home": "ホームに戻る",
       "status": {
         "submitting": "アカウントを作成しています..."
       },
       "errors": {
-        "allRequired": "すべての項目を入力してください。",
-        "usernameLength": "ユーザー名は{{min}}〜{{max}}文字で入力してください。",
+        "required": "すべての項目を入力してください。",
+        "usernameLength": "ユーザー名は3〜20文字で入力してください。",
         "emailInvalid": "有効なメールアドレスを入力してください。",
-        "passwordLength": "パスワードは{{min}}文字以上で入力してください。",
+        "passwordLength": "パスワードは6文字以上で入力してください。",
         "passwordMismatch": "パスワードが一致しません。",
-        "generic": "登録に失敗しました"
+        "generic": "登録に失敗しました。"
+      },
+      "passwordToggle": {
+        "show": "パスワードを表示",
+        "hide": "パスワードを非表示"
       }
     }
   },
@@ -261,7 +275,8 @@
     },
     "match": {
       "heading": "{{player1}} 対 {{player2}}",
-      "details": "試合 {{id}} - 先に5ポイント取った方が勝利",
+      "details": "{{identifier}} - 先に{{points}}ポイント取った方が勝利",
+      "identifier": "第{{roundNumber}}ラウンド - 第{{matchNumber}}試合",
       "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>:W/S(上下)",
       "controlsRight": "<strong class=\"text-white\">{{player}}</strong>：↑/↓（上下）",
       "playerDefault": "プレイヤー{{index}}",
@@ -283,7 +298,7 @@
       "roundBegins": "{{roundName}} が始まります！ 🥊"
     },
     "modal": {
-      "playerWins": "プレイヤー{{index}}の勝利！",
+      "playerWins": "{{player}}の勝利！",
       "matchResult": "{{player}} が {{score1}} - {{score2}} で勝利しました！"
     }
   }

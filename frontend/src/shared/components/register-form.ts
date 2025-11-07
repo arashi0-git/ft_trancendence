@@ -1,6 +1,11 @@
 import { AuthService } from "../services/auth-service";
 import type { CreateUserRequest, PublicUser } from "../types/user";
+import type {
+  RegisterFormTranslations,
+  RegisterTranslations,
+} from "../types/translations";
 import { setupPasswordToggles } from "../utils/password-toggle-utils";
+import { i18next } from "../../i18n";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -9,13 +14,24 @@ export class RegisterForm {
   private onRegisterSuccess: (user: PublicUser) => void = () => {};
   private onShowLogin: () => void = () => {};
   private onShowHome: () => void = () => {};
+  private translations: RegisterFormTranslations = {};
 
   constructor(private container: HTMLElement) {
     this.abortController = new AbortController();
+    const registerTranslations =
+      (i18next.t("register", {
+        returnObjects: true,
+      }) as RegisterTranslations) || {};
+    this.translations = registerTranslations.form || {};
     this.render();
   }
 
   private render(): void {
+    const submitLabel = this.translations.submit || "Create account";
+    const loginLabel =
+      this.translations.login || "Already have an account? Sign in";
+    const homeLabel = this.translations.home || "Back to Home";
+
     this.container.innerHTML = `
       <div class="border border-cyan-500/30 rounded-lg p-6 bg-gray-900/95 shadow-xl backdrop-blur-sm">
         <h2 class="text-2xl font-bold mb-4 text-center text-cyan-200">Create an Account</h2>
@@ -93,21 +109,21 @@ export class RegisterForm {
               id="register-submit"
               class="w-full bg-cyan-600 hover:bg-cyan-500 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
-              Create account
+              ${submitLabel}
             </button>
             <button
               type="button"
               id="show-login"
               class="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-700"
             >
-              Already have an account? Sign in
+              ${loginLabel}
             </button>
             <button
               type="button"
               id="register-show-home"
               class="w-full bg-gray-800 hover:bg-gray-700 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
-              Back to Home
+              ${homeLabel}
             </button>
           </div>
         </form>
@@ -184,8 +200,12 @@ export class RegisterForm {
       return;
     }
 
+    const submitLabel = this.translations.submit || "Create account";
+    const submittingLabel =
+      this.translations.status?.submitting || "Creating account...";
+
     submitBtn.disabled = true;
-    submitBtn.textContent = "Creating account...";
+    submitBtn.textContent = submittingLabel;
 
     const payload: CreateUserRequest = {
       username,
@@ -198,12 +218,14 @@ export class RegisterForm {
       this.onRegisterSuccess(response.user);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Registration failed";
+        error instanceof Error && error.message
+          ? error.message
+          : this.translations.errors?.generic || "Registration failed";
       errorDiv.textContent = message;
       errorDiv.classList.remove("hidden");
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = "Create account";
+      submitBtn.textContent = submitLabel;
     }
   }
 
@@ -213,24 +235,30 @@ export class RegisterForm {
     password: string,
     confirmPassword: string,
   ): string | null {
+    const errors = this.translations.errors || {};
+
     if (!username || !email || !password || !confirmPassword) {
-      return "All fields are required.";
+      return errors.required || "All fields are required.";
     }
 
     if (username.length < 3 || username.length > 20) {
-      return "Username must be between 3 and 20 characters.";
+      return (
+        errors.usernameLength || "Username must be between 3 and 20 characters."
+      );
     }
 
     if (!emailRegex.test(email)) {
-      return "Please enter a valid email address.";
+      return errors.emailInvalid || "Please enter a valid email address.";
     }
 
     if (password.length < 6) {
-      return "Password must be at least 6 characters long.";
+      return (
+        errors.passwordLength || "Password must be at least 6 characters long."
+      );
     }
 
     if (password !== confirmPassword) {
-      return "Passwords do not match.";
+      return errors.passwordMismatch || "Passwords do not match.";
     }
 
     return null;

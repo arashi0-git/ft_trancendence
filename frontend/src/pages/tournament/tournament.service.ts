@@ -2,6 +2,7 @@ import { GameManagerService } from "../../shared/services/game-manager.service";
 import { NotificationService } from "../../shared/services/notification.service";
 import { router } from "../../routes/router";
 import { TournamentDataService } from "../../shared/services/tournament-data.service";
+import { gameCustomizationService } from "../../shared/services/game-customization.service";
 import { PlayerRegistrationWithCountSelector } from "../../shared/components/player-registration-with-count-selector";
 import {
   type PlayerSelectorTranslations,
@@ -576,12 +577,31 @@ export class TournamentService {
           player2: p2Alias,
         }) as string)
       : `${p1Alias} vs ${p2Alias}`;
-    const localizedMatchId = this.getLocalizedMatchIdentifier(matchId);
+    const { maxScore } = gameCustomizationService.getSettings();
+    const matchIdPattern = /round-(\d+)-match-(\d+)/i;
+    const matchIdMatch = matchIdPattern.exec(matchId);
+    const roundNumber =
+      matchIdMatch && matchIdMatch[1]
+        ? Number.parseInt(matchIdMatch[1], 10)
+        : (match.round ?? 1);
+    const matchNumber =
+      matchIdMatch && matchIdMatch[2]
+        ? Number.parseInt(matchIdMatch[2], 10)
+        : 1;
+
+    const identifier = this.translateFn
+      ? (this.translateFn("tournament.match.identifier", {
+          roundNumber,
+          matchNumber,
+        }) as string)
+      : `Round ${roundNumber} - Match ${matchNumber}`;
+
     const details = this.translateFn
       ? (this.translateFn("tournament.match.details", {
-          id: localizedMatchId,
+          identifier,
+          points: maxScore,
         }) as string)
-      : `Match ${escapeHtml(localizedMatchId)} - First to 5 points wins`;
+      : `${escapeHtml(identifier)} - First to ${maxScore} points wins`;
     const controlsLeft = this.translateFn
       ? (this.translateFn("tournament.match.controlsLeft", {
           player: p1Alias,
@@ -713,30 +733,6 @@ export class TournamentService {
           }) as string)
         : `Round ${currentRound}`;
     }
-  }
-
-  private getLocalizedMatchIdentifier(matchId: string): string {
-    const pattern = /round-(\d+)-match-(\d+)/i;
-    const match = pattern.exec(matchId);
-    if (!match) {
-      return matchId;
-    }
-    const roundNumber = parseInt(match[1], 10);
-    const matchNumber = parseInt(match[2], 10);
-
-    const roundLabel = this.translateFn
-      ? (this.translateFn("tournament.rounds.round", {
-          number: roundNumber,
-        }) as string)
-      : `Round ${roundNumber}`;
-
-    const matchLabel = this.translateFn
-      ? (this.translateFn("tournament.match.matchNumber", {
-          number: matchNumber,
-        }) as string)
-      : `Match ${matchNumber}`;
-
-    return `${roundLabel} - ${matchLabel}`;
   }
 
   private attachEventListenersToElements(
@@ -925,9 +921,9 @@ export class TournamentService {
       }
       const modalTitle = this.translateFn
         ? (this.translateFn("tournament.modal.playerWins", {
-            index: winner,
+            player: winnerAlias,
           }) as string)
-        : `Player ${winner} Wins!`;
+        : `${winnerAlias} Wins!`;
 
       const modalMessage = this.translateFn
         ? (this.translateFn("tournament.modal.matchResult", {

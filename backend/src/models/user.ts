@@ -12,6 +12,7 @@ export interface UserRecord {
   last_login: string | null;
   token_version: number;
   two_factor_enabled: number;
+  language: string;
 }
 
 export interface CreateUserParams {
@@ -103,13 +104,17 @@ export class UserModel {
   static async updateProfile(
     id: number,
     updates: Partial<
-      Record<"username" | "email" | "profile_image_url", string | null>
+      Record<
+        "username" | "email" | "profile_image_url" | "language",
+        string | null
+      >
     >,
   ): Promise<void> {
     const allowedKeys: Array<keyof typeof updates> = [
       "username",
       "email",
       "profile_image_url",
+      "language",
     ];
 
     const filteredEntries = Object.entries(updates).filter(

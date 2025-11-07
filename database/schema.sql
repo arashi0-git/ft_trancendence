@@ -12,11 +12,12 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    
+
     is_online BOOLEAN DEFAULT FALSE,
     last_login DATETIME DEFAULT CURRENT_TIMESTAMP,
     token_version INTEGER DEFAULT 0,
-    two_factor_enabled BOOLEAN DEFAULT FALSE
+    two_factor_enabled BOOLEAN DEFAULT FALSE,
+    language TEXT DEFAULT 'en' CHECK(language IN ('en', 'cs', 'jp'))
 );
 
 CREATE TABLE IF NOT EXISTS two_factor_challenges (

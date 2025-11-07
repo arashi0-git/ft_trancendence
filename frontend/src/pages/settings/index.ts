@@ -106,27 +106,23 @@ export class UserSettingsPage extends SpacePageBase {
 
           <form id="user-settings-form" class="space-y-6">
             <div id="profile-section"></div>
-            <div id="security-section"></div>
-            <div id="history-section"></div>
-            <div id="friends-section"></div>
-
-            <div class="flex gap-3 pt-4 border-t border-gray-700">
-              <button
-                type="submit"
-                id="save-settings-btn"
-                class="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white py-3 px-6 rounded-lg font-semibold transition"
-              >
-                Save Changes
-              </button>
-              <button
-                type="button"
-                id="back-to-home-btn"
-                class="bg-gray-700 hover:bg-gray-600 text-white py-3 px-6 rounded-lg font-semibold transition"
-              >
-                Back to Home
-              </button>
-            </div>
           </form>
+
+          <div class="space-y-6 mt-6">
+            <div id="security-section"></div>
+            <div id="friends-section"></div>
+            <div id="history-section"></div>
+          </div>
+
+          <div class="flex gap-3 pt-4 border-t border-gray-700 mt-6">
+            <button
+              type="button"
+              id="back-to-home-btn"
+              class="w-full bg-gray-700 hover:bg-gray-600 text-white py-3 px-6 rounded-lg font-semibold transition"
+            >
+              Back to Home
+            </button>
+          </div>
         </div>
       </div>
     `);
@@ -146,7 +142,7 @@ export class UserSettingsPage extends SpacePageBase {
   private async handleFormSubmit(event: Event): Promise<void> {
     event.preventDefault();
     const saveButton = document.getElementById(
-      "save-settings-btn",
+      "save-profile-btn",
     ) as HTMLButtonElement | null;
 
     try {
@@ -163,7 +159,21 @@ export class UserSettingsPage extends SpacePageBase {
       // Build payload from form data
       const payload: UpdateUserSettingsPayload = {};
       const profileData = this.profileSection?.getFormData();
-      const passwordData = this.securitySection?.getPasswordData();
+      const passwordData = this.profileSection?.getPasswordData();
+
+      // Validate password confirmation if attempting to change password
+      if (passwordData?.newPassword || passwordData?.confirmPassword) {
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+          NotificationService.getInstance().error(
+            "New password and confirm password do not match.",
+          );
+          if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.textContent = "Save Changes";
+          }
+          return;
+        }
+      }
 
       if (profileData?.username) payload.username = profileData.username;
       if (profileData?.email) payload.email = profileData.email;

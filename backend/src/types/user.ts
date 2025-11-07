@@ -58,6 +58,7 @@ export interface UpdateUserProfileRequest {
   username?: string;
   email?: string;
   profile_image_url?: string | null;
+  language?: string;
 }
 
 export interface UpdateUserSettingsRequest extends UpdateUserProfileRequest {

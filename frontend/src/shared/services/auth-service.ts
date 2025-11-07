@@ -13,6 +13,7 @@ import type {
   TwoFactorStatusResponse,
   TwoFactorVerificationResponse,
 } from "../types/user";
+import { setLanguage, type SupportedLanguage } from "../../i18n";
 
 declare const __API_BASE_URL__: string | undefined;
 
@@ -72,6 +73,19 @@ export class AuthService {
     return headers;
   }
 
+  private static async applyUserLanguage(user: PublicUser): Promise<void> {
+    if (user.language) {
+      const validLanguages: SupportedLanguage[] = ["en", "cs", "jp"];
+      if (validLanguages.includes(user.language as SupportedLanguage)) {
+        try {
+          await setLanguage(user.language as SupportedLanguage);
+        } catch (error) {
+          console.error("Failed to set user language:", error);
+        }
+      }
+    }
+  }
+
   static async register(userData: CreateUserRequest): Promise<AuthResponse> {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -94,6 +108,11 @@ export class AuthService {
 
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
+      }
+
+      // Apply user's language preference after registration
+      if (data.user) {
+        await this.applyUserLanguage(data.user);
       }
 
       return data as AuthResponse;
@@ -127,6 +146,11 @@ export class AuthService {
         localStorage.setItem("auth_token", data.token);
       }
 
+      // Apply user's language preference
+      if (!data.requiresTwoFactor && data.user) {
+        await this.applyUserLanguage(data.user);
+      }
+
       return data as AuthResponse;
     } catch (error) {
       console.error("Login error:", error);
@@ -155,6 +179,11 @@ export class AuthService {
 
       if ("token" in data && data.token) {
         localStorage.setItem("auth_token", data.token);
+      }
+
+      // Apply user's language preference after 2FA verification
+      if (data.user) {
+        await this.applyUserLanguage(data.user);
       }
 
       return data as TwoFactorVerificationResponse;
@@ -281,7 +310,12 @@ export class AuthService {
         throw new Error(data.error || "Failed to get user info");
       }
 
-      return data.user as PublicUser;
+      const user = data.user as PublicUser;
+
+      // Apply user's language preference
+      await this.applyUserLanguage(user);
+
+      return user;
     } catch (error) {
       console.error("Get user error:", error);
       throw error;
