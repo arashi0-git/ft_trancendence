@@ -30,7 +30,15 @@
     "language": "🌐 Language",
     "logoutSuccess": "Logged out successfully",
     "logoutError": "Logout error: {{message}}",
-    "logoutErrorFallback": "An error occurred during logout"
+    "logoutErrorFallback": "An error occurred during logout",
+    "lang": {
+      "en": "English",
+      "cs": "Čeština",
+      "jp": "日本語"
+    }
+  },
+  "settings": {
+    "languageDescription": "Select your preferred language"
   },
   "quickPlay": {
     "pageTitleSetup": "Quick Play Setup",

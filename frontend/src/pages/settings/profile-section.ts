@@ -2,20 +2,30 @@ import { AuthService } from "../../shared/services/auth-service";
 import { NotificationService } from "../../shared/services/notification.service";
 import type { PublicUser } from "../../shared/types/user";
 import { escapeHtml } from "../../shared/utils/html-utils";
+import {
+  i18next,
+  SupportedLanguage,
+  setLanguage,
+  getCurrentLanguage,
+  onLanguageChange,
+} from "../../i18n";
 
 export class ProfileSection {
   private container: HTMLElement;
   private user: PublicUser | null = null;
   private selectedFile: File | null = null;
   private avatarPreviewUrl: string | null = null;
+  private unsubscribeLanguage?: () => void;
 
   constructor(container: HTMLElement) {
     this.container = container;
+    this.unsubscribeLanguage = onLanguageChange(() => this.render(this.user!));
   }
 
   render(user: PublicUser): void {
     this.user = user;
     const sanitizedProfileUrl = (user.profile_image_url ?? "").trim();
+    const currentLanguage = getCurrentLanguage();
 
     this.container.innerHTML = `
       <section class="space-y-4">
@@ -75,6 +85,100 @@ export class ProfileSection {
             autocomplete="email"
           />
         </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm text-gray-300 mb-1">${i18next.t("common.language", "Language")}</label>
+          <p class="text-xs text-gray-400 mb-2">
+            ${i18next.t("settings.languageDescription", "Select your preferred language")}
+          </p>
+          <div class="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              id="lang-btn-en"
+              class="px-3 py-2 rounded-lg text-center transition ${
+                currentLanguage === "en"
+                  ? "bg-cyan-600 text-white border-2 border-cyan-400"
+                  : "bg-gray-900/70 text-gray-300 border border-cyan-500/30 hover:bg-gray-800"
+              }"
+            >
+              <div class="text-lg">🇬🇧</div>
+              <div class="text-xs mt-1">${i18next.t("header.lang.en", "English")}</div>
+            </button>
+            <button
+              type="button"
+              id="lang-btn-cs"
+              class="px-3 py-2 rounded-lg text-center transition ${
+                currentLanguage === "cs"
+                  ? "bg-cyan-600 text-white border-2 border-cyan-400"
+                  : "bg-gray-900/70 text-gray-300 border border-cyan-500/30 hover:bg-gray-800"
+              }"
+            >
+              <div class="text-lg">🇨🇿</div>
+              <div class="text-xs mt-1">${i18next.t("header.lang.cs", "Čeština")}</div>
+            </button>
+            <button
+              type="button"
+              id="lang-btn-jp"
+              class="px-3 py-2 rounded-lg text-center transition ${
+                currentLanguage === "jp"
+                  ? "bg-cyan-600 text-white border-2 border-cyan-400"
+                  : "bg-gray-900/70 text-gray-300 border border-cyan-500/30 hover:bg-gray-800"
+              }"
+            >
+              <div class="text-lg">🇯🇵</div>
+              <div class="text-xs mt-1">${i18next.t("header.lang.jp", "日本語")}</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-4 space-y-4">
+          <h4 class="text-md font-semibold text-cyan-200">Change Password</h4>
+          <p class="text-xs text-gray-400">
+            Leave the password fields blank to keep your current password. When changing your password, provide your current password for verification.
+          </p>
+          <div>
+            <label class="block text-sm text-gray-300 mb-1" for="current-password">Current password</label>
+            <input
+              id="current-password"
+              name="currentPassword"
+              type="password"
+              class="w-full bg-gray-900/70 border border-cyan-500/30 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              autocomplete="current-password"
+            />
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="block text-sm text-gray-300 mb-1" for="new-password">New password</label>
+              <input
+                id="new-password"
+                name="newPassword"
+                type="password"
+                class="w-full bg-gray-900/70 border border-cyan-500/30 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                autocomplete="new-password"
+              />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-300 mb-1" for="confirm-password">Confirm new password</label>
+              <input
+                id="confirm-password"
+                name="confirmPassword"
+                type="password"
+                class="w-full bg-gray-900/70 border border-cyan-500/30 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                autocomplete="new-password"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-3 pt-4">
+          <button
+            type="submit"
+            id="save-profile-btn"
+            class="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white py-3 px-6 rounded-lg font-semibold transition"
+          >
+            Save Changes
+          </button>
+        </div>
       </section>
     `;
 
@@ -86,6 +190,17 @@ export class ProfileSection {
       "profile-image-input",
     ) as HTMLInputElement;
     fileInput?.addEventListener("change", (e) => this.handleAvatarChange(e));
+
+    // Language buttons
+    document
+      .getElementById("lang-btn-en")
+      ?.addEventListener("click", () => this.handleLanguageChange("en"));
+    document
+      .getElementById("lang-btn-cs")
+      ?.addEventListener("click", () => this.handleLanguageChange("cs"));
+    document
+      .getElementById("lang-btn-jp")
+      ?.addEventListener("click", () => this.handleLanguageChange("jp"));
   }
 
   private async handleAvatarChange(event: Event): Promise<void> {
@@ -146,6 +261,31 @@ export class ProfileSection {
     }
   }
 
+  private async handleLanguageChange(
+    language: SupportedLanguage,
+  ): Promise<void> {
+    try {
+      await setLanguage(language);
+      // The render will be automatically triggered by the language change subscription
+
+      // Save language preference to backend
+      try {
+        const response = await AuthService.updateSettings({ language });
+        if ("user" in response && response.user) {
+          this.user = response.user;
+        }
+      } catch (error) {
+        console.error("Failed to save language preference to backend:", error);
+        NotificationService.getInstance().warning(
+          "Language changed locally, but failed to save to your account.",
+        );
+      }
+    } catch (error) {
+      console.error("Failed to change language:", error);
+      NotificationService.getInstance().error("Failed to change language.");
+    }
+  }
+
   private derivePlaceholderInitial(user?: PublicUser): string {
     const source = user?.username
       ? user.username
@@ -192,6 +332,24 @@ export class ProfileSection {
     return { username, email };
   }
 
+  getPasswordData(): {
+    currentPassword?: string;
+    newPassword?: string;
+    confirmPassword?: string;
+  } {
+    const currentPassword = (
+      document.getElementById("current-password") as HTMLInputElement
+    )?.value.trim();
+    const newPassword = (
+      document.getElementById("new-password") as HTMLInputElement
+    )?.value.trim();
+    const confirmPassword = (
+      document.getElementById("confirm-password") as HTMLInputElement
+    )?.value.trim();
+
+    return { currentPassword, newPassword, confirmPassword };
+  }
+
   hasAvatarChange(): boolean {
     return this.selectedFile !== null;
   }
@@ -199,5 +357,7 @@ export class ProfileSection {
   destroy(): void {
     this.revokePreviewUrl();
     this.selectedFile = null;
+    this.unsubscribeLanguage?.();
+    this.unsubscribeLanguage = undefined;
   }
 }

@@ -30,7 +30,15 @@
     "language": "🌐 言語",
     "logoutSuccess": "ログアウトしました",
     "logoutError": "ログアウトエラー: {{message}}",
-    "logoutErrorFallback": "ログアウト処理でエラーが発生しました"
+    "logoutErrorFallback": "ログアウト処理でエラーが発生しました",
+    "lang": {
+      "en": "English",
+      "cs": "Čeština",
+      "jp": "日本語"
+    }
+  },
+  "settings": {
+    "languageDescription": "使用する言語を選択"
   },
   "quickPlay": {
     "pageTitleSetup": "クイックプレイ設定",

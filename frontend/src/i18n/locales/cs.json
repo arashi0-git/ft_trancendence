@@ -30,7 +30,15 @@
     "language": "🌐 Jazyk",
     "logoutSuccess": "Úspěšně jste se odhlásili",
     "logoutError": "Chyba při odhlášení: {{message}}",
-    "logoutErrorFallback": "Během odhlášení došlo k chybě"
+    "logoutErrorFallback": "Během odhlášení došlo k chybě",
+    "lang": {
+      "en": "English",
+      "cs": "Čeština",
+      "jp": "日本語"
+    }
+  },
+  "settings": {
+    "languageDescription": "Vyberte preferovaný jazyk"
   },
   "quickPlay": {
     "pageTitleSetup": "Rychlá hra - nastavení",

@@ -1,7 +1,6 @@
 import { AuthService } from "../services/auth-service";
 import type { CreateUserRequest, PublicUser } from "../types/user";
 import type {
-  PasswordToggleTranslations,
   RegisterFormTranslations,
   RegisterTranslations,
 } from "../types/translations";
@@ -27,39 +26,8 @@ export class RegisterForm {
     this.render();
   }
 
-  private getPasswordToggleLabels(): PasswordToggleTranslations {
-    const defaults: Required<PasswordToggleTranslations> = {
-      show: "Show password",
-      hide: "Hide password",
-    };
-
-    if (!this.translations.passwordToggle) {
-      return defaults;
-    }
-
-    return {
-      show: this.translations.passwordToggle.show || defaults.show,
-      hide: this.translations.passwordToggle.hide || defaults.hide,
-    };
-  }
-
   private render(): void {
-    const passwordToggleLabels = this.getPasswordToggleLabels();
-    const heading = this.translations.title || "Create an Account";
-    const usernameLabel = this.translations.usernameLabel || "Username";
-    const usernamePlaceholder =
-      this.translations.usernamePlaceholder || "Choose a username";
-    const emailLabel = this.translations.emailLabel || "Email";
-    const emailPlaceholder =
-      this.translations.emailPlaceholder || "you@example.com";
-    const passwordLabel = this.translations.passwordLabel || "Password";
-    const passwordPlaceholder =
-      this.translations.passwordPlaceholder || "Enter a secure password";
-    const passwordHelp =
-      this.translations.passwordHelp || "At least 6 characters.";
-    const confirmLabel = this.translations.confirmLabel || "Confirm Password";
-    const confirmPlaceholder =
-      this.translations.confirmPlaceholder || "Re-enter your password";
+    this.translations.confirmPlaceholder || "Re-enter your password";
     const submitLabel = this.translations.submit || "Create account";
     const loginLabel =
       this.translations.login || "Already have an account? Sign in";
