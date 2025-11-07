@@ -120,30 +120,37 @@ export class PlayerSelector {
   private async getPlayerOptions(): Promise<PlayerOption[]> {
     const options: PlayerOption[] = [];
 
-    // 1. AIオプションを最初に追加
+    // 1. ログインユーザーを追加（存在する場合）
+    try {
+      if (AuthService.isAuthenticated()) {
+        const user = await AuthService.getCurrentUser();
+        const username = user.username?.trim() ?? "";
+        const template = this.t.currentUser || "{{username}}";
+        const displayName = template.includes("{{username}}")
+          ? formatTemplate(template, {
+              username: username || user.username || "",
+            })
+          : username || template;
+        options.push({
+          id: `user-${user.id}`,
+          displayName,
+          isAI: false,
+          userId: user.id,
+        });
+        // Store the actual username for later display
+        this.loginUsername = username || user.username || "";
+      }
+    } catch (error) {
+      console.warn("Failed to load current user:", error);
+    }
+
+    // 2. AIオプションを追加
     options.push({
       id: "ai",
       displayName: this.t.aiOption || "AI",
       isAI: true,
       aiDifficulty: "medium", // デフォルト難易度
     });
-
-    // 2. ログインユーザーを追加（存在する場合）
-    try {
-      if (AuthService.isAuthenticated()) {
-        const user = await AuthService.getCurrentUser();
-        options.push({
-          id: `user-${user.id}`,
-          displayName: "Login User",
-          isAI: false,
-          userId: user.id,
-        });
-        // Store the actual username for later display
-        this.loginUsername = user.username;
-      }
-    } catch (error) {
-      console.warn("Failed to load current user:", error);
-    }
 
     return options;
   }
