@@ -1,5 +1,4 @@
 export interface TwoFactorVerificationOptions {
-  mode?: "inline" | "modal";
   message: string;
   verifyLabel?: string;
   resendLabel?: string;
@@ -18,7 +17,6 @@ export class TwoFactorVerification {
     onResend?: () => Promise<void>;
     onCancel?: () => void;
   };
-  private readonly isModal: boolean;
   private elements!: {
     message: HTMLElement;
     form: HTMLFormElement;
@@ -33,7 +31,6 @@ export class TwoFactorVerification {
   constructor(container: HTMLElement, options: TwoFactorVerificationOptions) {
     this.container = container;
     this.options = {
-      mode: options.mode ?? "inline",
       message: options.message,
       verifyLabel: options.verifyLabel ?? "Verify Code",
       resendLabel: options.resendLabel ?? "Resend email code",
@@ -44,8 +41,6 @@ export class TwoFactorVerification {
       onCancel: options.onCancel,
     };
 
-    this.isModal = this.options.mode === "modal";
-
     this.render();
     this.attachListeners();
   }
@@ -54,28 +49,21 @@ export class TwoFactorVerification {
     this.container.innerHTML = "";
 
     const wrapper = document.createElement("div");
-    wrapper.className = this.isModal
-      ? "border border-cyan-500/30 rounded-lg p-6 bg-gray-900/95 shadow-xl backdrop-blur-sm"
-      : "border border-gray-200 rounded-lg p-6 bg-white shadow-sm";
+    wrapper.className =
+      "border border-cyan-500/30 rounded-lg p-6 bg-gray-900/95 shadow-xl backdrop-blur-sm";
 
     const title = document.createElement("h2");
-    title.className = this.isModal
-      ? "text-2xl font-bold mb-4 text-center text-cyan-200"
-      : "text-2xl font-bold mb-4 text-center text-gray-900";
+    title.className = "text-2xl font-bold mb-4 text-center text-cyan-200";
     title.textContent = "Two-Factor Verification";
 
     const message = document.createElement("p");
     message.dataset.message = "";
-    message.className = this.isModal
-      ? "text-sm text-gray-300 mb-2"
-      : "text-sm text-gray-500 mb-2";
+    message.className = "text-sm text-gray-300 mb-2";
     message.textContent = this.options.message;
 
     const feedback = document.createElement("p");
     feedback.dataset.feedback = "";
-    feedback.className = this.isModal
-      ? "hidden text-sm mb-4 text-gray-300"
-      : "hidden text-sm mb-4 text-gray-500";
+    feedback.className = "hidden text-sm mb-4 text-gray-300";
     feedback.setAttribute("role", "status");
 
     const form = document.createElement("form");
@@ -89,9 +77,7 @@ export class TwoFactorVerification {
 
     const label = document.createElement("label");
     label.htmlFor = "code";
-    label.className = this.isModal
-      ? "text-sm font-medium text-gray-200"
-      : "text-sm font-medium text-gray-700";
+    label.className = "text-sm font-medium text-gray-200";
     label.textContent = "Verification Code";
 
     let resendButton: HTMLButtonElement | null = null;
@@ -99,9 +85,7 @@ export class TwoFactorVerification {
       resendButton = document.createElement("button");
       resendButton.type = "button";
       resendButton.dataset.resend = "";
-      resendButton.className = this.isModal
-        ? "text-cyan-300 hover:text-cyan-200 text-sm"
-        : "text-blue-600 hover:underline text-sm";
+      resendButton.className = "text-cyan-300 hover:text-cyan-200 text-sm";
       resendButton.textContent = this.options.resendLabel;
     }
 
@@ -113,9 +97,8 @@ export class TwoFactorVerification {
     input.maxLength = 6;
     input.required = true;
     input.inputMode = "numeric";
-    input.className = this.isModal
-      ? "block w-full px-3 py-2 bg-gray-950 border border-cyan-500/40 rounded-md shadow-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400 tracking-widest text-center"
-      : "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 tracking-widest text-center";
+    input.className =
+      "block w-full px-3 py-2 bg-gray-950 border border-cyan-500/40 rounded-md shadow-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400 tracking-widest text-center";
     input.placeholder = "123456";
 
     labelRow.appendChild(label);
@@ -128,9 +111,7 @@ export class TwoFactorVerification {
 
     const error = document.createElement("div");
     error.dataset.error = "";
-    error.className = this.isModal
-      ? "hidden text-sm text-red-300"
-      : "hidden text-sm text-red-600";
+    error.className = "hidden text-sm text-red-300";
 
     const actions = document.createElement("div");
     actions.className = "space-y-2";
@@ -138,9 +119,8 @@ export class TwoFactorVerification {
     const submit = document.createElement("button");
     submit.type = "submit";
     submit.dataset.submit = "";
-    submit.className = this.isModal
-      ? "w-full bg-cyan-600 hover:bg-cyan-500 text-white py-2 px-4 rounded disabled:opacity-60"
-      : "w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded disabled:opacity-60";
+    submit.className =
+      "w-full bg-cyan-600 hover:bg-cyan-500 text-white py-2 px-4 rounded disabled:opacity-60";
     submit.textContent = this.options.verifyLabel;
 
     let cancelButton: HTMLButtonElement | null = null;
@@ -148,9 +128,8 @@ export class TwoFactorVerification {
       cancelButton = document.createElement("button");
       cancelButton.type = "button";
       cancelButton.dataset.cancel = "";
-      cancelButton.className = this.isModal
-        ? "w-full bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded"
-        : "w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded";
+      cancelButton.className =
+        "w-full bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded";
       cancelButton.textContent = this.options.cancelLabel;
     }
 
@@ -273,9 +252,9 @@ export class TwoFactorVerification {
     variant: "success" | "info" | "error" = "success",
   ): void {
     const colors = {
-      success: this.isModal ? "text-green-300" : "text-green-600",
-      info: this.isModal ? "text-cyan-300" : "text-blue-600",
-      error: this.isModal ? "text-red-300" : "text-red-600",
+      success: "text-green-300",
+      info: "text-cyan-300",
+      error: "text-red-300",
     };
     this.elements.feedback.textContent = message;
     this.elements.feedback.className = `text-sm mb-4 ${colors[variant]}`;
@@ -283,8 +262,7 @@ export class TwoFactorVerification {
   }
 
   public clearFeedback(): void {
-    const baseColor = this.isModal ? "text-gray-300" : "text-gray-500";
-    this.elements.feedback.className = `hidden text-sm mb-4 ${baseColor}`;
+    this.elements.feedback.className = "hidden text-sm mb-4 text-gray-300";
     this.elements.feedback.textContent = "";
   }
 

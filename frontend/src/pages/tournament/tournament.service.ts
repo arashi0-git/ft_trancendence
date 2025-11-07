@@ -339,6 +339,8 @@ export class TournamentService {
         startButtonText: buttons.startTournament || "Start Tournament",
         backButtonText: buttons.home || "Back to Home",
         requireHumanPlayer: true,
+        playerCountOptions: [4, 8], // トーナメントは4人と8人
+        defaultPlayerCount: 4, // デフォルトは4人
         translations: {
           setup: setup,
           playerSelector: playerSelector,
@@ -415,14 +417,7 @@ export class TournamentService {
   }
 
   getBackButtonTemplate(): string {
-    if (this.currentStep === "registration") {
-      return "";
-    }
-
-    const stepCopy =
-      this.navigationCopy[this.currentStep] ?? this.navigationCopy.fallback;
-    const backText = stepCopy.backButtonLabel;
-    return `<button id="back-button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded border border-purple-400">${backText}</button>`;
+    return "";
   }
 
   private addEventListenerWithTracking(
@@ -527,7 +522,6 @@ export class TournamentService {
 
     container.innerHTML = `
       <div class="text-center mb-4">
-        <h3 class="text-xl font-bold">${bracket.heading || "Current Bracket"}</h3>
         <p class="text-gray-300">${remainingText}</p>
       </div>
       <div class="space-y-4 mb-6">
@@ -734,6 +728,12 @@ export class TournamentService {
   }
 
   navigateToMatch(matchId: string): void {
+    // ブラケット画面の履歴に「試合から戻る」フラグを設定
+    window.history.replaceState(
+      { fromMatch: true },
+      "",
+      window.location.pathname,
+    );
     this.navigate(`/tournament/match/${matchId}`);
   }
 
@@ -750,10 +750,10 @@ export class TournamentService {
         router.navigate("/tournament");
         break;
       case "match":
-        this.navigateToBracket();
+        router.navigate("/tournament");
         break;
       case "results":
-        this.navigateToBracket();
+        router.navigate("/tournament");
         break;
       default:
         this.navigate("/");

@@ -258,7 +258,6 @@
       "criticalMatch": "A critical error occurred while saving the match."
     },
     "bracket": {
-      "heading": "Current Bracket",
       "remaining": "{{roundName}} ({{count}} players remaining)",
       "unknownPlayer": "Unknown",
       "vs": "vs"

@@ -8,8 +8,6 @@ import type {
 import { setupPasswordToggles } from "../utils/password-toggle-utils";
 import { i18next } from "../../i18n";
 
-const eyeIconUrl = new URL("../../../images/icon/eye_icon.png", import.meta.url)
-  .href;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export class RegisterForm {
@@ -68,11 +66,11 @@ export class RegisterForm {
     const homeLabel = this.translations.home || "Back to Home";
 
     this.container.innerHTML = `
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold mb-4 text-center">${heading}</h2>
+      <div class="border border-cyan-500/30 rounded-lg p-6 bg-gray-900/95 shadow-xl backdrop-blur-sm">
+        <h2 class="text-2xl font-bold mb-4 text-center text-cyan-200">Create an Account</h2>
         <form id="register-form" class="space-y-4">
           <div>
-            <label for="username" class="block text-sm font-medium text-gray-700">${usernameLabel}</label>
+            <label for="username" class="block text-sm font-medium text-gray-200">Username</label>
             <input
               type="text"
               id="username"
@@ -80,23 +78,23 @@ export class RegisterForm {
               required
               minlength="3"
               maxlength="20"
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="${usernamePlaceholder}"
+              class="mt-1 block w-full px-3 py-2 bg-gray-950 border border-cyan-500/40 rounded-md shadow-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400"
+              placeholder="Choose a username"
             >
           </div>
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">${emailLabel}</label>
+            <label for="email" class="block text-sm font-medium text-gray-200">Email</label>
             <input
               type="email"
               id="email"
               name="email"
               required
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="${emailPlaceholder}"
+              class="mt-1 block w-full px-3 py-2 bg-gray-950 border border-cyan-500/40 rounded-md shadow-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400"
+              placeholder="you@example.com"
             >
           </div>
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700">${passwordLabel}</label>
+            <label for="password" class="block text-sm font-medium text-gray-200">Password</label>
             <div class="mt-1 relative">
               <input
                 type="password"
@@ -104,59 +102,59 @@ export class RegisterForm {
                 name="password"
                 required
                 minlength="6"
-                class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="${passwordPlaceholder}"
+                class="block w-full px-3 py-2 pr-10 bg-gray-950 border border-cyan-500/40 rounded-md shadow-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400"
+                placeholder="Enter a secure password"
               >
               <button
                 type="button"
-                class="password-toggle absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                aria-label="${passwordToggleLabels.show}"
+                class="password-toggle absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                aria-label="Show password"
                 data-target="password"
                 data-visible="false"
               ></button>
             </div>
-            <p class="text-xs text-gray-500 mt-1">${passwordHelp}</p>
+            <p class="text-xs text-gray-400 mt-1">At least 6 characters.</p>
           </div>
           <div>
-            <label for="confirm-password" class="block text-sm font-medium text-gray-700">${confirmLabel}</label>
+            <label for="confirm-password" class="block text-sm font-medium text-gray-200">Confirm Password</label>
             <div class="mt-1 relative">
               <input
                 type="password"
                 id="confirm-password"
                 name="confirm-password"
                 required
-                class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="${confirmPlaceholder}"
+                class="block w-full px-3 py-2 pr-10 bg-gray-950 border border-cyan-500/40 rounded-md shadow-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400"
+                placeholder="Re-enter your password"
               >
               <button
                 type="button"
-                class="password-toggle absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                aria-label="${passwordToggleLabels.show}"
+                class="password-toggle absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                aria-label="Show password"
                 data-target="confirm-password"
                 data-visible="false"
               ></button>
             </div>
           </div>
-          <div id="register-error-message" class="hidden text-red-600 text-sm"></div>
+          <div id="register-error-message" class="hidden text-red-300 text-sm"></div>
           <div class="space-y-2">
             <button
-                type="submit"
-                id="register-submit"
-                class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              type="submit"
+              id="register-submit"
+              class="w-full bg-cyan-600 hover:bg-cyan-500 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
               ${submitLabel}
             </button>
             <button
               type="button"
               id="show-login"
-              class="w-full bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-700"
+              class="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-700"
             >
               ${loginLabel}
             </button>
             <button
               type="button"
               id="register-show-home"
-              class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+              class="w-full bg-gray-800 hover:bg-gray-700 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
               ${homeLabel}
             </button>
@@ -166,7 +164,7 @@ export class RegisterForm {
     `;
 
     this.attachEventListeners();
-    setupPasswordToggles(this.container, eyeIconUrl, passwordToggleLabels);
+    setupPasswordToggles(this.container);
   }
 
   private attachEventListeners(): void {

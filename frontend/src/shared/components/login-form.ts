@@ -10,9 +10,6 @@ import type {
 } from "../types/user";
 import { setupPasswordToggles } from "../utils/password-toggle-utils";
 
-const eyeIconUrl = new URL("../../../images/icon/eye_icon.png", import.meta.url)
-  .href;
-
 interface LoginErrorTranslations {
   required?: string;
   generic?: string;
@@ -73,60 +70,60 @@ export class LoginForm {
     this.twoFactorComponent = null;
 
     this.container.innerHTML = `
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold mb-4 text-center">${this.t.title || "Login"}</h2>
+      <div class="border border-cyan-500/30 rounded-lg p-6 bg-gray-900/95 shadow-xl backdrop-blur-sm">
+        <h2 class="text-2xl font-bold mb-4 text-center text-cyan-200">${this.t.title || "Login"}</h2>
         <form id="login-form" class="space-y-4">
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">${this.t.emailLabel || "Email"}</label>
+            <label for="email" class="block text-sm font-medium text-gray-200">${this.t.emailLabel || "Email"}</label>
             <input
               type="email"
               id="email"
               name="email"
               required
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              class="mt-1 block w-full px-3 py-2 bg-gray-950 border border-cyan-500/40 rounded-md shadow-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400"
               placeholder="${this.t.emailPlaceholder || "Enter your email"}"
             >
           </div>
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700">${this.t.passwordLabel || "Password"}</label>
+            <label for="password" class="block text-sm font-medium text-gray-200">${this.t.passwordLabel || "Password"}</label>
             <div class="mt-1 relative">
               <input
                 type="password"
                 id="password"
                 name="password"
                 required
-                class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                class="block w-full px-3 py-2 pr-10 bg-gray-950 border border-cyan-500/40 rounded-md shadow-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400"
                 placeholder="${this.t.passwordPlaceholder || "Enter your password"}"
               >
               <button
                 type="button"
-                class="password-toggle absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="password-toggle absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 aria-label="Show password"
                 data-target="password"
                 data-visible="false"
               ></button>
             </div>
           </div>
-          <div id="error-message" class="hidden text-red-600 text-sm"></div>
+          <div id="error-message" class="hidden text-red-300 text-sm"></div>
           <div class="space-y-2">
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               id="login-submit"
-              class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full bg-cyan-600 hover:bg-cyan-500 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
               ${this.t.submit || "Login"}
             </button>
-            <button 
-              type="button" 
+            <button
+              type="button"
               id="show-register"
-              class="w-full bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-700"
+              class="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-700"
             >
               ${this.t.register || "Don't have an account? Register"}
             </button>
-            <button 
-              type="button" 
+            <button
+              type="button"
               id="show-home"
-              class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+              class="w-full bg-gray-800 hover:bg-gray-700 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
               ${this.t.home || "Back to Home"}
             </button>
@@ -136,7 +133,7 @@ export class LoginForm {
     `;
 
     this.attachLoginListeners();
-    setupPasswordToggles(this.container, eyeIconUrl);
+    setupPasswordToggles(this.container);
   }
 
   private renderTwoFactorView(): void {
@@ -162,7 +159,6 @@ export class LoginForm {
     }
 
     this.twoFactorComponent = new TwoFactorVerification(dialogContainer, {
-      mode: "modal",
       message: this.buildTwoFactorMessage(this.twoFactorChallenge),
       resendLabel: "Resend email code",
       cancelLabel: "Back to Login",
