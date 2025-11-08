@@ -103,10 +103,6 @@ export class QuickPlayService extends BaseGameService {
 
       startBtn?.classList.add("hidden");
       pauseBtn?.classList.add("hidden");
-    } else {
-      this.notificationService.success(
-        `${this.getWinnerDisplayName(data.winner)} wins! 🎉`,
-      );
     }
     this.updateButtonStates(false);
   }

@@ -26,14 +26,6 @@ export abstract class BaseAiGameService extends BaseGameService {
     this.aiPlayer?.reset();
   }
 
-  protected changeDifficulty(difficulty: AiDifficulty): void {
-    this.currentDifficulty = difficulty;
-    if (this.aiPlayer) {
-      this.aiPlayer.setDifficulty(difficulty);
-    }
-    this.notificationService.info(`Difficulty changed to ${difficulty}`);
-  }
-
   cleanup(): void {
     this.aiPlayer?.cleanup();
     super.cleanup();

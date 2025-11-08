@@ -82,7 +82,7 @@
     },
     "customAlias": "ニックネーム",
     "customPlaceholder": "カスタム名を入力",
-    "currentUser": "{{username}}（あなた）",
+    "currentUser": "ログインユーザー",
     "aiDisplayName": "AI{{index}}({{difficulty}})",
     "leftSideLabel": "左サイド",
     "rightSideLabel": "右サイド"
@@ -145,6 +145,7 @@
     "errors": {
       "required": "メールアドレスとパスワードは必須です",
       "generic": "ログインに失敗しました",
+      "invalidCredentials": "メールアドレスまたはパスワードが正しくありません",
       "twoFactorInvalid": "メールで受け取った6桁のコードを入力してください",
       "twoFactorUnexpected": "コード検証中に予期しない応答がありました。",
       "twoFactorGeneric": "検証に失敗しました",
@@ -193,8 +194,10 @@
         "required": "すべての項目を入力してください。",
         "usernameLength": "ユーザー名は3〜20文字で入力してください。",
         "emailInvalid": "有効なメールアドレスを入力してください。",
+        "emailExists": "このメールアドレスは既に使用されています。",
         "passwordLength": "パスワードは6文字以上で入力してください。",
         "passwordMismatch": "パスワードが一致しません。",
+        "usernameExists": "このユーザー名は既に使用されています。",
         "generic": "登録に失敗しました。"
       },
       "passwordToggle": {

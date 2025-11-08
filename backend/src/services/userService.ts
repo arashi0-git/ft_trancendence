@@ -94,17 +94,20 @@ export class UserService {
     userData: CreateUserRequest,
   ): Promise<UserWithoutPassword> {
     try {
-      if (await UserModel.findByEmail(userData.email)) {
+      const normalizedUsername = userData.username.trim();
+      const normalizedEmail = this.normalizeEmail(userData.email);
+
+      if (await UserModel.findByEmail(normalizedEmail)) {
         throw new Error("User with this email already exists");
       }
-      if (await UserModel.findByUsername(userData.username)) {
+      if (await UserModel.findByUsername(normalizedUsername)) {
         throw new Error("User with this username already exists");
       }
 
       const passwordHash = await AuthUtils.hashPassword(userData.password);
       const newUser = await UserModel.create({
-        username: userData.username,
-        email: userData.email,
+        username: normalizedUsername,
+        email: normalizedEmail,
         passwordHash,
       });
 

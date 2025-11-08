@@ -43,8 +43,10 @@ export interface RegisterFormErrorTranslations {
   required?: string;
   usernameLength?: string;
   emailInvalid?: string;
+  emailExists?: string;
   passwordLength?: string;
   passwordMismatch?: string;
+  usernameExists?: string;
   generic?: string;
 }
 

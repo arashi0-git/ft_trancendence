@@ -487,6 +487,8 @@ export class AuthService {
         throw new Error("Failed to update settings");
       }
 
+      await this.applyUserLanguage(data.user);
+
       return data as UpdateUserSettingsResponse;
     } catch (error) {
       console.error("Update settings error:", error);

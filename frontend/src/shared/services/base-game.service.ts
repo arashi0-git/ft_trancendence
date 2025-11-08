@@ -1,9 +1,7 @@
 import { GameManagerService } from "./game-manager.service";
-import { NotificationService } from "./notification.service";
 
 export abstract class BaseGameService {
   protected gameManager: GameManagerService;
-  protected notificationService: NotificationService;
   protected controlListeners: Array<{
     element: HTMLElement;
     event: string;
@@ -12,7 +10,6 @@ export abstract class BaseGameService {
 
   constructor() {
     this.gameManager = new GameManagerService();
-    this.notificationService = NotificationService.getInstance();
   }
 
   // 共通のゲーム制御メソッド
@@ -23,7 +20,7 @@ export abstract class BaseGameService {
       this.onGameStart();
     } catch (error) {
       this.updateButtonStates(false);
-      this.notificationService.error("ゲームの開始に失敗しました");
+      console.log("Starting game failed");
       console.error("Failed to start game:", error);
     }
   }
@@ -35,7 +32,7 @@ export abstract class BaseGameService {
       this.onGamePause();
     } catch (error) {
       this.updateButtonStates(false);
-      this.notificationService.error("ゲームの一時停止に失敗しました");
+      console.log("Pausing game failed");
       console.error("Failed to pause game:", error);
     }
   }
@@ -47,7 +44,7 @@ export abstract class BaseGameService {
       this.onGameReset();
     } catch (error) {
       this.updateButtonStates(false);
-      this.notificationService.error("ゲームのリセットに失敗しました");
+      console.log("Resetting game failed");
       console.error("Failed to reset game:", error);
     }
   }

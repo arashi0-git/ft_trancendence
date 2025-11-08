@@ -8,7 +8,7 @@ export class LoginService {
       const loginForm = new LoginForm(loginContainer);
 
       loginForm.setOnLoginSuccess(() => {
-        this.navigateToHome();
+        this.navigateAfterLogin();
       });
 
       loginForm.setOnShowRegister(() => {
@@ -18,6 +18,17 @@ export class LoginService {
       loginForm.setOnShowHome(() => {
         this.navigateToHome();
       });
+    }
+  }
+
+  navigateAfterLogin(): void {
+    // Check if there's a stored return URL
+    const returnUrl = sessionStorage.getItem("returnUrl");
+    if (returnUrl) {
+      sessionStorage.removeItem("returnUrl");
+      this.navigate(returnUrl);
+    } else {
+      this.navigateToHome();
     }
   }
 

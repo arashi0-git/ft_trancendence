@@ -121,21 +121,9 @@ export class SecuritySection {
             "Two-factor authentication is now enabled.",
           );
         });
-      } else {
-        NotificationService.getInstance().success(
-          "Two-factor authentication is now enabled.",
-        );
-        if (result.user) {
-          this.onUserUpdate(result.user);
-        }
-        this.setTwoFactorButtonsDisabled(false);
       }
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to enable two-factor authentication.";
-      NotificationService.getInstance().error(message);
+      console.error(error);
       this.setTwoFactorButtonsDisabled(false);
     }
   }
@@ -168,21 +156,12 @@ export class SecuritySection {
             "Two-factor authentication has been disabled.",
           );
         });
-      } else {
-        NotificationService.getInstance().success(
-          "Two-factor authentication has been disabled.",
-        );
-        if (result.user) {
-          this.onUserUpdate(result.user);
-        }
-        this.setTwoFactorButtonsDisabled(false);
       }
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to disable two-factor authentication.";
-      NotificationService.getInstance().error(message);
+      NotificationService.getInstance().handleUnexpectedError(
+        error,
+        "Failed to disable two-factor authentication",
+      );
       this.setTwoFactorButtonsDisabled(false);
     }
   }
@@ -259,12 +238,10 @@ export class SecuritySection {
         );
       }
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Verification failed. Please try again.";
-      NotificationService.getInstance().error(message);
-      this.twoFactorComponent?.showFeedback(message, "error");
+      console.error("Two-factor verification failed:", error);
+      NotificationService.getInstance().error(
+        "Invalid verification code. Please try again.",
+      );
       this.twoFactorComponent?.resetCode();
       this.twoFactorComponent?.focus();
     }
@@ -292,11 +269,12 @@ export class SecuritySection {
       );
       this.twoFactorComponent.resetCode();
       this.twoFactorComponent.focus();
-      const feedbackMessage = refreshedChallenge.destination
-        ? `Sent a new verification code to ${refreshedChallenge.destination}.`
-        : "Sent a new verification code to your email.";
-      this.twoFactorComponent.showFeedback(feedbackMessage, "success");
     }
+
+    const feedbackMessage = refreshedChallenge.destination
+      ? `Sent a new verification code to ${refreshedChallenge.destination}.`
+      : "Sent a new verification code to your email.";
+    NotificationService.getInstance().success(feedbackMessage);
   }
 
   private handleTwoFactorDialogCancel(): void {

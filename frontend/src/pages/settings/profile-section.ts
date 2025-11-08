@@ -5,7 +5,6 @@ import { escapeHtml } from "../../shared/utils/html-utils";
 import {
   i18next,
   SupportedLanguage,
-  setLanguage,
   getCurrentLanguage,
   onLanguageChange,
 } from "../../i18n";
@@ -16,6 +15,7 @@ export class ProfileSection {
   private selectedFile: File | null = null;
   private avatarPreviewUrl: string | null = null;
   private unsubscribeLanguage?: () => void;
+  private pendingLanguage: SupportedLanguage | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -28,8 +28,12 @@ export class ProfileSection {
 
   render(user: PublicUser): void {
     this.user = user;
+    this.pendingLanguage = (user.language as SupportedLanguage) ?? null;
     const sanitizedProfileUrl = (user.profile_image_url ?? "").trim();
-    const currentLanguage = getCurrentLanguage();
+    const selectedLanguage =
+      this.pendingLanguage ??
+      (user.language as SupportedLanguage | null) ??
+      getCurrentLanguage();
 
     this.container.innerHTML = `
       <section class="space-y-4">
@@ -100,7 +104,7 @@ export class ProfileSection {
               type="button"
               id="lang-btn-en"
               class="px-3 py-2 rounded-lg text-center transition ${
-                currentLanguage === "en"
+                selectedLanguage === "en"
                   ? "bg-cyan-600 text-white border-2 border-cyan-400"
                   : "bg-gray-900/70 text-gray-300 border border-cyan-500/30 hover:bg-gray-800"
               }"
@@ -112,7 +116,7 @@ export class ProfileSection {
               type="button"
               id="lang-btn-cs"
               class="px-3 py-2 rounded-lg text-center transition ${
-                currentLanguage === "cs"
+                selectedLanguage === "cs"
                   ? "bg-cyan-600 text-white border-2 border-cyan-400"
                   : "bg-gray-900/70 text-gray-300 border border-cyan-500/30 hover:bg-gray-800"
               }"
@@ -124,7 +128,7 @@ export class ProfileSection {
               type="button"
               id="lang-btn-jp"
               class="px-3 py-2 rounded-lg text-center transition ${
-                currentLanguage === "jp"
+                selectedLanguage === "jp"
                   ? "bg-cyan-600 text-white border-2 border-cyan-400"
                   : "bg-gray-900/70 text-gray-300 border border-cyan-500/30 hover:bg-gray-800"
               }"
@@ -265,19 +269,9 @@ export class ProfileSection {
     }
   }
 
-  private async handleLanguageChange(
-    language: SupportedLanguage,
-  ): Promise<void> {
-    try {
-      const response = await AuthService.updateSettings({ language });
-      if ("user" in response && response.user) {
-        this.user = response.user;
-      }
-      await setLanguage(language);
-    } catch (error) {
-      console.error("Failed to change language:", error);
-      NotificationService.getInstance().error("Failed to change language.");
-    }
+  private handleLanguageChange(language: SupportedLanguage): void {
+    this.pendingLanguage = language;
+    this.updateLanguageButtons();
   }
 
   private derivePlaceholderInitial(user?: PublicUser): string {
@@ -315,7 +309,11 @@ export class ProfileSection {
     }
   }
 
-  getFormData(): { username?: string; email?: string } {
+  getFormData(): {
+    username?: string;
+    email?: string;
+    language?: SupportedLanguage;
+  } {
     const username = (
       document.getElementById("username") as HTMLInputElement
     )?.value.trim();
@@ -323,7 +321,11 @@ export class ProfileSection {
       document.getElementById("email") as HTMLInputElement
     )?.value.trim();
 
-    return { username, email };
+    const language =
+      this.pendingLanguage ??
+      (this.user?.language as SupportedLanguage | undefined);
+
+    return { username, email, language };
   }
 
   getPasswordData(): {
@@ -353,5 +355,39 @@ export class ProfileSection {
     this.selectedFile = null;
     this.unsubscribeLanguage?.();
     this.unsubscribeLanguage = undefined;
+    this.pendingLanguage = null;
+  }
+
+  private updateLanguageButtons(): void {
+    const activeLanguage =
+      this.pendingLanguage ?? (this.user?.language as SupportedLanguage | null);
+    const languages: SupportedLanguage[] = ["en", "cs", "jp"];
+    const activeClasses = [
+      "bg-cyan-600",
+      "text-white",
+      "border-2",
+      "border-cyan-400",
+    ];
+    const inactiveClasses = [
+      "bg-gray-900/70",
+      "text-gray-300",
+      "border",
+      "border-cyan-500/30",
+      "hover:bg-gray-800",
+    ];
+
+    languages.forEach((lang) => {
+      const button = document.getElementById(`lang-btn-${lang}`);
+      if (!button) return;
+      button.classList.remove(
+        ...activeClasses,
+        ...inactiveClasses,
+        "text-white",
+        "text-gray-300",
+      );
+      const isActive = activeLanguage === lang;
+      const classesToAdd = isActive ? activeClasses : inactiveClasses;
+      button.classList.add(...classesToAdd);
+    });
   }
 }
