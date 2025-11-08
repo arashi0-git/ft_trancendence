@@ -277,7 +277,7 @@
     "match": {
       "heading": "{{player1}} vs {{player2}}",
       "details": "{{identifier}} - First to {{points}} points wins",
-      "identifier": "Round {{roundNumber}} - Match {{matchNumber}}",
+      "identifier": "{{roundName}} - {{matchLabel}}",
       "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>: W/S (Up/Down)",
       "controlsRight": "<strong class=\"text-white\">{{player}}</strong>: ↑/↓ (Up/Down)",
       "playerDefault": "Player {{index}}",
@@ -293,10 +293,6 @@
       "semiFinal": "Semi-Final",
       "quarterFinal": "Quarter-Final",
       "round": "Round {{number}}"
-    },
-    "notifications": {
-      "tournamentComplete": "Tournament completed! 🏆",
-      "roundBegins": "{{roundName}} begins! 🥊"
     },
     "modal": {
       "playerWins": "{{player}} Wins!",

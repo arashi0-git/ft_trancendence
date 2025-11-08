@@ -278,7 +278,7 @@
     "match": {
       "heading": "{{player1}} 対 {{player2}}",
       "details": "{{identifier}} - 先に{{points}}ポイント取った方が勝利",
-      "identifier": "第{{roundNumber}}ラウンド - 第{{matchNumber}}試合",
+      "identifier": "{{roundName}} - {{matchLabel}}",
       "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>:W/S(上下)",
       "controlsRight": "<strong class=\"text-white\">{{player}}</strong>：↑/↓（上下）",
       "playerDefault": "プレイヤー{{index}}",
@@ -294,10 +294,6 @@
       "semiFinal": "準決勝",
       "quarterFinal": "準々決勝",
       "round": "第{{number}}ラウンド"
-    },
-    "notifications": {
-      "tournamentComplete": "トーナメントが終了しました！ 🏆",
-      "roundBegins": "{{roundName}} が始まります！ 🥊"
     },
     "modal": {
       "playerWins": "{{player}}の勝利！",

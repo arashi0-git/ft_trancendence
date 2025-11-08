@@ -7,6 +7,7 @@ import { PlayerRegistrationWithCountSelector } from "../../shared/components/pla
 import {
   type PlayerSelectorTranslations,
   type TranslationSection,
+  formatTemplate,
 } from "../../shared/types/translations";
 import { onLanguageChange, translate, i18next } from "../../i18n";
 import { escapeHtml } from "../../shared/utils/html-utils";
@@ -589,12 +590,30 @@ export class TournamentService {
         ? Number.parseInt(matchIdMatch[2], 10)
         : 1;
 
+    const tournament = this.tournamentData.getCurrentTournament();
+    const totalPlayers = tournament?.players.length ?? 0;
+    const localizedDefaultRound =
+      this.t.rounds?.round
+        ? formatTemplate(this.t.rounds.round, { number: roundNumber })
+        : `Round ${roundNumber}`;
+    const roundName =
+      totalPlayers > 0
+        ? this.getRoundName(roundNumber, totalPlayers)
+        : localizedDefaultRound;
+    const matchLabel = this.translateFn
+      ? ((this.translateFn("tournament.match.matchNumber", {
+          number: matchNumber,
+        }) as string) || `Match ${matchNumber}`)
+      : `Match ${matchNumber}`;
+
     const identifier = this.translateFn
       ? (this.translateFn("tournament.match.identifier", {
           roundNumber,
           matchNumber,
+          roundName,
+          matchLabel,
         }) as string)
-      : `Round ${roundNumber} - Match ${matchNumber}`;
+      : `${roundName} - ${matchLabel}`;
 
     const details = this.translateFn
       ? (this.translateFn("tournament.match.details", {

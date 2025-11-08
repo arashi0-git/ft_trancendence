@@ -278,7 +278,7 @@
     "match": {
       "heading": "{{player1}} versus {{player2}}",
       "details": "{{identifier}} - vítězí první na {{points}} bodů",
-      "identifier": "Kolo {{roundNumber}} - Zápas {{matchNumber}}",
+      "identifier": "{{roundName}} - {{matchLabel}}",
       "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>: W/S (nahoru/dolů)",
       "controlsRight": "<strong class=\"text-white\">{{player}}</strong>: ↑/↓ (nahoru/dolů)",
       "playerDefault": "Hráč {{index}}",
@@ -294,10 +294,6 @@
       "semiFinal": "Semifinále",
       "quarterFinal": "Čtvrtfinále",
       "round": "Kolo {{number}}"
-    },
-    "notifications": {
-      "tournamentComplete": "Turnaj dokončen! 🏆",
-      "roundBegins": "{{roundName}} začíná! 🥊"
     },
     "modal": {
       "playerWins": "Vítěz: {{player}}!",
