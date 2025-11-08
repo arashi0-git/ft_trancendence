@@ -28,7 +28,7 @@
     "logout": "Odhlásit se",
     "login": "Přihlásit se",
     "language": "🌐",
-    "logoutSuccess": "Úspěšně jste se odhlásili",
+    "logoutSuccess": "Úspěšně jsi se odhlásil",
     "logoutError": "Chyba při odhlášení: {{message}}",
     "logoutErrorFallback": "Během odhlášení došlo k chybě",
     "lang": {
@@ -38,7 +38,7 @@
     }
   },
   "settings": {
-    "languageDescription": "Vyberte preferovaný jazyk"
+    "languageDescription": "Vyber preferovaný jazyk"
   },
   "quickPlay": {
     "pageTitleSetup": "Rychlá hra - nastavení",
@@ -73,7 +73,7 @@
     "label": "Hráč {{index}}",
     "selectPlaceholder": "Vyber hráče nebo AI",
     "aiOption": "AI",
-    "customOption": "Zadat vlastní přezdívku",
+    "customOption": "Host",
     "aiDifficulty": "Obtížnost AI",
     "difficulty": {
       "easy": "Snadná",
@@ -83,6 +83,8 @@
     "customAlias": "Vlastní přezdívka",
     "customPlaceholder": "Zadej vlastní přezdívku",
     "currentUser": "{{username}} (ty)",
+    "loginUserOption": "Přihlášený uživatel",
+    "loginUserNameLabel": "Uživatelské jméno",
     "aiDisplayName": "AI {{index}} ({{difficulty}})",
     "leftSideLabel": "Levá strana",
     "rightSideLabel": "Pravá strana"
@@ -179,20 +181,20 @@
       "emailLabel": "E-mail",
       "emailPlaceholder": "vas@example.com",
       "passwordLabel": "Heslo",
-      "passwordPlaceholder": "Zadejte bezpečné heslo",
+      "passwordPlaceholder": "Zadej bezpečné heslo",
       "passwordHelp": "Nejméně 6 znaků.",
       "confirmLabel": "Potvrzení hesla",
-      "confirmPlaceholder": "Zadejte heslo znovu",
+      "confirmPlaceholder": "Zadej heslo znovu",
       "submit": "Vytvořit účet",
-      "login": "Máte už účet? Přihlaste se",
+      "login": "Máš už účet? Přihlas se",
       "home": "Zpět domů",
       "status": {
         "submitting": "Vytváření účtu..."
       },
       "errors": {
-        "required": "Vyplňte prosím všechna pole.",
+        "required": "Vyplň prosím všechna pole.",
         "usernameLength": "Uživatelské jméno musí mít 3 až 20 znaků.",
-        "emailInvalid": "Zadejte platnou e-mailovou adresu.",
+        "emailInvalid": "Zadej platnou e-mailovou adresu.",
         "passwordLength": "Heslo musí mít alespoň 6 znaků.",
         "passwordMismatch": "Hesla se neshodují.",
         "generic": "Registrace se nezdařila."

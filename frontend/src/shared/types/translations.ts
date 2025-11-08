@@ -16,6 +16,8 @@ export interface PlayerSelectorTranslations {
   customAlias?: string;
   customPlaceholder?: string;
   currentUser?: string;
+  loginUserOption?: string;
+  loginUserNameLabel?: string;
   aiDisplayName?: string;
   leftSideLabel?: string;
   rightSideLabel?: string;

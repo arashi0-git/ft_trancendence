@@ -73,7 +73,7 @@
     "label": "Player {{index}}",
     "selectPlaceholder": "Select player or AI",
     "aiOption": "AI",
-    "customOption": "guest player",
+    "customOption": "Guest player",
     "aiDifficulty": "AI Difficulty",
     "difficulty": {
       "easy": "Easy",
@@ -83,6 +83,8 @@
     "customAlias": "Custom Alias",
     "customPlaceholder": "Enter custom alias",
     "currentUser": "{{username}} (You)",
+    "loginUserOption": "Login user",
+    "loginUserNameLabel": "Username",
     "aiDisplayName": "AI {{index}} ({{difficulty}})",
     "leftSideLabel": "Left Side",
     "rightSideLabel": "Right Side"

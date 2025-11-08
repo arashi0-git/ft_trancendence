@@ -83,6 +83,8 @@
     "customAlias": "ニックネーム",
     "customPlaceholder": "カスタム名を入力",
     "currentUser": "{{username}}（あなた）",
+    "loginUserOption": "ログインユーザー",
+    "loginUserNameLabel": "ユーザー名",
     "aiDisplayName": "AI{{index}}({{difficulty}})",
     "leftSideLabel": "左サイド",
     "rightSideLabel": "右サイド"
