@@ -97,9 +97,16 @@ export class UserService {
       const normalizedUsername = userData.username.trim();
       const normalizedEmail = this.normalizeEmail(userData.email);
 
+      if (normalizedUsername.length === 0) {
+        throw new Error("Username cannot be empty");
+      }
+
+      this.validateEmailFormat(normalizedEmail);
+
       if (await UserModel.findByEmail(normalizedEmail)) {
         throw new Error("User with this email already exists");
       }
+
       if (await UserModel.findByUsername(normalizedUsername)) {
         throw new Error("User with this username already exists");
       }
