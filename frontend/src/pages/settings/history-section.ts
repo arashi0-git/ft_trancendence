@@ -1,5 +1,4 @@
 import { HistoryService } from "../../shared/services/history-service";
-import { NotificationService } from "../../shared/services/notification.service";
 import type { GameHistory, GameHistoryStats } from "../../shared/types/history";
 import { escapeHtml } from "../../shared/utils/html-utils";
 
@@ -83,7 +82,6 @@ export class HistorySection {
       this.historyLoaded = true;
     } catch (error) {
       console.error("Failed to load match history:", error);
-      NotificationService.getInstance().error("Failed to load match history");
       this.container.innerHTML = `
         <section class="space-y-4 border-t border-gray-700 pt-4">
           <h3 class="text-lg font-semibold text-cyan-200">Match History & Stats</h3>
@@ -123,7 +121,6 @@ export class HistorySection {
       this.hasMore = newHistory.length === this.BATCH_SIZE;
     } catch (error) {
       console.error("Failed to load more history:", error);
-      NotificationService.getInstance().error("Failed to load more games");
     } finally {
       this.isLoading = false;
 

@@ -75,7 +75,7 @@ export class NotificationService {
 
   private createNotification(
     message: string,
-    type: NotificationType
+    type: NotificationType,
   ): HTMLElement {
     const notification = document.createElement("div");
     notification.style.cssText = `
@@ -164,5 +164,11 @@ export class NotificationService {
 
   error(message: string, duration?: number): void {
     this.show(message, { type: "error", duration });
+  }
+
+  handleUnexpectedError(error: unknown, context?: string): void {
+    const prefix = context ? `${context}:` : "Unexpected error:";
+    console.error(prefix, error);
+    this.error("System error. Please try again later.");
   }
 }

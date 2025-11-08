@@ -45,13 +45,6 @@ export class UserSettingsService {
   ): Promise<UpdateUserSettingsResponse | TwoFactorChallengeResponse> {
     try {
       const response = await AuthService.updateSettings(payload);
-      if ("requiresTwoFactor" in response && response.requiresTwoFactor) {
-        if (response.user) {
-          this.currentUser = response.user;
-        }
-        return response;
-      }
-
       if (response.user) {
         this.currentUser = response.user;
       }

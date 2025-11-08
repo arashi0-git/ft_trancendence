@@ -129,7 +129,14 @@ export class AppHeader {
       this.bindClick("header-settings-btn", () => router.navigate("/settings"));
       this.bindClick("header-logout-btn", this.handleLogout.bind(this));
     } else {
-      this.bindClick("header-login-btn", () => router.navigate("/login"));
+      this.bindClick("header-login-btn", () => {
+        // Store the current path to return to after login
+        const currentPath = window.location.pathname;
+        if (currentPath !== "/login" && currentPath !== "/register") {
+          sessionStorage.setItem("returnUrl", currentPath);
+        }
+        router.navigate("/login");
+      });
       this.bindClick("header-language-btn", this.toggleLanguageMenu.bind(this));
       this.bindClick("header-lang-cs", () => this.handleSetLanguage("cs"));
       this.bindClick("header-lang-en", () => this.handleSetLanguage("en"));
@@ -192,19 +199,9 @@ export class AppHeader {
       );
       router.navigate("/");
     } catch (error) {
-      console.error("Logout failed:", error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : i18next.t(
-              "header.logoutErrorFallback",
-              "ログアウト処理でエラーが発生しました",
-            );
-
-      NotificationService.getInstance().error(
-        i18next.t("header.logoutError", "ログアウトエラー: {{message}}", {
-          message: errorMessage,
-        }),
+      NotificationService.getInstance().handleUnexpectedError(
+        error,
+        "Logout failed",
       );
       router.navigate("/");
     }

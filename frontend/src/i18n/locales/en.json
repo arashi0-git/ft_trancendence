@@ -82,7 +82,7 @@
     },
     "customAlias": "Custom Alias",
     "customPlaceholder": "Enter custom alias",
-    "currentUser": "{{username}} (You)",
+    "currentUser": "Login user",
     "loginUserOption": "Login user",
     "loginUserNameLabel": "Username",
     "aiDisplayName": "AI {{index}} ({{difficulty}})",
@@ -147,6 +147,7 @@
     "errors": {
       "required": "Email and password are required",
       "generic": "Login failed",
+      "invalidCredentials": "Invalid email or password",
       "twoFactorInvalid": "Enter the 6-digit code from your email",
       "twoFactorUnexpected": "Unexpected response while verifying code.",
       "twoFactorGeneric": "Verification failed",
@@ -195,8 +196,10 @@
         "required": "All fields are required.",
         "usernameLength": "Username must be between 3 and 20 characters.",
         "emailInvalid": "Please enter a valid email address.",
+        "emailExists": "A user with this email already exists.",
         "passwordLength": "Password must be at least 6 characters long.",
         "passwordMismatch": "Passwords do not match.",
+        "usernameExists": "A user with this username already exists.",
         "generic": "Registration failed"
       },
       "passwordToggle": {

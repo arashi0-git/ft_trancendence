@@ -1,3 +1,5 @@
+import { NotificationService } from "../services/notification.service";
+
 export interface TwoFactorVerificationOptions {
   message: string;
   verifyLabel?: string;
@@ -11,6 +13,7 @@ export interface TwoFactorVerificationOptions {
 
 export class TwoFactorVerification {
   private container: HTMLElement;
+  private notificationService = NotificationService.getInstance();
   private options: Required<
     Omit<TwoFactorVerificationOptions, "onResend" | "onCancel">
   > & {
@@ -21,8 +24,6 @@ export class TwoFactorVerification {
     message: HTMLElement;
     form: HTMLFormElement;
     input: HTMLInputElement;
-    error: HTMLElement;
-    feedback: HTMLElement;
     submit: HTMLButtonElement;
     resend: HTMLButtonElement | null;
     cancel: HTMLButtonElement | null;
@@ -60,11 +61,6 @@ export class TwoFactorVerification {
     message.dataset.message = "";
     message.className = "text-sm text-gray-300 mb-2";
     message.textContent = this.options.message;
-
-    const feedback = document.createElement("p");
-    feedback.dataset.feedback = "";
-    feedback.className = "hidden text-sm mb-4 text-gray-300";
-    feedback.setAttribute("role", "status");
 
     const form = document.createElement("form");
     form.className = "space-y-4";
@@ -109,10 +105,6 @@ export class TwoFactorVerification {
     inputBlock.appendChild(labelRow);
     inputBlock.appendChild(input);
 
-    const error = document.createElement("div");
-    error.dataset.error = "";
-    error.className = "hidden text-sm text-red-300";
-
     const actions = document.createElement("div");
     actions.className = "space-y-2";
 
@@ -139,12 +131,10 @@ export class TwoFactorVerification {
     }
 
     form.appendChild(inputBlock);
-    form.appendChild(error);
     form.appendChild(actions);
 
     wrapper.appendChild(title);
     wrapper.appendChild(message);
-    wrapper.appendChild(feedback);
     wrapper.appendChild(form);
 
     this.container.appendChild(wrapper);
@@ -153,8 +143,6 @@ export class TwoFactorVerification {
       message,
       form,
       input,
-      error,
-      feedback,
       submit,
       resend: resendButton,
       cancel: cancelButton,
@@ -176,20 +164,15 @@ export class TwoFactorVerification {
     const code = this.elements.input.value.trim();
 
     if (!/^\d{6}$/.test(code)) {
-      this.showError("Enter the 6-digit code from your email.");
+      this.notificationService.warning(
+        "Enter the 6-digit code from your email.",
+      );
       return;
     }
 
-    this.clearError();
-    this.clearFeedback();
     this.setLoading(true);
-
     try {
       await this.options.onSubmit(code);
-    } catch (error) {
-      this.showError(
-        error instanceof Error ? error.message : "Verification failed",
-      );
     } finally {
       this.setLoading(false);
     }
@@ -198,16 +181,16 @@ export class TwoFactorVerification {
   private async handleResend(): Promise<void> {
     if (!this.options.onResend) return;
 
-    this.clearError();
-    this.clearFeedback();
     this.setResendLoading(true);
 
     try {
       await this.options.onResend();
     } catch (error) {
-      this.showError(
-        error instanceof Error ? error.message : "Failed to resend code",
-      );
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : "Failed to resend code";
+      this.notificationService.error(message);
     } finally {
       this.setResendLoading(false);
     }
@@ -235,35 +218,6 @@ export class TwoFactorVerification {
   // Public API
   public updateMessage(message: string): void {
     this.elements.message.textContent = message;
-  }
-
-  public showError(message: string): void {
-    this.elements.error.textContent = message;
-    this.elements.error.classList.remove("hidden");
-  }
-
-  public clearError(): void {
-    this.elements.error.classList.add("hidden");
-    this.elements.error.textContent = "";
-  }
-
-  public showFeedback(
-    message: string,
-    variant: "success" | "info" | "error" = "success",
-  ): void {
-    const colors = {
-      success: "text-green-300",
-      info: "text-cyan-300",
-      error: "text-red-300",
-    };
-    this.elements.feedback.textContent = message;
-    this.elements.feedback.className = `text-sm mb-4 ${colors[variant]}`;
-    this.elements.feedback.classList.remove("hidden");
-  }
-
-  public clearFeedback(): void {
-    this.elements.feedback.className = "hidden text-sm mb-4 text-gray-300";
-    this.elements.feedback.textContent = "";
   }
 
   public resetCode(): void {

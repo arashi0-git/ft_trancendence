@@ -82,9 +82,9 @@
     },
     "customAlias": "Vlastní přezdívka",
     "customPlaceholder": "Zadej vlastní přezdívku",
-    "currentUser": "{{username}} (ty)",
+    "currentUser": "Přihlášený uživatel",
     "loginUserOption": "Přihlášený uživatel",
-    "loginUserNameLabel": "Uživatelské jméno",
+    "loginUserNameLabel": "Jméno uživatele ",
     "aiDisplayName": "AI {{index}} ({{difficulty}})",
     "leftSideLabel": "Levá strana",
     "rightSideLabel": "Pravá strana"
@@ -147,6 +147,7 @@
     "errors": {
       "required": "E-mail a heslo jsou povinné",
       "generic": "Přihlášení se nezdařilo",
+      "invalidCredentials": "Neplatný e-mail nebo heslo",
       "twoFactorInvalid": "Zadej šestimístný kód z e-mailu",
       "twoFactorUnexpected": "Neočekávaná odpověď při ověřování kódu.",
       "twoFactorGeneric": "Ověření se nezdařilo",
@@ -175,9 +176,9 @@
       "home": "Domů"
     },
     "form": {
-      "title": "Vytvořte si účet",
+      "title": "Vytvoř si účet",
       "usernameLabel": "Uživatelské jméno",
-      "usernamePlaceholder": "Zvolte uživatelské jméno",
+      "usernamePlaceholder": "Zvol uživatelské jméno",
       "emailLabel": "E-mail",
       "emailPlaceholder": "vas@example.com",
       "passwordLabel": "Heslo",
@@ -195,8 +196,10 @@
         "required": "Vyplň prosím všechna pole.",
         "usernameLength": "Uživatelské jméno musí mít 3 až 20 znaků.",
         "emailInvalid": "Zadej platnou e-mailovou adresu.",
+        "emailExists": "Uživatel s tímto e-mailem již existuje.",
         "passwordLength": "Heslo musí mít alespoň 6 znaků.",
         "passwordMismatch": "Hesla se neshodují.",
+        "usernameExists": "Uživatel s tímto uživatelským jménem již existuje.",
         "generic": "Registrace se nezdařila."
       },
       "passwordToggle": {

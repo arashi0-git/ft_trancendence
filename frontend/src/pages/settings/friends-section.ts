@@ -168,10 +168,11 @@ export class FriendsSection {
     submitButton?: HTMLButtonElement | null,
   ): Promise<void> {
     if (!AuthService.isAuthenticated()) {
-      NotificationService.getInstance().info(
-        "Please log in to manage your friends list.",
-      );
-      router.navigate("/login");
+      console.log("Please log in to manage your friends list.");
+      // Use setTimeout to navigate after current operation completes
+      setTimeout(() => {
+        router.navigate("/login");
+      }, 0);
       return;
     }
 
@@ -180,7 +181,6 @@ export class FriendsSection {
 
     const username = friendInput.value.trim();
     if (username.length === 0) {
-      NotificationService.getInstance().info("Please enter a username to add.");
       return;
     }
 
@@ -192,18 +192,16 @@ export class FriendsSection {
         submitButton.textContent = "Adding...";
       }
 
-      const user = await this.addFriend(username);
+      await this.addFriend(username);
       friendInput.value = "";
       friendInput.focus();
       this.friendsLoaded = true;
       this.updateFriendsList();
-      NotificationService.getInstance().success(
-        `Added ${user.username} to your friends list!`,
-      );
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to add that friend.";
-      NotificationService.getInstance().error(message);
+      NotificationService.getInstance().handleUnexpectedError(
+        error,
+        "Failed to add friend",
+      );
     } finally {
       if (submitButton) {
         submitButton.disabled = false;
@@ -229,7 +227,6 @@ export class FriendsSection {
     const userId = parseInt(dataUserId, 10);
     if (isNaN(userId)) return;
 
-    const friend = this.friends.find((u) => u.id === userId);
     const originalText = button.textContent ?? "Remove";
 
     button.disabled = true;
@@ -238,14 +235,11 @@ export class FriendsSection {
     try {
       await this.removeFriend(userId);
       this.updateFriendsList();
-      const displayName = friend?.username ?? "that user";
-      NotificationService.getInstance().info(
-        `Removed ${displayName} from your friends list.`,
-      );
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to remove that user.";
-      NotificationService.getInstance().error(message);
+      NotificationService.getInstance().handleUnexpectedError(
+        error,
+        "Failed to remove friend",
+      );
       button.disabled = false;
       button.textContent = originalText;
     }
@@ -280,7 +274,10 @@ export class FriendsSection {
 
       this.updateFriendsList();
     } catch (error) {
-      console.error("Failed to load friends list:", error);
+      NotificationService.getInstance().handleUnexpectedError(
+        error,
+        "Failed to load friends list",
+      );
       throw error;
     }
   }
