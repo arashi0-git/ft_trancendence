@@ -1,5 +1,6 @@
 import { AuthService } from "../services/auth-service";
 import { TwoFactorVerification } from "./two-factor-verification";
+import { NotificationService } from "../services/notification.service";
 import { i18next } from "../../i18n";
 import type {
   AuthResponse,
@@ -13,6 +14,7 @@ import { setupPasswordToggles } from "../utils/password-toggle-utils";
 interface LoginErrorTranslations {
   required?: string;
   generic?: string;
+  invalidCredentials?: string;
   twoFactorInvalid?: string;
   twoFactorUnexpected?: string;
   twoFactorGeneric?: string;
@@ -41,6 +43,7 @@ export class LoginForm {
   private container: HTMLElement;
   private twoFactorChallenge: TwoFactorChallengeResponse | null = null;
   private twoFactorComponent: TwoFactorVerification | null = null;
+  private notificationService = NotificationService.getInstance();
   private t: LoginTranslations = {};
 
   private onLoginSuccessCallback: (user: PublicUser) => void = () => {
@@ -104,7 +107,6 @@ export class LoginForm {
               ></button>
             </div>
           </div>
-          <div id="error-message" class="hidden text-red-300 text-sm"></div>
           <div class="space-y-2">
             <button
               type="submit"
@@ -209,16 +211,10 @@ export class LoginForm {
     const submitBtn = this.container.querySelector(
       "#login-submit",
     ) as HTMLButtonElement | null;
-    const errorDiv = this.container.querySelector(
-      "#error-message",
-    ) as HTMLDivElement | null;
-
-    if (!submitBtn || !errorDiv) {
+    if (!submitBtn) {
       console.error("Required form elements not found");
       return;
     }
-
-    errorDiv.classList.add("hidden");
 
     const loginData: LoginRequest = {
       email: (formData.get("email") as string) ?? "",
@@ -226,8 +222,9 @@ export class LoginForm {
     };
 
     if (!loginData.email || !loginData.password) {
-      errorDiv.textContent = "Email and password are required";
-      errorDiv.classList.remove("hidden");
+      this.notificationService.error(
+        this.t.errors?.required || "Email and password are required",
+      );
       return;
     }
 
@@ -246,9 +243,19 @@ export class LoginForm {
       this.handleLoginSuccess(response);
     } catch (error) {
       console.error("Login failed:", error);
-      errorDiv.textContent =
-        error instanceof Error ? error.message : "Login failed";
-      errorDiv.classList.remove("hidden");
+      const rawMessage =
+        error instanceof Error && error.message ? error.message : "";
+      const normalized = rawMessage.toLowerCase();
+      const messageKey: keyof LoginErrorTranslations =
+        /invalid email or password/.test(normalized)
+          ? "invalidCredentials"
+          : "generic";
+      const message =
+        this.t.errors?.[messageKey] ||
+        this.t.errors?.generic ||
+        rawMessage ||
+        "Login failed";
+      this.notificationService.error(message);
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = this.t.submit || "Login";
@@ -257,15 +264,26 @@ export class LoginForm {
 
   private async verifyTwoFactorCode(code: string): Promise<void> {
     if (!this.twoFactorChallenge?.twoFactorToken) {
-      throw new Error("Two-factor challenge missing");
+      const message =
+        this.t.errors?.twoFactorMissing ||
+        "Two-factor verification data is missing.";
+      this.notificationService.error(message);
+      return;
     }
 
-    const result = await AuthService.verifyTwoFactorCode({
-      token: this.twoFactorChallenge.twoFactorToken,
-      code,
-    });
-
-    this.handleLoginSuccess(result);
+    try {
+      const result = await AuthService.verifyTwoFactorCode({
+        token: this.twoFactorChallenge.twoFactorToken,
+        code,
+      });
+      this.handleLoginSuccess(result);
+    } catch (error) {
+      console.error("Login two-factor verification failed:", error);
+      const message =
+        this.t.errors?.twoFactorGeneric ||
+        "Invalid verification code. Please try again.";
+      this.notificationService.error(message);
+    }
   }
 
   private async resendTwoFactorCode(): Promise<void> {
@@ -282,13 +300,14 @@ export class LoginForm {
       this.twoFactorComponent.updateMessage(
         this.buildTwoFactorMessage(challenge),
       );
-      const feedbackMessage = challenge.destination
-        ? `We sent another verification code to ${challenge.destination}.`
-        : "We sent another verification code to your email.";
       this.twoFactorComponent.resetCode();
       this.twoFactorComponent.focus();
-      this.twoFactorComponent.showFeedback(feedbackMessage, "success");
     }
+
+    const feedbackMessage = challenge.destination
+      ? `We sent another verification code to ${challenge.destination}.`
+      : "We sent another verification code to your email.";
+    this.notificationService.success(feedbackMessage);
   }
 
   private handleLoginSuccess(response: AuthResponse): void {

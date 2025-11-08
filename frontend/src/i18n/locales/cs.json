@@ -82,7 +82,7 @@
     },
     "customAlias": "Vlastní přezdívka",
     "customPlaceholder": "Zadej vlastní přezdívku",
-    "currentUser": "{{username}} (ty)",
+    "currentUser": "Přihlášený uživatel",
     "aiDisplayName": "AI {{index}} ({{difficulty}})",
     "leftSideLabel": "Levá strana",
     "rightSideLabel": "Pravá strana"
@@ -145,6 +145,7 @@
     "errors": {
       "required": "E-mail a heslo jsou povinné",
       "generic": "Přihlášení se nezdařilo",
+      "invalidCredentials": "Neplatný e-mail nebo heslo",
       "twoFactorInvalid": "Zadej šestimístný kód z e-mailu",
       "twoFactorUnexpected": "Neočekávaná odpověď při ověřování kódu.",
       "twoFactorGeneric": "Ověření se nezdařilo",
@@ -193,8 +194,10 @@
         "required": "Vyplňte prosím všechna pole.",
         "usernameLength": "Uživatelské jméno musí mít 3 až 20 znaků.",
         "emailInvalid": "Zadejte platnou e-mailovou adresu.",
+        "emailExists": "Uživatel s tímto e-mailem již existuje.",
         "passwordLength": "Heslo musí mít alespoň 6 znaků.",
         "passwordMismatch": "Hesla se neshodují.",
+        "usernameExists": "Uživatel s tímto uživatelským jménem již existuje.",
         "generic": "Registrace se nezdařila."
       },
       "passwordToggle": {

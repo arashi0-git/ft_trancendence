@@ -46,20 +46,14 @@ export async function userRoutes(fastify: FastifyInstance) {
 
           if (normalizedEmail !== user.email.toLowerCase()) {
             const { email: _unused, ...updatesWithoutEmail } = payload;
+            const hasAdditionalUpdates = Object.values(
+              updatesWithoutEmail,
+            ).some((value) => value !== undefined);
 
-            if (
-              Object.prototype.hasOwnProperty.call(
-                updatesWithoutEmail,
-                "currentPassword",
-              ) ||
-              Object.prototype.hasOwnProperty.call(
-                updatesWithoutEmail,
-                "newPassword",
-              )
-            ) {
+            if (hasAdditionalUpdates) {
               return reply.status(400).send({
                 error:
-                  "Password changes cannot be combined with an email change that requires verification.",
+                  "Email changes must be submitted separately when two-factor authentication is enabled.",
               });
             }
 
@@ -74,21 +68,6 @@ export async function userRoutes(fastify: FastifyInstance) {
               },
             );
 
-            let resultUser = user;
-            let resultToken: string | undefined;
-
-            if (Object.keys(updatesWithoutEmail).length > 0) {
-              const updateResult = await UserService.updateUserSettings(
-                request.user.id,
-                updatesWithoutEmail,
-              );
-              resultUser = updateResult.user;
-              resultToken = updateResult.token;
-            } else {
-              resultUser =
-                (await UserService.getUserById(request.user.id)) ?? user;
-            }
-
             return reply.send({
               requiresTwoFactor: true,
               twoFactorToken: challenge.token,
@@ -97,8 +76,7 @@ export async function userRoutes(fastify: FastifyInstance) {
               message: challenge.message,
               purpose: challenge.purpose,
               destination: challenge.destination,
-              user: resultUser,
-              token: resultToken,
+              user,
             });
           }
         }

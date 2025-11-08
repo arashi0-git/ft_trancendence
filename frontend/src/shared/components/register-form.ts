@@ -6,11 +6,13 @@ import type {
 } from "../types/translations";
 import { setupPasswordToggles } from "../utils/password-toggle-utils";
 import { i18next } from "../../i18n";
+import { NotificationService } from "../services/notification.service";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export class RegisterForm {
   private abortController: AbortController;
+  private notificationService = NotificationService.getInstance();
   private onRegisterSuccess: (user: PublicUser) => void = () => {};
   private onShowLogin: () => void = () => {};
   private onShowHome: () => void = () => {};
@@ -102,7 +104,6 @@ export class RegisterForm {
               ></button>
             </div>
           </div>
-          <div id="register-error-message" class="hidden text-red-300 text-sm"></div>
           <div class="space-y-2">
             <button
               type="submit"
@@ -175,17 +176,11 @@ export class RegisterForm {
 
     const submitBtn =
       this.container.querySelector<HTMLButtonElement>("#register-submit");
-    const errorDiv = this.container.querySelector<HTMLDivElement>(
-      "#register-error-message",
-    );
 
-    if (!submitBtn || !errorDiv) {
+    if (!submitBtn) {
       console.error("Register form controls not found");
       return;
     }
-
-    errorDiv.textContent = "";
-    errorDiv.classList.add("hidden");
 
     const validationError = this.validateFormData(
       username,
@@ -195,8 +190,7 @@ export class RegisterForm {
     );
 
     if (validationError) {
-      errorDiv.textContent = validationError;
-      errorDiv.classList.remove("hidden");
+      this.notificationService.error(validationError);
       return;
     }
 
@@ -217,12 +211,31 @@ export class RegisterForm {
       const response = await AuthService.register(payload);
       this.onRegisterSuccess(response.user);
     } catch (error) {
-      const message =
-        error instanceof Error && error.message
-          ? error.message
-          : this.translations.errors?.generic || "Registration failed";
-      errorDiv.textContent = message;
-      errorDiv.classList.remove("hidden");
+      const errors = this.translations.errors || {};
+      let message =
+        errors.generic ||
+        (error instanceof Error && error.message) ||
+        "Registration failed";
+
+      if (error instanceof Error && error.message) {
+        const normalized = error.message.toLowerCase();
+        if (normalized.includes("email") && normalized.includes("exists")) {
+          message =
+            errors.emailExists ||
+            errors.emailInvalid ||
+            "A user with this email already exists.";
+        } else if (
+          normalized.includes("username") &&
+          normalized.includes("exists")
+        ) {
+          message =
+            errors.usernameExists ||
+            errors.usernameLength ||
+            "A user with this username already exists.";
+        }
+      }
+
+      this.notificationService.error(message);
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = submitLabel;

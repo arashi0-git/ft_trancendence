@@ -316,7 +316,6 @@ export class TournamentService {
     const reg = this.t.registration || {};
     const setup = this.t.setup || {};
     const buttons = this.t.buttons || {};
-    const errors = this.t.errors || {};
     const playerSelector = i18next.t("playerSelector", {
       returnObjects: true,
     }) as TranslationSection;
@@ -379,22 +378,17 @@ export class TournamentService {
             this.tournamentData.generateMatches();
             this.navigateToBracket();
           } catch (error) {
-            console.error("Error generating matches:", error);
-            const message =
-              error instanceof Error && error.message ? error.message : "";
-            const errorMessage = this.translateFn
-              ? (this.translateFn(errors.startTournament, {
-                  message,
-                }) as string)
-              : `Failed to generate matches: ${message}`;
-            this.notificationService.error(errorMessage);
+            this.notificationService.handleUnexpectedError(
+              error,
+              "Failed to generate matches",
+            );
           }
         },
       });
     } catch (error) {
-      console.error("Failed to render registration view:", error);
-      this.notificationService.error(
-        reg.error || "Failed to render registration view",
+      this.notificationService.handleUnexpectedError(
+        error,
+        "Failed to render registration view",
       );
       router.navigate("/");
     }
@@ -887,8 +881,6 @@ export class TournamentService {
     score: { player1: number; player2: number },
   ): void {
     console.log(`Handling Match End: ${matchId}`);
-    const tNotifications = this.t.notifications || {};
-    const tErrors = this.t.errors || {};
 
     try {
       const match = this.tournamentData.getMatch(matchId);
@@ -937,28 +929,9 @@ export class TournamentService {
         console.log("Continue button clicked. Checking tournament state...");
         if (this.tournamentData.isTournamentComplete()) {
           console.log("Tournament completed, navigating to results.");
-          this.notificationService.success(
-            tNotifications.tournamentComplete || "Tournament completed! 🏆",
-          );
           this.navigateToResults();
         } else if (this.tournamentData.canAdvanceToNextRound()) {
           console.log("Advancing to next round.");
-          const success = this.tournamentData.generateNextRound();
-          if (success) {
-            const currentRound =
-              this.tournamentData.getCurrentTournament()?.currentRound;
-            const tournament = this.tournamentData.getCurrentTournament();
-            const roundName = tournament
-              ? this.getRoundName(currentRound || 1, tournament.players.length)
-              : `Round ${currentRound}`;
-            this.notificationService.info(
-              this.translateFn
-                ? (this.translateFn("tournament.notifications.roundBegins", {
-                    roundName: roundName,
-                  }) as string)
-                : `${roundName} begins! 🥊`,
-            );
-          }
           this.navigateToBracket();
         } else {
           console.log("Current round not finished. Navigating to bracket.");
@@ -975,10 +948,6 @@ export class TournamentService {
       }
     } catch (error) {
       console.error("Error in handleMatchEnd:", error);
-      this.notificationService.error(
-        tErrors.criticalMatch ||
-          "A critical error occurred while saving the match.",
-      );
       this.navigateToBracket();
     }
   }

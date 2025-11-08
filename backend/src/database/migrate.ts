@@ -97,6 +97,25 @@ export async function runMigrations(): Promise<void> {
           }
         }
 
+        if (file === "003_add_user_language.sql") {
+          const columns = await db.all<TableColumnInfo>(
+            "PRAGMA table_info(users)",
+          );
+          const hasLanguage = columns.some(
+            (column) => column.name === "language",
+          );
+
+          if (hasLanguage) {
+            console.log(
+              `Skipping migration ${file}; language column already exists`,
+            );
+            await db.run("INSERT INTO migrations (filename) VALUES (?)", [
+              file,
+            ]);
+            continue;
+          }
+        }
+
         console.log(`Running migration: ${file}`);
         const migrationPath = path.join(migrationsDir, file);
         const migrationSQL = fs.readFileSync(migrationPath, "utf8");

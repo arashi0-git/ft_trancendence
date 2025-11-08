@@ -27,10 +27,11 @@ export class UserSettingsPage extends SpacePageBase {
 
   render(): void {
     if (!AuthService.isAuthenticated()) {
-      NotificationService.getInstance().info(
-        "Please log in to manage your profile.",
-      );
-      router.navigate("/login");
+      console.log("Please log in to manage your profile.");
+      // Use setTimeout to navigate after current render cycle completes
+      setTimeout(() => {
+        router.navigate("/login");
+      }, 0);
       return;
     }
 
@@ -65,9 +66,6 @@ export class UserSettingsPage extends SpacePageBase {
       this.historySection = new HistorySection(historyContainer);
       this.historySection.render().catch((error) => {
         console.error("Failed to render history section:", error);
-        NotificationService.getInstance().error(
-          "Failed to load match history.",
-        );
       });
     }
 
@@ -118,7 +116,7 @@ export class UserSettingsPage extends SpacePageBase {
             <button
               type="button"
               id="back-to-home-btn"
-              class="w-full bg-gray-700 hover:bg-gray-600 text-white py-3 px-6 rounded-lg font-semibold transition"
+              class="w-full bg-yellow-600 bg-opacity-30 hover:bg-opacity-50 text-white py-3 px-6 rounded-lg font-semibold border border-yellow-500 shadow-lg transition-all duration-200"
             >
               Back to Home
             </button>
@@ -141,6 +139,19 @@ export class UserSettingsPage extends SpacePageBase {
 
   private async handleFormSubmit(event: Event): Promise<void> {
     event.preventDefault();
+    let currentUser = this.service.getUser();
+    if (!currentUser) {
+      try {
+        currentUser = await this.service.loadCurrentUser();
+        this.initialEmail = currentUser.email;
+        this.profileSection?.render(currentUser);
+        this.securitySection?.render(currentUser);
+      } catch (error) {
+        console.error("Failed to reload user before saving settings:", error);
+        return;
+      }
+    }
+
     const saveButton = document.getElementById(
       "save-profile-btn",
     ) as HTMLButtonElement | null;
@@ -151,15 +162,65 @@ export class UserSettingsPage extends SpacePageBase {
         saveButton.textContent = "Saving...";
       }
 
-      // Upload avatar if changed
-      if (this.profileSection?.hasAvatarChange()) {
-        await this.profileSection.uploadAvatar();
-      }
-
-      // Build payload from form data
-      const payload: UpdateUserSettingsPayload = {};
       const profileData = this.profileSection?.getFormData();
       const passwordData = this.profileSection?.getPasswordData();
+      const hasAvatarChange = this.profileSection?.hasAvatarChange() ?? false;
+
+      const trimmedUsername = profileData?.username?.trim() ?? "";
+      const trimmedEmail = profileData?.email?.trim() ?? "";
+
+      const payload: UpdateUserSettingsPayload = {};
+
+      if (trimmedUsername && trimmedUsername !== currentUser.username) {
+        payload.username = trimmedUsername;
+      }
+
+      const normalizedEmail = trimmedEmail.toLowerCase();
+      const normalizedCurrentEmail = currentUser.email.toLowerCase();
+      if (trimmedEmail && normalizedEmail !== normalizedCurrentEmail) {
+        payload.email = trimmedEmail;
+      }
+
+      if (
+        profileData?.language &&
+        profileData.language !== currentUser.language
+      ) {
+        payload.language = profileData.language;
+      }
+
+      const passwordChangeAttempted = Boolean(
+        passwordData?.currentPassword ||
+          passwordData?.newPassword ||
+          passwordData?.confirmPassword,
+      );
+
+      const emailChangeRequested = Boolean(payload.email);
+      const otherProfileFieldChanges =
+        Object.prototype.hasOwnProperty.call(payload, "username") ||
+        Object.prototype.hasOwnProperty.call(payload, "language");
+      const hasProfileFieldChanges =
+        emailChangeRequested || otherProfileFieldChanges;
+      const hasAdditionalUpdates =
+        otherProfileFieldChanges || passwordChangeAttempted || hasAvatarChange;
+
+      if (
+        !hasProfileFieldChanges &&
+        !passwordChangeAttempted &&
+        !hasAvatarChange
+      ) {
+        return;
+      }
+
+      if (
+        currentUser.two_factor_enabled &&
+        emailChangeRequested &&
+        hasAdditionalUpdates
+      ) {
+        NotificationService.getInstance().warning(
+          "Email changes must be saved separately when two-factor authentication is enabled.",
+        );
+        return;
+      }
 
       // Validate password confirmation if attempting to change password
       if (passwordData?.newPassword || passwordData?.confirmPassword) {
@@ -167,29 +228,26 @@ export class UserSettingsPage extends SpacePageBase {
           NotificationService.getInstance().error(
             "New password and confirm password do not match.",
           );
-          if (saveButton) {
-            saveButton.disabled = false;
-            saveButton.textContent = "Save Changes";
-          }
           return;
         }
       }
 
-      if (profileData?.username) payload.username = profileData.username;
-      if (profileData?.email) payload.email = profileData.email;
-      if (passwordData?.currentPassword)
+      if (hasAvatarChange && this.profileSection) {
+        await this.profileSection.uploadAvatar();
+      }
+
+      if (passwordData?.currentPassword) {
         payload.currentPassword = passwordData.currentPassword;
-      if (passwordData?.newPassword)
+      }
+      if (passwordData?.newPassword) {
         payload.newPassword = passwordData.newPassword;
+      }
 
       // Save settings
       const response = await this.service.saveSettings(payload);
 
       // Handle 2FA challenge for email change
       if ("requiresTwoFactor" in response && response.requiresTwoFactor) {
-        NotificationService.getInstance().info(
-          "Enter the verification code we emailed you.",
-        );
         this.securitySection?.showTwoFactorDialogForEmailChange(
           response,
           () => {
@@ -210,9 +268,10 @@ export class UserSettingsPage extends SpacePageBase {
         "Profile updated successfully!",
       );
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to update settings.";
-      NotificationService.getInstance().error(message);
+      NotificationService.getInstance().handleUnexpectedError(
+        error,
+        "Failed to update settings",
+      );
     } finally {
       if (saveButton) {
         saveButton.disabled = false;
@@ -223,6 +282,7 @@ export class UserSettingsPage extends SpacePageBase {
 
   private handleUserUpdate(user: PublicUser): void {
     this.service.setCurrentUser(user);
+    this.initialEmail = user.email;
     this.profileSection?.render(user);
     this.securitySection?.render(user);
   }

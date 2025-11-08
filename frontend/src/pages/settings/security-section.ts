@@ -60,7 +60,7 @@ export class SecuritySection {
       </section>
 
       <!-- Two-Factor Dialog -->
-      <div id="twofactor-dialog" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div id="twofactor-dialog" class="hidden fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 pt-96">
         <div class="w-full max-w-md" id="twofactor-dialog-content"></div>
       </div>
     `;
@@ -116,29 +116,14 @@ export class SecuritySection {
       }
 
       if ("requiresTwoFactor" in result && result.requiresTwoFactor) {
-        NotificationService.getInstance().info(
-          "Enter the verification code we emailed you.",
-        );
         this.showTwoFactorDialog(result, () => {
           NotificationService.getInstance().success(
             "Two-factor authentication is now enabled.",
           );
         });
-      } else {
-        NotificationService.getInstance().success(
-          "Two-factor authentication is now enabled.",
-        );
-        if (result.user) {
-          this.onUserUpdate(result.user);
-        }
-        this.setTwoFactorButtonsDisabled(false);
       }
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to enable two-factor authentication.";
-      NotificationService.getInstance().error(message);
+      console.error(error);
       this.setTwoFactorButtonsDisabled(false);
     }
   }
@@ -166,29 +151,17 @@ export class SecuritySection {
       }
 
       if ("requiresTwoFactor" in result && result.requiresTwoFactor) {
-        NotificationService.getInstance().info(
-          "Enter the verification code we emailed you.",
-        );
         this.showTwoFactorDialog(result, () => {
           NotificationService.getInstance().success(
             "Two-factor authentication has been disabled.",
           );
         });
-      } else {
-        NotificationService.getInstance().success(
-          "Two-factor authentication has been disabled.",
-        );
-        if (result.user) {
-          this.onUserUpdate(result.user);
-        }
-        this.setTwoFactorButtonsDisabled(false);
       }
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to disable two-factor authentication.";
-      NotificationService.getInstance().error(message);
+      NotificationService.getInstance().handleUnexpectedError(
+        error,
+        "Failed to disable two-factor authentication",
+      );
       this.setTwoFactorButtonsDisabled(false);
     }
   }
@@ -265,12 +238,10 @@ export class SecuritySection {
         );
       }
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Verification failed. Please try again.";
-      NotificationService.getInstance().error(message);
-      this.twoFactorComponent?.showFeedback(message, "error");
+      console.error("Two-factor verification failed:", error);
+      NotificationService.getInstance().error(
+        "Invalid verification code. Please try again.",
+      );
       this.twoFactorComponent?.resetCode();
       this.twoFactorComponent?.focus();
     }
@@ -298,22 +269,19 @@ export class SecuritySection {
       );
       this.twoFactorComponent.resetCode();
       this.twoFactorComponent.focus();
-      const feedbackMessage = refreshedChallenge.destination
-        ? `Sent a new verification code to ${refreshedChallenge.destination}.`
-        : "Sent a new verification code to your email.";
-      this.twoFactorComponent.showFeedback(feedbackMessage, "success");
     }
+
+    const feedbackMessage = refreshedChallenge.destination
+      ? `Sent a new verification code to ${refreshedChallenge.destination}.`
+      : "Sent a new verification code to your email.";
+    NotificationService.getInstance().success(feedbackMessage);
   }
 
   private handleTwoFactorDialogCancel(): void {
     if (this.activeTwoFactorChallenge?.purpose === "email_change") {
       this.onEmailRestore();
     }
-
     this.hideTwoFactorDialog();
-    NotificationService.getInstance().info(
-      "Two-factor verification canceled. Your changes were not applied.",
-    );
   }
 
   private buildTwoFactorMessage(challenge: TwoFactorChallengeResponse): string {
