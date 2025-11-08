@@ -7,6 +7,7 @@ import {
   SupportedLanguage,
   getCurrentLanguage,
   onLanguageChange,
+  isSupportedLanguage,
 } from "../../i18n";
 
 export class ProfileSection {
@@ -28,12 +29,15 @@ export class ProfileSection {
 
   render(user: PublicUser): void {
     this.user = user;
-    this.pendingLanguage = (user.language as SupportedLanguage) ?? null;
+    const safeUserLanguage: SupportedLanguage | null = isSupportedLanguage(
+      user.language,
+    )
+      ? user.language
+      : null;
+    this.pendingLanguage = safeUserLanguage;
     const sanitizedProfileUrl = (user.profile_image_url ?? "").trim();
     const selectedLanguage =
-      this.pendingLanguage ??
-      (user.language as SupportedLanguage | null) ??
-      getCurrentLanguage();
+      this.pendingLanguage ?? safeUserLanguage ?? getCurrentLanguage();
 
     this.container.innerHTML = `
       <section class="space-y-4">
@@ -323,7 +327,9 @@ export class ProfileSection {
 
     const language =
       this.pendingLanguage ??
-      (this.user?.language as SupportedLanguage | undefined);
+      (this.user && isSupportedLanguage(this.user.language)
+        ? this.user.language
+        : undefined);
 
     return { username, email, language };
   }

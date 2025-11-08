@@ -243,15 +243,18 @@ export class LoginForm {
       this.handleLoginSuccess(response);
     } catch (error) {
       console.error("Login failed:", error);
-      let messageKey: keyof LoginErrorTranslations = "generic";
-      if (
-        error instanceof Error &&
-        /invalid email or password/i.test(error.message)
-      ) {
-        messageKey = "invalidCredentials";
-      }
+      const rawMessage =
+        error instanceof Error && error.message ? error.message : "";
+      const normalized = rawMessage.toLowerCase();
+      const messageKey: keyof LoginErrorTranslations =
+        /invalid email or password/.test(normalized)
+          ? "invalidCredentials"
+          : "generic";
       const message =
-        this.t.errors?.[messageKey] || this.t.errors?.generic || "Login failed";
+        this.t.errors?.[messageKey] ||
+        this.t.errors?.generic ||
+        rawMessage ||
+        "Login failed";
       this.notificationService.error(message);
     } finally {
       submitBtn.disabled = false;

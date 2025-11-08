@@ -188,11 +188,6 @@ export class UserSettingsPage extends SpacePageBase {
         payload.language = profileData.language;
       }
 
-      const hasProfileFieldChanges =
-        Object.prototype.hasOwnProperty.call(payload, "username") ||
-        Object.prototype.hasOwnProperty.call(payload, "email") ||
-        Object.prototype.hasOwnProperty.call(payload, "language");
-
       const passwordChangeAttempted = Boolean(
         passwordData?.currentPassword ||
           passwordData?.newPassword ||
@@ -200,8 +195,13 @@ export class UserSettingsPage extends SpacePageBase {
       );
 
       const emailChangeRequested = Boolean(payload.email);
+      const otherProfileFieldChanges =
+        Object.prototype.hasOwnProperty.call(payload, "username") ||
+        Object.prototype.hasOwnProperty.call(payload, "language");
+      const hasProfileFieldChanges =
+        emailChangeRequested || otherProfileFieldChanges;
       const hasAdditionalUpdates =
-        hasProfileFieldChanges || passwordChangeAttempted || hasAvatarChange;
+        otherProfileFieldChanges || passwordChangeAttempted || hasAvatarChange;
 
       if (
         !hasProfileFieldChanges &&

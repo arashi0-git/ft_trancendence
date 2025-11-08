@@ -133,7 +133,8 @@ export class UserService {
     email: string,
     password: string,
   ): Promise<UserWithoutPassword | null> {
-    const user = await UserModel.findByEmail(email);
+    const normalizedEmail = this.normalizeEmail(email);
+    const user = await UserModel.findByEmail(normalizedEmail);
 
     if (!user) {
       return null; // User not found

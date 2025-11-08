@@ -18,7 +18,9 @@ export type LanguageChangeHandler = (language: SupportedLanguage) => void;
 
 const listeners = new Set<LanguageChangeHandler>();
 
-const isSupportedLanguage = (value: unknown): value is SupportedLanguage =>
+export const isSupportedLanguage = (
+  value: unknown,
+): value is SupportedLanguage =>
   typeof value === "string" &&
   Object.prototype.hasOwnProperty.call(resources, value);
 
