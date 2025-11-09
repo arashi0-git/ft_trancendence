@@ -116,6 +116,47 @@ export async function runMigrations(): Promise<void> {
           }
         }
 
+        if (file === "004_add_match_type_and_round.sql") {
+          const columns = await db.all<TableColumnInfo>(
+            "PRAGMA table_info(game_history)",
+          );
+          const hasMatchType = columns.some(
+            (column) => column.name === "match_type",
+          );
+          const hasTournamentRound = columns.some(
+            (column) => column.name === "tournament_round",
+          );
+
+          if (hasMatchType && hasTournamentRound) {
+            console.log(
+              `Skipping migration ${file}; match_type and tournament_round columns already exist`,
+            );
+            await db.run("INSERT INTO migrations (filename) VALUES (?)", [
+              file,
+            ]);
+            continue;
+          }
+        }
+
+        if (file === "005_add_tournament_name_to_history.sql") {
+          const columns = await db.all<TableColumnInfo>(
+            "PRAGMA table_info(game_history)",
+          );
+          const hasTournamentName = columns.some(
+            (column) => column.name === "tournament_name",
+          );
+
+          if (hasTournamentName) {
+            console.log(
+              `Skipping migration ${file}; tournament_name column already exists`,
+            );
+            await db.run("INSERT INTO migrations (filename) VALUES (?)", [
+              file,
+            ]);
+            continue;
+          }
+        }
+
         console.log(`Running migration: ${file}`);
         const migrationPath = path.join(migrationsDir, file);
         const migrationSQL = fs.readFileSync(migrationPath, "utf8");

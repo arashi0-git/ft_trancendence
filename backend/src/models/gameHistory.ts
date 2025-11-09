@@ -4,6 +4,7 @@ import type {
   GameHistoryStats,
   GameHistoryFilters,
   CreateGameHistoryInput,
+  MatchType,
 } from "../types/history";
 
 interface GameHistoryRecord {
@@ -11,6 +12,9 @@ interface GameHistoryRecord {
   user_id: number;
   tournament_id: number | null;
   teammate: string | null;
+  match_type: MatchType;
+  tournament_round: string | null;
+  tournament_name: string | null;
   my_score: number;
   opponent_score: number;
   is_winner: number; // SQLite stores boolean as 0/1
@@ -24,6 +28,9 @@ function toGameHistory(record: GameHistoryRecord): GameHistory {
     userId: record.user_id,
     tournamentId: record.tournament_id,
     teammate: record.teammate,
+    matchType: record.match_type,
+    tournamentRound: record.tournament_round,
+    tournamentName: record.tournament_name,
     myScore: record.my_score,
     opponentScore: record.opponent_score,
     isWinner: Boolean(record.is_winner),
@@ -35,12 +42,15 @@ function toGameHistory(record: GameHistoryRecord): GameHistory {
 export class GameHistoryModel {
   static async create(input: CreateGameHistoryInput): Promise<GameHistory> {
     await db.run(
-      `INSERT INTO game_history (user_id, tournament_id, teammate, my_score, opponent_score, is_winner, opponent_info, finished_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO game_history (user_id, tournament_id, teammate, match_type, tournament_round, tournament_name, my_score, opponent_score, is_winner, opponent_info, finished_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         input.userId,
         input.tournamentId ?? null,
         input.teammate ?? null,
+        input.matchType ?? "quick",
+        input.tournamentRound ?? null,
+        input.tournamentName ?? null,
         input.myScore,
         input.opponentScore,
         input.isWinner ? 1 : 0,
@@ -65,7 +75,7 @@ export class GameHistoryModel {
     filters?: GameHistoryFilters,
   ): Promise<GameHistory[]> {
     let query = `SELECT * FROM game_history WHERE user_id = ?`;
-    const params: number[] = [userId];
+    const params: (number | string)[] = [userId];
 
     if (filters?.tournamentId !== undefined) {
       query += ` AND tournament_id = ?`;
@@ -75,6 +85,11 @@ export class GameHistoryModel {
     if (filters?.isWinner !== undefined) {
       query += ` AND is_winner = ?`;
       params.push(filters.isWinner ? 1 : 0);
+    }
+
+    if (filters?.matchType) {
+      query += ` AND match_type = ?`;
+      params.push(filters.matchType);
     }
 
     query += ` ORDER BY finished_at DESC`;

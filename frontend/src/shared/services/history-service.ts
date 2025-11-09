@@ -2,6 +2,7 @@ import type {
   GameHistory,
   GameHistoryStats,
   GameHistoryFilters,
+  MatchType,
 } from "../types/history";
 
 declare const __API_BASE_URL__: string | undefined;
@@ -20,6 +21,9 @@ interface CreateGameHistoryRequest {
   isWinner: boolean;
   opponentInfo: string;
   finishedAt: string;
+  matchType?: MatchType;
+  tournamentRound?: string | null;
+  tournamentName?: string | null;
 }
 
 interface CreateGameHistoryResponse {
@@ -54,10 +58,15 @@ export class HistoryService {
    */
   static async saveGame(data: CreateGameHistoryRequest): Promise<GameHistory> {
     try {
+      const payload: CreateGameHistoryRequest = {
+        ...data,
+        matchType: data.matchType ?? "quick",
+        tournamentName: data.tournamentName ?? null,
+      };
       const response = await fetch(`${API_BASE_URL}/history`, {
         method: "POST",
         headers: this.getAuthHeaders(),
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -87,6 +96,9 @@ export class HistoryService {
       if (filters?.isWinner !== undefined) {
         params.append("isWinner", filters.isWinner.toString());
       }
+      if (filters?.matchType) {
+        params.append("matchType", filters.matchType);
+      }
       if (filters?.limit !== undefined) {
         params.append("limit", filters.limit.toString());
       }
@@ -110,7 +122,15 @@ export class HistoryService {
       }
 
       const result: GameHistoryResponse = await response.json();
-      return result.history;
+      const normalizedHistory: GameHistory[] = result.history.map((game) => {
+        const matchType: MatchType =
+          game.matchType === "tournament" ? "tournament" : "quick";
+        return {
+          ...game,
+          matchType,
+        };
+      });
+      return normalizedHistory;
     } catch (error) {
       console.error("Error fetching game history:", error);
       throw error;

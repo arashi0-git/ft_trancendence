@@ -198,6 +198,10 @@ JWT_SECRET=your-jwt-secret-key
 ## Security Features
 
 - HTTPS enforced with security headers
+
+## Changelog
+
+- **2025-11-09** — Tournament names are now limited to 30 characters on the UI and backend validation paths. Long names (≈50 chars) were overflowing the history cards in the settings screen, so we shortened the allowed length to keep layouts readable. Existing data remains untouched, but any new tournament history entries must comply with the 30-character limit.
 - JWT-based authentication
 - XSS protection with input sanitization
 - CSRF protection
