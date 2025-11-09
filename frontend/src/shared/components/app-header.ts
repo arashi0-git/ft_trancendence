@@ -39,8 +39,8 @@ export class AppHeader {
 
     return `
       <header class="p-4 bg-transparent">
-        <div class="grid grid-cols-3 items-center">
-          <div></div>
+        <div class="flex flex-col gap-4 sm:grid sm:grid-cols-[auto_1fr_auto] sm:gap-0 sm:items-center">
+          <div class="hidden sm:block" aria-hidden="true"></div>
           <div class="text-center">
             <h1 class="text-3xl font-bold">
               <a
@@ -52,7 +52,7 @@ export class AppHeader {
               </a>
             </h1>
           </div>
-          <div class="flex justify-end items-center space-x-3">
+          <div class="flex flex-wrap justify-center sm:justify-end items-center gap-3">
             ${authButtons}
           </div>
         </div>
