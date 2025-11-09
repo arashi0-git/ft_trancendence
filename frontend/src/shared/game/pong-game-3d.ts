@@ -859,6 +859,8 @@ export class PongGame3D {
     this.canvas.width = width;
     this.canvas.height = height;
 
+    this.renderer.setGameSize(width, height);
+
     // ゲーム状態を新しいサイズに合わせて調整
     this.adjustGameStateToNewSize();
 
