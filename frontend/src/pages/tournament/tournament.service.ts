@@ -517,9 +517,8 @@ export class TournamentService {
       })
       .join("");
 
-    const totalPlayers = tournament.players.length;
     const remainingPlayers = currentRoundMatches.length * 2;
-    const roundName = this.getRoundName(tournament.currentRound, totalPlayers);
+    const roundName = this.getRoundLabel(tournament.currentRound);
     const remainingText = this.translateFn
       ? (this.translateFn("tournament.bracket.remaining", {
           roundName: roundName,
@@ -601,7 +600,7 @@ export class TournamentService {
       : `Round ${roundNumber}`;
     const roundName =
       totalPlayers > 0
-        ? this.getRoundName(roundNumber, totalPlayers)
+        ? this.getRoundLabel(roundNumber)
         : localizedDefaultRound;
     const matchLabel = this.translateFn
       ? (this.translateFn("tournament.match.matchNumber", {
@@ -736,25 +735,6 @@ export class TournamentService {
       this.tournamentData.clearTournament();
       router.navigate("/tournament");
     });
-  }
-
-  private getRoundName(currentRound: number, totalPlayers: number): string {
-    const totalRounds = Math.log2(totalPlayers);
-    const tRounds = this.t.rounds || {};
-
-    if (currentRound === totalRounds) {
-      return tRounds.final || "Final";
-    } else if (currentRound === totalRounds - 1) {
-      return tRounds.semiFinal || "Semi-Final";
-    } else if (currentRound === totalRounds - 2) {
-      return tRounds.quarterFinal || "Quarter-Final";
-    } else {
-      return this.translateFn
-        ? (this.translateFn("tournament.rounds.round", {
-            number: currentRound,
-          }) as string)
-        : `Round ${currentRound}`;
-    }
   }
 
   private attachEventListenersToElements(
