@@ -127,14 +127,7 @@ export class PlayerSelector {
         const user = await AuthService.getCurrentUser();
         const username = user.username?.trim() ?? "";
         const actualUsername = username || user.username || "";
-        const template = this.t.currentUser || "{{username}}";
-        const loginUserLabel =
-          this.t.loginUserOption?.trim() ||
-          (template.includes("{{username}}")
-            ? formatTemplate(template, {
-                username: actualUsername,
-              })
-            : actualUsername || template);
+        const loginUserLabel = this.t.loginUserOption?.trim();
         options.push({
           id: `user-${user.id}`,
           displayName: loginUserLabel || "login user",
