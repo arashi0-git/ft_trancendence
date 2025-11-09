@@ -917,6 +917,8 @@ export class PongGame3D {
     const ball = this.gameState.ball;
     ball.x = Math.round(ball.x * widthRatio);
     ball.y = Math.round(ball.y * heightRatio);
+    // 速度は累積スケーリングではなく、config.ballSpeedに基づいて正規化
+    this.ensureBallAtFullSpeed();
     ball.x = clamp(ball.x, ball.radius, this.config.canvasWidth - ball.radius);
     ball.y = clamp(ball.y, ball.radius, this.config.canvasHeight - ball.radius);
   }
