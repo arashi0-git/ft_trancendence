@@ -853,14 +853,19 @@ export class PongGame3D {
   }
 
   private handleResize(): void {
+    const previousWidth = this.config.canvasWidth;
+    const previousHeight = this.config.canvasHeight;
+
     const { width, height } = this.calculateResponsiveSize();
     this.config.canvasWidth = width;
     this.config.canvasHeight = height;
     this.canvas.width = width;
     this.canvas.height = height;
 
+    this.renderer.setGameSize(width, height);
+
     // ゲーム状態を新しいサイズに合わせて調整
-    this.adjustGameStateToNewSize();
+    this.adjustGameStateToNewSize(previousWidth, previousHeight);
 
     // 3Dオブジェクトを更新
     this.renderer.updateGameObjects(this.gameState);
@@ -869,30 +874,53 @@ export class PongGame3D {
     this.engine.resize();
   }
 
-  private adjustGameStateToNewSize(): void {
-    if (!this.gameState) return;
+  private adjustGameStateToNewSize(
+    previousWidth: number,
+    previousHeight: number,
+  ): void {
+    if (!this.gameState || previousWidth <= 0 || previousHeight <= 0) {
+      return;
+    }
 
-    // プレイヤーの位置を新しいサイズに合わせて調整
-    const p1 = this.gameState.player1.paddle;
-    const p2 = this.gameState.player2.paddle;
+    const widthRatio = this.config.canvasWidth / previousWidth;
+    const heightRatio = this.config.canvasHeight / previousHeight;
 
-    // Player1の位置調整
-    p1.y = Math.min(p1.y, this.config.canvasHeight - this.config.paddleHeight);
+    const clamp = (value: number, min: number, max: number): number =>
+      Math.min(Math.max(value, min), max);
 
-    // Player2の位置調整
-    p2.x = this.config.canvasWidth - 30;
-    p2.y = Math.min(p2.y, this.config.canvasHeight - this.config.paddleHeight);
+    const updatePaddlePosition = (player?: Player | null): void => {
+      if (!player) return;
 
-    // ボールの位置調整
+      const paddle = player.paddle;
+      paddle.x = Math.round(paddle.x * widthRatio);
+      paddle.y = Math.round(paddle.y * heightRatio);
+
+      paddle.minY = 0;
+      paddle.maxY = Math.max(
+        this.config.canvasHeight - paddle.height,
+        paddle.minY,
+      );
+
+      paddle.x = clamp(paddle.x, 0, this.config.canvasWidth - paddle.width);
+      paddle.y = clamp(
+        paddle.y,
+        paddle.minY ?? 0,
+        paddle.maxY ?? this.config.canvasHeight - paddle.height,
+      );
+    };
+
+    updatePaddlePosition(this.gameState.player1);
+    updatePaddlePosition(this.gameState.player2);
+    updatePaddlePosition(this.gameState.player3 || undefined);
+    updatePaddlePosition(this.gameState.player4 || undefined);
+
     const ball = this.gameState.ball;
-    ball.x = Math.min(
-      Math.max(ball.x, ball.radius),
-      this.config.canvasWidth - ball.radius,
-    );
-    ball.y = Math.min(
-      Math.max(ball.y, ball.radius),
-      this.config.canvasHeight - ball.radius,
-    );
+    ball.x = Math.round(ball.x * widthRatio);
+    ball.y = Math.round(ball.y * heightRatio);
+    // 速度は累積スケーリングではなく、config.ballSpeedに基づいて正規化
+    this.ensureBallAtFullSpeed();
+    ball.x = clamp(ball.x, ball.radius, this.config.canvasWidth - ball.radius);
+    ball.y = clamp(ball.y, ball.radius, this.config.canvasHeight - ball.radius);
   }
 
   public destroy(): void {
