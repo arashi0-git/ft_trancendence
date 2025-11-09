@@ -2,6 +2,8 @@ import { HistoryService } from "../../shared/services/history-service";
 import type { GameHistory, GameHistoryStats } from "../../shared/types/history";
 import { escapeHtml } from "../../shared/utils/html-utils";
 
+type HistoryFilter = "all" | "quick" | "tournament";
+
 export class HistorySection {
   private container: HTMLElement;
   private stats: GameHistoryStats | null = null;
@@ -11,6 +13,7 @@ export class HistorySection {
   private offset = 0;
   private hasMore = true;
   private readonly BATCH_SIZE = 10;
+  private matchFilter: HistoryFilter = "all";
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -69,10 +72,18 @@ export class HistorySection {
     this.isLoading = true;
 
     try {
-      // Load both stats and initial history in parallel
+      const statsPromise = this.stats
+        ? Promise.resolve(this.stats)
+        : HistoryService.getMyStats();
+      const historyPromise = HistoryService.getMyHistory({
+        limit: this.BATCH_SIZE,
+        offset: 0,
+        matchType: this.matchFilter === "all" ? undefined : this.matchFilter,
+      });
+
       const [stats, history] = await Promise.all([
-        HistoryService.getMyStats(),
-        HistoryService.getMyHistory({ limit: this.BATCH_SIZE, offset: 0 }),
+        statsPromise,
+        historyPromise,
       ]);
 
       this.stats = stats;
@@ -114,6 +125,7 @@ export class HistorySection {
       const newHistory = await HistoryService.getMyHistory({
         limit: this.BATCH_SIZE,
         offset: this.offset,
+        matchType: this.matchFilter === "all" ? undefined : this.matchFilter,
       });
 
       this.history = [...this.history, ...newHistory];
@@ -161,16 +173,24 @@ export class HistorySection {
 
   private renderHistory(): string {
     if (this.history.length === 0) {
+      const emptyMessage =
+        "No matches yet. Play some games to see your history here!";
       return `
-        <div class="text-center p-6 bg-gray-900/40 rounded border border-cyan-500/20">
-          <p class="text-sm text-gray-400">No match history yet. Play some games to see your history here!</p>
+        <div>
+          ${this.renderFilterControls()}
+          <div class="text-center p-6 bg-gray-900/40 rounded border border-cyan-500/20">
+            <p class="text-sm text-gray-400">${emptyMessage}</p>
+          </div>
         </div>
       `;
     }
 
     return `
       <div class="space-y-2">
-        <h4 class="text-sm font-semibold text-cyan-300">Recent Matches</h4>
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <h4 class="text-sm font-semibold text-cyan-300">Recent Matches</h4>
+          ${this.renderFilterControls()}
+        </div>
         <div class="space-y-2">
           ${this.history.map((game) => this.renderGameCard(game)).join("")}
         </div>
@@ -200,28 +220,59 @@ export class HistorySection {
       minute: "2-digit",
     });
 
-    const resultBadge = game.isWinner
-      ? '<span class="px-2 py-0.5 bg-green-600/30 text-green-400 text-[12px] rounded">Win</span>'
-      : '<span class="px-2 py-0.5 bg-red-600/30 text-red-400 text-[12px] rounded">Loss</span>';
+    const [resultClass, resultText] = game.isWinner
+      ? ["bg-green-600/30 text-green-400", "Win"]
+      : ["bg-red-600/30 text-red-400", "Loss"];
+    const resultBadge = `<span class="px-2 py-0.5 ${resultClass} text-[12px] rounded">${resultText}</span>`;
 
-    const gameType = game.tournamentId
-      ? `<span class="text-[12px] text-purple-400">🏆 Tournament</span>`
+    const tournamentName = game.tournamentName?.trim() || "Tournament";
+    const tournamentTitleAttr = escapeHtml(tournamentName);
+    const truncatedTournamentLabel =
+      tournamentName.length > 30
+        ? `${escapeHtml(tournamentName.slice(0, 27))}...`
+        : tournamentTitleAttr;
+    const matchType = game.matchType;
+    const isTournamentMatch =
+      Boolean(game.tournamentId) || matchType === "tournament";
+    const gameType = isTournamentMatch
+      ? `<span class="text-[12px] text-purple-400 inline-flex items-center gap-1 max-w-[180px]" title="${tournamentTitleAttr}"><span aria-hidden="true">🏆</span><span class="truncate">${truncatedTournamentLabel}</span></span>`
       : `<span class="text-[12px] text-blue-400">⚡ Quick Match</span>`;
 
     const teamInfo = game.teammate
       ? ` · With: ${escapeHtml(game.teammate)}`
       : "";
 
+    const [typeLabel, typeBadgeClass] =
+      matchType === "tournament"
+        ? [
+            "Tournament",
+            "bg-purple-600/20 text-purple-200 border border-purple-400/20",
+          ]
+        : [
+            "Quick Match",
+            "bg-cyan-600/20 text-cyan-100 border border-cyan-400/30",
+          ];
+    const roundBadge =
+      matchType === "tournament" && game.tournamentRound
+        ? `<span class="px-2 py-0.5 bg-purple-500/10 text-purple-200 text-[11px] rounded border border-purple-400/30">${escapeHtml(game.tournamentRound)}</span>`
+        : "";
+
     return `
     <div class="p-2 bg-gray-900/40 rounded border border-cyan-500/20 hover:border-cyan-500/40 transition">
-      <div class="flex justify-between items-center mb-1">
+      <div class="flex justify-between items-center mb-1 flex-wrap gap-2">
         <div class="flex items-center gap-2">
           ${gameType}
           <span class="text-[12px] text-gray-400">
             ${formattedDate} ${formattedTime}
           </span>
         </div>
-        ${resultBadge}
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-0.5 text-[11px] rounded ${typeBadgeClass}">
+            ${typeLabel}
+          </span>
+          ${roundBadge}
+          ${resultBadge}
+        </div>
       </div>
 
       <div class="text-[13px] text-gray-100">
@@ -237,6 +288,36 @@ export class HistorySection {
   `;
   }
 
+  private renderFilterControls(): string {
+    const options: Array<{ value: HistoryFilter; label: string }> = [
+      { value: "all", label: "All" },
+      { value: "quick", label: "Quick" },
+      { value: "tournament", label: "Tournament" },
+    ];
+    return `
+      <div class="flex gap-2" role="tablist">
+        ${options
+          .map(({ value, label }) => this.renderFilterButton(value, label))
+          .join("")}
+      </div>
+    `;
+  }
+
+  private renderFilterButton(filter: HistoryFilter, label: string): string {
+    const isActive = this.matchFilter === filter;
+    const classes = isActive
+      ? "bg-cyan-600 text-white border border-cyan-400"
+      : "bg-gray-900/70 text-gray-300 border border-cyan-500/30 hover:bg-gray-800";
+    return `<button
+        type="button"
+        data-filter="${filter}"
+        class="px-3 py-1 text-xs font-semibold rounded ${classes}"
+        aria-pressed="${isActive}"
+      >
+        ${label}
+      </button>`;
+  }
+
   private attachListeners(): void {
     const loadMoreButton = this.container.querySelector(
       '[data-action="load-more"]',
@@ -244,6 +325,29 @@ export class HistorySection {
     if (loadMoreButton) {
       loadMoreButton.addEventListener("click", () => this.loadMoreHistory());
     }
+
+    this.container
+      .querySelectorAll<HTMLButtonElement>("[data-filter]")
+      .forEach((button) => {
+        const filter = button.dataset.filter as HistoryFilter | undefined;
+        if (!filter) return;
+        button.addEventListener("click", () => {
+          void this.handleFilterClick(filter);
+        });
+      });
+  }
+
+  private async handleFilterClick(filter: HistoryFilter): Promise<void> {
+    if (this.matchFilter === filter || this.isLoading) {
+      return;
+    }
+    this.matchFilter = filter;
+    this.history = [];
+    this.offset = 0;
+    this.hasMore = true;
+    this.historyLoaded = false;
+    this.renderLoading();
+    await this.loadData();
   }
 
   destroy(): void {

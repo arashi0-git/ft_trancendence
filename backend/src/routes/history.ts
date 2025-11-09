@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { authenticateToken } from "../middleware/auth";
 import { GameHistoryModel } from "../models/gameHistory";
-import type { CreateGameHistoryInput } from "../types/history";
+import type { CreateGameHistoryInput, MatchType } from "../types/history";
 
 export async function historyRoutes(fastify: FastifyInstance) {
   // Create game history
@@ -23,7 +23,17 @@ export async function historyRoutes(fastify: FastifyInstance) {
             .send({ error: "Cannot create history for another user" });
         }
 
-        const history = await GameHistoryModel.create(input);
+        const matchType = input.matchType ?? "quick";
+        if (matchType !== "quick" && matchType !== "tournament") {
+          return reply
+            .status(400)
+            .send({ error: "Invalid match type provided" });
+        }
+
+        const history = await GameHistoryModel.create({
+          ...input,
+          matchType,
+        });
         return reply.status(201).send({ history });
       } catch (error) {
         fastify.log.error(error);
@@ -41,6 +51,7 @@ export async function historyRoutes(fastify: FastifyInstance) {
     Querystring: {
       tournamentId?: string;
       isWinner?: string;
+      matchType?: string;
       limit?: string;
       offset?: string;
     };
@@ -60,6 +71,7 @@ export async function historyRoutes(fastify: FastifyInstance) {
             : request.query.isWinner === "false"
               ? false
               : undefined,
+        matchType: request.query.matchType as MatchType | undefined,
         limit: request.query.limit ? Number(request.query.limit) : undefined,
         offset: request.query.offset ? Number(request.query.offset) : undefined,
       };
@@ -81,6 +93,13 @@ export async function historyRoutes(fastify: FastifyInstance) {
         (isNaN(filters.offset) || filters.offset < 0)
       ) {
         return reply.status(400).send({ error: "Invalid offset" });
+      }
+      if (
+        filters.matchType !== undefined &&
+        filters.matchType !== "quick" &&
+        filters.matchType !== "tournament"
+      ) {
+        return reply.status(400).send({ error: "Invalid matchType" });
       }
 
       const history = await GameHistoryModel.findByUserId(

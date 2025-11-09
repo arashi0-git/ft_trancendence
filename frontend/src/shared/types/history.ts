@@ -1,3 +1,5 @@
+export type MatchType = "quick" | "tournament";
+
 export interface GameHistory {
   id: number;
   userId: number;
@@ -8,6 +10,9 @@ export interface GameHistory {
   isWinner: boolean;
   opponentInfo: string;
   finishedAt: string;
+  matchType: MatchType;
+  tournamentRound?: string | null;
+  tournamentName?: string | null;
 }
 
 export interface GameHistoryStats {
@@ -21,6 +26,7 @@ export interface GameHistoryFilters {
   userId?: number;
   tournamentId?: number;
   isWinner?: boolean;
+  matchType?: MatchType;
   limit?: number;
   offset?: number;
 }

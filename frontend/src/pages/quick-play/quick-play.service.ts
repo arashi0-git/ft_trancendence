@@ -246,6 +246,9 @@ export class QuickPlayService extends BaseGameService {
         isWinner,
         opponentInfo,
         finishedAt: new Date().toISOString(),
+        matchType: "quick",
+        tournamentRound: null,
+        tournamentName: null,
       });
     } catch (error) {
       console.error("Failed to save game history:", error);

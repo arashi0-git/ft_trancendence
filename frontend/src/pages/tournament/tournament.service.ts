@@ -1,7 +1,11 @@
 import { GameManagerService } from "../../shared/services/game-manager.service";
 import { NotificationService } from "../../shared/services/notification.service";
 import { router } from "../../routes/router";
-import { TournamentDataService } from "../../shared/services/tournament-data.service";
+import {
+  TournamentDataService,
+  type TournamentPlayer,
+  type TournamentMatch,
+} from "../../shared/services/tournament-data.service";
 import { gameCustomizationService } from "../../shared/services/game-customization.service";
 import { PlayerRegistrationWithCountSelector } from "../../shared/components/player-registration-with-count-selector";
 import {
@@ -10,6 +14,9 @@ import {
 } from "../../shared/types/translations";
 import { onLanguageChange, translate, i18next } from "../../i18n";
 import { escapeHtml } from "../../shared/utils/html-utils";
+import { HistoryService } from "../../shared/services/history-service";
+import { AuthService } from "../../shared/services/auth-service";
+import type { PublicUser } from "../../shared/types/user";
 
 interface TournamentTranslations {
   titles?: TranslationSection;
@@ -75,6 +82,8 @@ export class TournamentService {
     event: string;
     handler: EventListener;
   }> = [];
+  private currentUser: PublicUser | null = null;
+  private currentUserPromise: Promise<PublicUser | null> | null = null;
 
   constructor(translateFn?: TranslateFn) {
     this.gameManager = new GameManagerService();
@@ -97,6 +106,7 @@ export class TournamentService {
     this.unsubscribeLanguageChange = onLanguageChange(
       this.handleLanguageChange.bind(this),
     );
+    void this.ensureCurrentUser();
   }
 
   setCurrentPath(path: string): void {
@@ -891,6 +901,7 @@ export class TournamentService {
 
       const winnerId = winner === 1 ? match.player1Id : match.player2Id;
       this.tournamentData.completeMatch(matchId, winnerId, score);
+      void this.recordTournamentMatchHistory(match, score, winnerId);
 
       const winnerPlayer = this.tournamentData.getPlayer(winnerId);
       let winnerAlias: string;
@@ -932,6 +943,12 @@ export class TournamentService {
           this.navigateToResults();
         } else if (this.tournamentData.canAdvanceToNextRound()) {
           console.log("Advancing to next round.");
+          const advanced = this.tournamentData.generateNextRound();
+          if (!advanced) {
+            console.warn(
+              "Failed to generate next round despite eligibility. Staying on current bracket.",
+            );
+          }
           this.navigateToBracket();
         } else {
           console.log("Current round not finished. Navigating to bracket.");
@@ -1002,5 +1019,100 @@ export class TournamentService {
       }
       return true;
     });
+  }
+
+  private async ensureCurrentUser(): Promise<PublicUser | null> {
+    if (this.currentUser) {
+      return this.currentUser;
+    }
+
+    if (!this.currentUserPromise) {
+      this.currentUserPromise = AuthService.getCurrentUser()
+        .then((user) => {
+          this.currentUser = user;
+          return user;
+        })
+        .catch((error) => {
+          console.error("Failed to fetch current user:", error);
+          return null;
+        });
+    }
+
+    return this.currentUserPromise;
+  }
+
+  private getRoundLabel(roundNumber: number): string {
+    const rounds = this.t.rounds || {};
+    const tournament = this.tournamentData.getCurrentTournament();
+    const totalRounds =
+      tournament && tournament.playerCount > 1
+        ? Math.round(Math.log2(tournament.playerCount))
+        : null;
+
+    if (totalRounds) {
+      if (roundNumber === totalRounds && rounds.final) {
+        return rounds.final;
+      }
+      if (roundNumber === totalRounds - 1 && rounds.semiFinal) {
+        return rounds.semiFinal;
+      }
+      if (roundNumber === totalRounds - 2 && rounds.quarterFinal) {
+        return rounds.quarterFinal;
+      }
+    }
+
+    const template = rounds.round || "Round {{number}}";
+    return template.replace("{{number}}", roundNumber.toString());
+  }
+
+  private async recordTournamentMatchHistory(
+    match: TournamentMatch,
+    score: { player1: number; player2: number },
+    winnerId: string,
+  ): Promise<void> {
+    try {
+      const currentUser = await this.ensureCurrentUser();
+      if (!currentUser) return;
+
+      const player1 = this.tournamentData.getPlayer(match.player1Id);
+      const player2 = this.tournamentData.getPlayer(match.player2Id);
+      if (!player1 || !player2) return;
+
+      let perspective: {
+        player: TournamentPlayer;
+        opponent: TournamentPlayer;
+        index: 1 | 2;
+      } | null = null;
+
+      if (player1.userId === currentUser.id) {
+        perspective = { player: player1, opponent: player2, index: 1 };
+      } else if (player2.userId === currentUser.id) {
+        perspective = { player: player2, opponent: player1, index: 2 };
+      } else {
+        return;
+      }
+
+      const myScore = perspective.index === 1 ? score.player1 : score.player2;
+      const opponentScore =
+        perspective.index === 1 ? score.player2 : score.player1;
+
+      const tournament = this.tournamentData.getCurrentTournament();
+
+      await HistoryService.saveGame({
+        userId: currentUser.id,
+        tournamentId: null,
+        teammate: null,
+        myScore,
+        opponentScore,
+        isWinner: perspective.player.id === winnerId,
+        opponentInfo: perspective.opponent.alias,
+        finishedAt: new Date().toISOString(),
+        matchType: "tournament",
+        tournamentRound: this.getRoundLabel(match.round),
+        tournamentName: tournament?.name ?? null,
+      });
+    } catch (error) {
+      console.error("Failed to record tournament match history:", error);
+    }
   }
 }
