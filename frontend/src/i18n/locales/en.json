@@ -73,7 +73,7 @@
     "label": "Player {{index}}",
     "selectPlaceholder": "Select player or AI",
     "aiOption": "AI",
-    "customOption": "guest player",
+    "customOption": "Guest player",
     "aiDifficulty": "AI Difficulty",
     "difficulty": {
       "easy": "Easy",
@@ -82,7 +82,9 @@
     },
     "customAlias": "Custom Alias",
     "customPlaceholder": "Enter custom alias",
-    "currentUser": "Login User",
+    "currentUser": "Login user",
+    "loginUserOption": "Login user",
+    "loginUserNameLabel": "Username",
     "aiDisplayName": "AI {{index}} ({{difficulty}})",
     "leftSideLabel": "Left Side",
     "rightSideLabel": "Right Side"
@@ -278,7 +280,7 @@
     "match": {
       "heading": "{{player1}} vs {{player2}}",
       "details": "{{identifier}} - First to {{points}} points wins",
-      "identifier": "Round {{roundNumber}} - Match {{matchNumber}}",
+      "identifier": "{{roundName}} - {{matchLabel}}",
       "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>: W/S (Up/Down)",
       "controlsRight": "<strong class=\"text-white\">{{player}}</strong>: ↑/↓ (Up/Down)",
       "playerDefault": "Player {{index}}",
@@ -294,10 +296,6 @@
       "semiFinal": "Semi-Final",
       "quarterFinal": "Quarter-Final",
       "round": "Round {{number}}"
-    },
-    "notifications": {
-      "tournamentComplete": "Tournament completed! 🏆",
-      "roundBegins": "{{roundName}} begins! 🥊"
     },
     "modal": {
       "playerWins": "{{player}} Wins!",

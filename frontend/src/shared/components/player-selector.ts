@@ -60,6 +60,7 @@ export class PlayerSelector {
     const customAliasLabel = this.t.customAlias || "Custom Alias";
     const customAliasPlaceholder =
       this.t.customPlaceholder || "Enter custom alias";
+    const userInfoLabel = this.t.loginUserNameLabel || "Username";
 
     const difficultyButtonsHtml = (["easy", "medium", "hard"] as const)
       .map((difficulty, index) => {
@@ -107,7 +108,7 @@ export class PlayerSelector {
           </div>
 
           <div id="user-info-${this.playerIndex}" class="hidden">
-            <label class="block text-sm font-medium text-white mb-1">Username</label>
+            <label class="block text-sm font-medium text-white mb-1">${escapeHtml(userInfoLabel)}</label>
             <div id="user-name-display-${this.playerIndex}" class="w-full min-w-[280px] px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-700 overflow-hidden truncate"></div>
           </div>
         </div>
@@ -125,20 +126,16 @@ export class PlayerSelector {
       if (AuthService.isAuthenticated()) {
         const user = await AuthService.getCurrentUser();
         const username = user.username?.trim() ?? "";
-        const template = this.t.currentUser || "{{username}}";
-        const displayName = template.includes("{{username}}")
-          ? formatTemplate(template, {
-              username: username || user.username || "",
-            })
-          : username || template;
+        const actualUsername = username;
+        const loginUserLabel = this.t.loginUserOption?.trim();
         options.push({
           id: `user-${user.id}`,
-          displayName,
+          displayName: escapeHtml(loginUserLabel || "login user"),
           isAI: false,
           userId: user.id,
         });
         // Store the actual username for later display
-        this.loginUsername = username || user.username || "";
+        this.loginUsername = actualUsername;
       }
     } catch (error) {
       console.warn("Failed to load current user:", error);
