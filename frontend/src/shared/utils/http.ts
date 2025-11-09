@@ -2,9 +2,6 @@ import { ApiError } from "./api-error";
 
 export async function expectJson<T>(response: Response): Promise<T> {
   if (response.status === 204) {
-    if (!response.ok) {
-      throw ApiError.fromResponse(response, null);
-    }
     return null as T;
   }
 

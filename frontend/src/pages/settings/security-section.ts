@@ -113,6 +113,7 @@ export class SecuritySection {
       if (result.user) {
         this.user = result.user;
         this.updateTwoFactorUi(result.user);
+        this.onUserUpdate(result.user);
         NotificationService.getInstance().success(successMessage);
       }
     } catch (error) {
@@ -142,6 +143,7 @@ export class SecuritySection {
       if (result.user) {
         this.user = result.user;
         this.updateTwoFactorUi(result.user);
+        this.onUserUpdate(result.user);
         NotificationService.getInstance().success(successMessage);
       }
     } catch (error) {
