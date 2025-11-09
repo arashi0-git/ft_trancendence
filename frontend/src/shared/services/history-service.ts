@@ -61,7 +61,7 @@ export class HistoryService {
       const payload: CreateGameHistoryRequest = {
         ...data,
         matchType: data.matchType ?? "quick",
-        tournamentName: data.tournamentName ?? "tournament",
+        tournamentName: data.tournamentName ?? null,
       };
       const response = await fetch(`${API_BASE_URL}/history`, {
         method: "POST",

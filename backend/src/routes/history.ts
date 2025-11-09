@@ -30,9 +30,27 @@ export async function historyRoutes(fastify: FastifyInstance) {
             .send({ error: "Invalid match type provided" });
         }
 
+        const tournamentName = input.tournamentName
+          ? input.tournamentName.trim()
+          : undefined;
+        if (matchType === "tournament") {
+          if (!tournamentName) {
+            return reply.status(400).send({
+              error: "Tournament name is required for tournament matches.",
+            });
+          }
+        }
+
+        if (tournamentName && tournamentName.length > 30) {
+          return reply.status(400).send({
+            error: "Tournament name must be 30 characters or fewer.",
+          });
+        }
+
         const history = await GameHistoryModel.create({
           ...input,
           matchType,
+          tournamentName: tournamentName ?? null,
         });
         return reply.status(201).send({ history });
       } catch (error) {
