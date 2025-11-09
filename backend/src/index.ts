@@ -12,21 +12,10 @@ import { authRoutes } from "./routes/auth";
 import { userRoutes } from "./routes/user";
 import { historyRoutes } from "./routes/history";
 
-const httpsOptions =
-  process.env.NODE_ENV === "production"
-    ? {
-        key: fs.readFileSync(path.join(process.cwd(), "ssl", "key.pem")),
-        cert: fs.readFileSync(path.join(process.cwd(), "ssl", "cert.pem")),
-      }
-    : undefined;
-
 const fastify = Fastify({
   logger: true,
-  serverFactory: httpsOptions
-    ? (handler) => {
-        return https.createServer(httpsOptions, handler);
-      }
-    : undefined,
+  // If serverFactory is not specified, Fastify automatically creates an HTTP server
+  // Internally uses http.createServer() as the default server factory
 });
 
 // Allow empty JSON bodies (parsed as {}) for endpoints that don't require payloads.
