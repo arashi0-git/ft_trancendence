@@ -115,6 +115,8 @@ export class SecuritySection {
         this.updateTwoFactorUi(result.user);
         this.onUserUpdate(result.user);
         NotificationService.getInstance().success(successMessage);
+      } else {
+        throw new Error("Failed to enable two-factor: missing user data");
       }
     } catch (error) {
       NotificationService.getInstance().apiError(error, {
@@ -145,6 +147,8 @@ export class SecuritySection {
         this.updateTwoFactorUi(result.user);
         this.onUserUpdate(result.user);
         NotificationService.getInstance().success(successMessage);
+      } else {
+        throw new Error("Failed to disable two-factor: missing user data");
       }
     } catch (error) {
       NotificationService.getInstance().apiError(error, {
