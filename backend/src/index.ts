@@ -30,6 +30,10 @@ fastify.addContentTypeParser(
         done(null, {});
         return;
       }
+      // Securely parse incoming JSON payloads.
+      // - Uses secure-json-parse to prevent prototype/constructor pollution.
+      // - Removes any "__proto__" or "constructor" properties from the parsed object
+      //   so malicious payloads cannot tamper with object prototypes or constructors.
       const parsed = secureJsonParse(text, undefined, {
         protoAction: "remove",
         constructorAction: "remove",
