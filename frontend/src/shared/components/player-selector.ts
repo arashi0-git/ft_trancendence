@@ -126,11 +126,11 @@ export class PlayerSelector {
       if (AuthService.isAuthenticated()) {
         const user = await AuthService.getCurrentUser();
         const username = user.username?.trim() ?? "";
-        const actualUsername = username || user.username || "";
+        const actualUsername = username;
         const loginUserLabel = this.t.loginUserOption?.trim();
         options.push({
           id: `user-${user.id}`,
-          displayName: loginUserLabel || "login user",
+          displayName: escapeHtml(loginUserLabel || "login user"),
           isAI: false,
           userId: user.id,
         });
