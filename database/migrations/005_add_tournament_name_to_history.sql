@@ -1,2 +1,2 @@
 ALTER TABLE game_history
-ADD COLUMN tournament_name TEXT;
+ADD COLUMN IF NOT EXISTS tournament_name TEXT;
