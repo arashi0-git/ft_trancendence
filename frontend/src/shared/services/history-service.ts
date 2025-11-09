@@ -4,6 +4,7 @@ import type {
   GameHistoryFilters,
   MatchType,
 } from "../types/history";
+import { expectJson } from "../utils/http";
 
 declare const __API_BASE_URL__: string | undefined;
 
@@ -69,12 +70,7 @@ export class HistoryService {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || `Failed to save game history`);
-      }
-
-      const result: CreateGameHistoryResponse = await response.json();
+      const result = await expectJson<CreateGameHistoryResponse>(response);
       return result.history;
     } catch (error) {
       console.error("Error saving game history:", error);
@@ -116,12 +112,7 @@ export class HistoryService {
         headers: this.getAuthHeaders(),
       });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || `Failed to fetch game history`);
-      }
-
-      const result: GameHistoryResponse = await response.json();
+      const result = await expectJson<GameHistoryResponse>(response);
       const normalizedHistory: GameHistory[] = result.history.map((game) => {
         const matchType: MatchType =
           game.matchType === "tournament" ? "tournament" : "quick";
@@ -147,12 +138,7 @@ export class HistoryService {
         headers: this.getAuthHeaders(),
       });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || `Failed to fetch stats`);
-      }
-
-      const result: GameHistoryStatsResponse = await response.json();
+      const result = await expectJson<GameHistoryStatsResponse>(response);
       return result.stats;
     } catch (error) {
       console.error("Error fetching stats:", error);

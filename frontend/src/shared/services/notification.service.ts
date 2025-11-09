@@ -1,4 +1,8 @@
 import { escapeHtml } from "../utils/html-utils";
+import {
+  translateApiError,
+  type ErrorTranslationOptions,
+} from "../utils/error-translator";
 
 export type NotificationType = "success" | "info" | "warning" | "error";
 
@@ -166,9 +170,17 @@ export class NotificationService {
     this.show(message, { type: "error", duration });
   }
 
+  apiError(
+    error: unknown,
+    options?: ErrorTranslationOptions & { duration?: number },
+  ): void {
+    const message = translateApiError(error, options);
+    this.error(message, options?.duration);
+  }
+
   handleUnexpectedError(error: unknown, context?: string): void {
     const prefix = context ? `${context}:` : "Unexpected error:";
     console.error(prefix, error);
-    this.error("System error. Please try again later.");
+    this.apiError(error, { fallbackKey: "errors.UNKNOWN_ERROR" });
   }
 }

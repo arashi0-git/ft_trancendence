@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { AuthUtils } from "../utils/auth";
 import { UserService } from "../services/userService";
+import { sendError } from "../utils/errorResponse";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -22,14 +23,19 @@ export async function authenticateToken(
     );
 
     if (!token) {
-      return reply.status(401).send({ error: "Access token required" });
+      return sendError(
+        reply,
+        401,
+        "AUTH_TOKEN_REQUIRED",
+        "Access token required",
+      );
     }
 
     const decoded = AuthUtils.verifyToken(token);
 
     const user = await UserService.getUserById(decoded.id);
     if (!user) {
-      return reply.status(401).send({ error: "User not found" });
+      return sendError(reply, 401, "AUTH_USER_NOT_FOUND", "User not found");
     }
 
     // Check token version to invalidate old tokens
@@ -38,7 +44,12 @@ export async function authenticateToken(
       user.token_version !== undefined
     ) {
       if (decoded.tokenVersion < user.token_version) {
-        return reply.status(401).send({ error: "Token has been invalidated" });
+        return sendError(
+          reply,
+          401,
+          "AUTH_TOKEN_INVALIDATED",
+          "Token has been invalidated",
+        );
       }
     }
 
@@ -53,7 +64,7 @@ export async function authenticateToken(
       error instanceof Error && error.message.includes("expired");
     const errorMessage = isExpired ? "Token expired" : "Invalid token";
 
-    return reply.status(401).send({ error: errorMessage });
+    return sendError(reply, 401, "AUTH_INVALID_TOKEN", errorMessage);
   }
 }
 

@@ -99,7 +99,9 @@ export class ProfileSection {
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm text-gray-300 mb-1">${i18next.t("common.language", "Language")}</label>
+          <h4 class="text-md font-semibold text-cyan-200">
+            ${i18next.t("settings.languageTitle", "Set Default Language")}
+          </h4>
           <p class="text-xs text-gray-400 mb-2">
             ${i18next.t("settings.languageDescription", "Select your preferred language")}
           </p>

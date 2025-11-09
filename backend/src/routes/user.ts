@@ -9,6 +9,7 @@ import crypto from "crypto";
 import "@fastify/multipart";
 import sharp from "sharp";
 import { TwoFactorService } from "../services/twoFactorService";
+import { sendError } from "../utils/errorResponse";
 
 const AVATAR_UPLOAD_DIR = path.join(process.cwd(), "uploads", "avatars");
 const ALLOWED_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp"]);
@@ -21,7 +22,12 @@ export async function userRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       try {
         if (!request.user) {
-          return reply.status(401).send({ error: "User not authenticated" });
+          return sendError(
+            reply,
+            401,
+            "AUTH_UNAUTHORIZED",
+            "User not authenticated",
+          );
         }
 
         const payload: UpdateUserSettingsRequest = {
@@ -30,7 +36,7 @@ export async function userRoutes(fastify: FastifyInstance) {
 
         const user = await UserService.getUserById(request.user.id);
         if (!user) {
-          return reply.status(404).send({ error: "User not found" });
+          return sendError(reply, 404, "AUTH_USER_NOT_FOUND", "User not found");
         }
 
         const emailCandidate =
@@ -51,10 +57,12 @@ export async function userRoutes(fastify: FastifyInstance) {
             ).some((value) => value !== undefined);
 
             if (hasAdditionalUpdates) {
-              return reply.status(400).send({
-                error:
-                  "Email changes must be submitted separately when two-factor authentication is enabled.",
-              });
+              return sendError(
+                reply,
+                400,
+                "USER_EMAIL_CHANGE_REQUIRES_2FA",
+                "Email changes must be submitted separately when two-factor authentication is enabled.",
+              );
             }
 
             const challenge = await TwoFactorService.startChallenge(
@@ -94,22 +102,26 @@ export async function userRoutes(fastify: FastifyInstance) {
             ? error.message
             : "Failed to update user settings";
         let statusCode = 500;
+        let code = "USER_UPDATE_FAILED";
 
         if (error instanceof Error) {
           if (message.includes("not authenticated")) {
             statusCode = 401;
+            code = "AUTH_UNAUTHORIZED";
           } else if (message.includes("not found")) {
             statusCode = 404;
+            code = "AUTH_USER_NOT_FOUND";
           } else if (
             message.includes("incorrect") ||
             message.includes("required") ||
             message.includes("already")
           ) {
             statusCode = 400;
+            code = "USER_UPDATE_INVALID";
           }
         }
 
-        return reply.status(statusCode).send({ error: message });
+        return sendError(reply, statusCode, code, message);
       }
     },
   );
@@ -120,24 +132,39 @@ export async function userRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       try {
         if (!request.user) {
-          return reply.status(401).send({ error: "User not authenticated" });
+          return sendError(
+            reply,
+            401,
+            "AUTH_UNAUTHORIZED",
+            "User not authenticated",
+          );
         }
 
         const file = await request.file({ limits: { files: 1 } });
 
         if (!file) {
-          return reply.status(400).send({ error: "Avatar file is required" });
+          return sendError(
+            reply,
+            400,
+            "AVATAR_REQUIRED",
+            "Avatar file is required",
+          );
         }
 
         if (file.fieldname !== "avatar") {
           file.file.resume();
-          return reply.status(400).send({ error: "Invalid avatar field name" });
+          return sendError(
+            reply,
+            400,
+            "AVATAR_INVALID_FIELD",
+            "Invalid avatar field name",
+          );
         }
 
         const user = await UserService.getUserById(request.user.id);
         if (!user) {
           file.file.resume();
-          return reply.status(404).send({ error: "User not found" });
+          return sendError(reply, 404, "AUTH_USER_NOT_FOUND", "User not found");
         }
 
         await fs.promises.mkdir(AVATAR_UPLOAD_DIR, { recursive: true });
@@ -153,15 +180,23 @@ export async function userRoutes(fastify: FastifyInstance) {
           }
         } catch (streamError) {
           fastify.log.error(streamError);
-          return reply
-            .status(500)
-            .send({ error: "Failed to read avatar stream" });
+          return sendError(
+            reply,
+            500,
+            "AVATAR_STREAM_ERROR",
+            "Failed to read avatar stream",
+          );
         }
 
         const originalBuffer = Buffer.concat(chunks);
 
         if (originalBuffer.length === 0) {
-          return reply.status(400).send({ error: "Avatar file is empty" });
+          return sendError(
+            reply,
+            400,
+            "AVATAR_EMPTY_FILE",
+            "Avatar file is empty",
+          );
         }
 
         let detectedExtension: string | undefined;
@@ -171,15 +206,21 @@ export async function userRoutes(fastify: FastifyInstance) {
           detectedExtension = fileType?.ext;
         } catch (detectionError) {
           fastify.log.error(detectionError);
-          return reply
-            .status(400)
-            .send({ error: "Could not determine avatar file type" });
+          return sendError(
+            reply,
+            400,
+            "AVATAR_UNKNOWN_TYPE",
+            "Could not determine avatar file type",
+          );
         }
 
         if (!detectedExtension || !ALLOWED_EXTENSIONS.has(detectedExtension)) {
-          return reply
-            .status(400)
-            .send({ error: "Only PNG, JPEG, or WebP images are allowed" });
+          return sendError(
+            reply,
+            400,
+            "AVATAR_UNSUPPORTED_TYPE",
+            "Only PNG, JPEG, or WebP images are allowed",
+          );
         }
 
         const MAX_DIMENSION = 4096;
@@ -195,10 +236,12 @@ export async function userRoutes(fastify: FastifyInstance) {
             metadata.width > MAX_DIMENSION ||
             metadata.height > MAX_DIMENSION
           ) {
-            return reply.status(400).send({
-              error:
-                "Image dimensions are too large. Maximum allowed is 4096x4096 pixels",
-            });
+            return sendError(
+              reply,
+              400,
+              "AVATAR_DIMENSIONS_TOO_LARGE",
+              "Image dimensions are too large. Maximum allowed is 4096x4096 pixels",
+            );
           }
 
           sanitizedBuffer = await sharp(originalBuffer)
@@ -210,7 +253,12 @@ export async function userRoutes(fastify: FastifyInstance) {
             .toBuffer();
         } catch (transformError) {
           fastify.log.error(transformError);
-          return reply.status(500).send({ error: "Failed to process avatar" });
+          return sendError(
+            reply,
+            500,
+            "AVATAR_PROCESSING_FAILED",
+            "Failed to process avatar",
+          );
         }
 
         const uniqueSuffix = crypto.randomBytes(6).toString("hex");
@@ -221,7 +269,12 @@ export async function userRoutes(fastify: FastifyInstance) {
           await fs.promises.writeFile(filePath, sanitizedBuffer);
         } catch (writeError) {
           fastify.log.error(writeError);
-          return reply.status(500).send({ error: "Failed to save avatar" });
+          return sendError(
+            reply,
+            500,
+            "AVATAR_SAVE_FAILED",
+            "Failed to save avatar",
+          );
         }
 
         if (user.profile_image_url) {
@@ -269,13 +322,21 @@ export async function userRoutes(fastify: FastifyInstance) {
           "code" in error &&
           (error as { code: string }).code === "FST_REQ_FILE_TOO_LARGE"
         ) {
-          return reply
-            .status(413)
-            .send({ error: "Avatar file exceeds the 2MB size limit" });
+          return sendError(
+            reply,
+            413,
+            "AVATAR_TOO_LARGE",
+            "Avatar file exceeds the 2MB size limit",
+          );
         }
 
         fastify.log.error(error);
-        return reply.status(500).send({ error: "Failed to upload avatar" });
+        return sendError(
+          reply,
+          500,
+          "AVATAR_UPLOAD_FAILED",
+          "Failed to upload avatar",
+        );
       }
     },
   );
@@ -286,7 +347,12 @@ export async function userRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       try {
         if (!request.user) {
-          return reply.status(401).send({ error: "User not authenticated" });
+          return sendError(
+            reply,
+            401,
+            "AUTH_UNAUTHORIZED",
+            "User not authenticated",
+          );
         }
 
         const friends = await FriendService.listFriends(request.user.id);
@@ -295,7 +361,12 @@ export async function userRoutes(fastify: FastifyInstance) {
         });
       } catch (error) {
         fastify.log.error(error);
-        return reply.status(500).send({ error: "Failed to load friends list" });
+        return sendError(
+          reply,
+          500,
+          "FRIENDS_LIST_FAILED",
+          "Failed to load friends list",
+        );
       }
     },
   );
@@ -306,7 +377,12 @@ export async function userRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       try {
         if (!request.user) {
-          return reply.status(401).send({ error: "User not authenticated" });
+          return sendError(
+            reply,
+            401,
+            "AUTH_UNAUTHORIZED",
+            "User not authenticated",
+          );
         }
 
         const friend = await FriendService.addFriendByUsername(
@@ -323,15 +399,19 @@ export async function userRoutes(fastify: FastifyInstance) {
           error instanceof Error ? error.message : "Failed to add friend";
 
         let statusCode = 500;
+        let code = "FRIENDS_ADD_FAILED";
         if (message.includes("required")) {
           statusCode = 400;
+          code = "FRIENDS_INVALID_INPUT";
         } else if (message.includes("cannot") || message.includes("already")) {
           statusCode = 400;
+          code = "FRIENDS_CONFLICT";
         } else if (message.includes("not found")) {
           statusCode = 404;
+          code = "AUTH_USER_NOT_FOUND";
         }
 
-        return reply.status(statusCode).send({ error: message });
+        return sendError(reply, statusCode, code, message);
       }
     },
   );
@@ -342,12 +422,17 @@ export async function userRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       try {
         if (!request.user) {
-          return reply.status(401).send({ error: "User not authenticated" });
+          return sendError(
+            reply,
+            401,
+            "AUTH_UNAUTHORIZED",
+            "User not authenticated",
+          );
         }
 
         const userId = Number(request.params.userId);
         if (!Number.isInteger(userId) || userId <= 0) {
-          return reply.status(400).send({ error: "Invalid user id" });
+          return sendError(reply, 400, "FRIENDS_INVALID_ID", "Invalid user id");
         }
 
         await FriendService.removeFriend(request.user.id, userId);
@@ -358,7 +443,9 @@ export async function userRoutes(fastify: FastifyInstance) {
           error instanceof Error ? error.message : "Failed to remove friend";
 
         const statusCode = message.includes("not found") ? 404 : 500;
-        return reply.status(statusCode).send({ error: message });
+        const code =
+          statusCode === 404 ? "AUTH_USER_NOT_FOUND" : "FRIENDS_REMOVE_FAILED";
+        return sendError(reply, statusCode, code, message);
       }
     },
   );

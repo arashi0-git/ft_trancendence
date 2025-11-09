@@ -6,6 +6,7 @@ import type {
   TwoFactorChallengeResponse,
   TwoFactorVerificationResponse,
 } from "../../shared/types/user";
+import { i18next } from "../../i18n";
 
 export class SecuritySection {
   private container: HTMLElement;
@@ -99,31 +100,28 @@ export class SecuritySection {
     this.setTwoFactorButtonsDisabled(true);
 
     try {
-      const response = await fetch(`${this.getApiUrl()}/auth/2fa/setup`, {
-        method: "POST",
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify({}),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to enable two-factor");
-      }
-
-      if (result.token) {
-        localStorage.setItem("auth_token", result.token);
-      }
+      const result = await AuthService.enableTwoFactor();
+      const successMessage = i18next.t("notifications.twoFactorEnabled");
 
       if ("requiresTwoFactor" in result && result.requiresTwoFactor) {
         this.showTwoFactorDialog(result, () => {
-          NotificationService.getInstance().success(
-            "Two-factor authentication is now enabled.",
-          );
+          NotificationService.getInstance().success(successMessage);
         });
+        return;
+      }
+
+      if (result.user) {
+        this.user = result.user;
+        this.updateTwoFactorUi(result.user);
+        this.onUserUpdate(result.user);
+        NotificationService.getInstance().success(successMessage);
+      } else {
+        throw new Error("Failed to enable two-factor: missing user data");
       }
     } catch (error) {
-      console.error(error);
+      NotificationService.getInstance().apiError(error, {
+        fallbackMessage: "Failed to enable two-factor authentication.",
+      });
       this.setTwoFactorButtonsDisabled(false);
     }
   }
@@ -134,34 +132,28 @@ export class SecuritySection {
     this.setTwoFactorButtonsDisabled(true);
 
     try {
-      const response = await fetch(`${this.getApiUrl()}/auth/2fa/disable`, {
-        method: "POST",
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify({}),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to disable two-factor");
-      }
-
-      if (result.token) {
-        localStorage.setItem("auth_token", result.token);
-      }
+      const result = await AuthService.disableTwoFactor();
+      const successMessage = i18next.t("notifications.twoFactorDisabled");
 
       if ("requiresTwoFactor" in result && result.requiresTwoFactor) {
         this.showTwoFactorDialog(result, () => {
-          NotificationService.getInstance().success(
-            "Two-factor authentication has been disabled.",
-          );
+          NotificationService.getInstance().success(successMessage);
         });
+        return;
+      }
+
+      if (result.user) {
+        this.user = result.user;
+        this.updateTwoFactorUi(result.user);
+        this.onUserUpdate(result.user);
+        NotificationService.getInstance().success(successMessage);
+      } else {
+        throw new Error("Failed to disable two-factor: missing user data");
       }
     } catch (error) {
-      NotificationService.getInstance().handleUnexpectedError(
-        error,
-        "Failed to disable two-factor authentication",
-      );
+      NotificationService.getInstance().apiError(error, {
+        fallbackMessage: "Failed to disable two-factor authentication.",
+      });
       this.setTwoFactorButtonsDisabled(false);
     }
   }
@@ -234,14 +226,14 @@ export class SecuritySection {
         pendingCallback(result);
       } else {
         NotificationService.getInstance().success(
-          "Two-factor verification complete.",
+          i18next.t("notifications.twoFactorVerified"),
         );
       }
     } catch (error) {
       console.error("Two-factor verification failed:", error);
-      NotificationService.getInstance().error(
-        "Invalid verification code. Please try again.",
-      );
+      NotificationService.getInstance().apiError(error, {
+        fallbackMessage: "Invalid verification code. Please try again.",
+      });
       this.twoFactorComponent?.resetCode();
       this.twoFactorComponent?.focus();
     }
@@ -272,8 +264,10 @@ export class SecuritySection {
     }
 
     const feedbackMessage = refreshedChallenge.destination
-      ? `Sent a new verification code to ${refreshedChallenge.destination}.`
-      : "Sent a new verification code to your email.";
+      ? i18next.t("notifications.twoFactorResendDestination", {
+          destination: refreshedChallenge.destination,
+        })
+      : i18next.t("notifications.twoFactorResendGeneric");
     NotificationService.getInstance().success(feedbackMessage);
   }
 
@@ -329,36 +323,6 @@ export class SecuritySection {
     onSuccess: (result: TwoFactorVerificationResponse) => void,
   ): void {
     this.showTwoFactorDialog(challenge, onSuccess);
-  }
-
-  private getApiUrl(): string {
-    if (typeof window !== "undefined") {
-      const browserWindow = window as typeof window & {
-        __API_BASE_URL__?: string;
-      };
-      const browserBase = browserWindow.__API_BASE_URL__;
-      if (typeof browserBase !== "undefined" && browserBase) {
-        return browserBase;
-      }
-    }
-
-    const envBase = process.env.API_BASE_URL;
-    if (envBase) {
-      return envBase;
-    }
-
-    return "/api";
-  }
-
-  private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem("auth_token");
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-    return headers;
   }
 
   destroy(): void {

@@ -703,19 +703,19 @@ export class BabylonRender {
     // Paddle 3 and 4
     if (this.paddle3Mesh && gameState.player3) {
       this.paddle3Mesh.position.x =
-        (gameState.player3.paddle.x - this.gameWidth / 2) * scaleX; // Použij this.gameWidth
+        (gameState.player3.paddle.x - this.gameWidth / 2) * scaleX;
       this.paddle3Mesh.position.z =
         (this.gameHeight / 2 -
           (gameState.player3.paddle.y + gameState.player3.paddle.height / 2)) *
-        scaleY; // Použij this.gameHeight
+        scaleY;
     }
     if (this.paddle4Mesh && gameState.player4) {
       this.paddle4Mesh.position.x =
-        (gameState.player4.paddle.x - this.gameWidth / 2) * scaleX; // Použij this.gameWidth
+        (gameState.player4.paddle.x - this.gameWidth / 2) * scaleX;
       this.paddle4Mesh.position.z =
         (this.gameHeight / 2 -
           (gameState.player4.paddle.y + gameState.player4.paddle.height / 2)) *
-        scaleY; // Použij this.gameHeight
+        scaleY;
     }
     // Ball
     this.ballMesh.position.x = (gameState.ball.x - this.gameWidth / 2) * scaleX;
