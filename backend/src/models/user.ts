@@ -62,14 +62,16 @@ export class UserModel {
   }
 
   static async findByEmail(email: string): Promise<UserRecord | null> {
-    return (await db.get("SELECT * FROM users WHERE email = ?", [
-      email,
+    const normalizedEmail = email.trim().toLowerCase();
+    return (await db.get("SELECT * FROM users WHERE LOWER(email) = ?", [
+      normalizedEmail,
     ])) as UserRecord | null;
   }
 
   static async findByUsername(username: string): Promise<UserRecord | null> {
-    return (await db.get("SELECT * FROM users WHERE username = ?", [
-      username,
+    const normalizedUsername = username.trim().toLowerCase();
+    return (await db.get("SELECT * FROM users WHERE LOWER(username) = ?", [
+      normalizedUsername,
     ])) as UserRecord | null;
   }
 
