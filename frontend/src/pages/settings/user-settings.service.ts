@@ -9,6 +9,7 @@ import type {
   TwoFactorChallengeResponse,
 } from "../../shared/types/user";
 import { router } from "../../routes/router";
+import { i18next } from "../../i18n";
 
 export class UserSettingsService {
   private currentUser: PublicUser | null = null;
@@ -33,7 +34,7 @@ export class UserSettingsService {
     } catch (error) {
       console.error("Failed to load current user:", error);
       NotificationService.getInstance().warning(
-        "Your session has expired. Please log in again.",
+        i18next.t("notifications.sessionExpired"),
       );
       router.navigate("/login");
       throw error;

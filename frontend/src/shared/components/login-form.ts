@@ -243,19 +243,10 @@ export class LoginForm {
       this.handleLoginSuccess(response);
     } catch (error) {
       console.error("Login failed:", error);
-      const rawMessage =
-        error instanceof Error && error.message ? error.message : "";
-      const normalized = rawMessage.toLowerCase();
-      const messageKey: keyof LoginErrorTranslations =
-        /invalid email or password/.test(normalized)
-          ? "invalidCredentials"
-          : "generic";
-      const message =
-        this.t.errors?.[messageKey] ||
-        this.t.errors?.generic ||
-        rawMessage ||
-        "Login failed";
-      this.notificationService.error(message);
+      const fallbackMessage = this.t.errors?.generic || "Login failed";
+      this.notificationService.apiError(error, {
+        fallbackMessage,
+      });
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = this.t.submit || "Login";
@@ -279,10 +270,10 @@ export class LoginForm {
       this.handleLoginSuccess(result);
     } catch (error) {
       console.error("Login two-factor verification failed:", error);
-      const message =
+      const fallbackMessage =
         this.t.errors?.twoFactorGeneric ||
         "Invalid verification code. Please try again.";
-      this.notificationService.error(message);
+      this.notificationService.apiError(error, { fallbackMessage });
     }
   }
 
@@ -305,8 +296,10 @@ export class LoginForm {
     }
 
     const feedbackMessage = challenge.destination
-      ? `We sent another verification code to ${challenge.destination}.`
-      : "We sent another verification code to your email.";
+      ? i18next.t("notifications.twoFactorResendDestination", {
+          destination: challenge.destination,
+        })
+      : i18next.t("notifications.twoFactorResendGeneric");
     this.notificationService.success(feedbackMessage);
   }
 

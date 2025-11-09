@@ -84,7 +84,3 @@ export type FriendSummary = Pick<
 export interface FriendResponse {
   user: FriendSummary;
 }
-
-export interface ApiError {
-  error: string;
-}

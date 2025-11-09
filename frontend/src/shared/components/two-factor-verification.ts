@@ -1,4 +1,5 @@
 import { NotificationService } from "../services/notification.service";
+import { i18next } from "../../i18n";
 
 export interface TwoFactorVerificationOptions {
   message: string;
@@ -165,7 +166,7 @@ export class TwoFactorVerification {
 
     if (!/^\d{6}$/.test(code)) {
       this.notificationService.warning(
-        "Enter the 6-digit code from your email.",
+        i18next.t("notifications.twoFactorCodePrompt"),
       );
       return;
     }
@@ -186,11 +187,9 @@ export class TwoFactorVerification {
     try {
       await this.options.onResend();
     } catch (error) {
-      const message =
-        error instanceof Error && error.message
-          ? error.message
-          : "Failed to resend code";
-      this.notificationService.error(message);
+      this.notificationService.apiError(error, {
+        fallbackMessage: "Failed to resend code",
+      });
     } finally {
       this.setResendLoading(false);
     }

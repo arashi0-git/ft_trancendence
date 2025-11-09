@@ -11,6 +11,7 @@ import type {
   UpdateUserSettingsPayload,
 } from "../../shared/types/user";
 import { router } from "../../routes/router";
+import { i18next } from "../../i18n";
 
 export class UserSettingsPage extends SpacePageBase {
   private service: UserSettingsService;
@@ -217,7 +218,7 @@ export class UserSettingsPage extends SpacePageBase {
         hasAdditionalUpdates
       ) {
         NotificationService.getInstance().warning(
-          "Email changes must be saved separately when two-factor authentication is enabled.",
+          i18next.t("notifications.emailChangeTwoFactor"),
         );
         return;
       }
@@ -226,7 +227,7 @@ export class UserSettingsPage extends SpacePageBase {
       if (passwordData?.newPassword || passwordData?.confirmPassword) {
         if (passwordData.newPassword !== passwordData.confirmPassword) {
           NotificationService.getInstance().error(
-            "New password and confirm password do not match.",
+            i18next.t("notifications.passwordMismatch"),
           );
           return;
         }
@@ -252,7 +253,7 @@ export class UserSettingsPage extends SpacePageBase {
           response,
           () => {
             NotificationService.getInstance().success(
-              "Profile updated successfully!",
+              i18next.t("notifications.profileUpdateSuccess"),
             );
           },
         );
@@ -265,7 +266,7 @@ export class UserSettingsPage extends SpacePageBase {
       }
 
       NotificationService.getInstance().success(
-        "Profile updated successfully!",
+        i18next.t("notifications.profileUpdateSuccess"),
       );
     } catch (error) {
       NotificationService.getInstance().handleUnexpectedError(

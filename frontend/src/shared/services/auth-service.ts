@@ -14,6 +14,8 @@ import type {
   TwoFactorVerificationResponse,
 } from "../types/user";
 import { setLanguage, type SupportedLanguage } from "../../i18n";
+import { expectJson } from "../utils/http";
+import { ApiError } from "../utils/api-error";
 
 declare const __API_BASE_URL__: string | undefined;
 
@@ -96,15 +98,7 @@ export class AuthService {
         body: JSON.stringify(userData),
       });
 
-      if (!response.ok) {
-        const text = await response.text();
-        console.log("Error response text:", text);
-        throw new Error(
-          text || `Registration failed with status ${response.status}`,
-        );
-      }
-
-      const data = await response.json();
+      const data = await expectJson<AuthResponse>(response);
 
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
@@ -132,26 +126,21 @@ export class AuthService {
         body: JSON.stringify(credentials),
       });
 
-      const data = await response.json();
+      const data = await expectJson<AuthResult>(response);
 
-      if (!response.ok) {
-        throw new Error(data.error || "Login failed");
-      }
-
-      if (data.requiresTwoFactor) {
-        return data as TwoFactorChallengeResponse;
+      if (isTwoFactorChallengeResponse(data)) {
+        return data;
       }
 
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
       }
 
-      // Apply user's language preference
-      if (!data.requiresTwoFactor && data.user) {
+      if (data.user) {
         await this.applyUserLanguage(data.user);
       }
 
-      return data as AuthResponse;
+      return data;
     } catch (error) {
       console.error("Login error:", error);
       throw error;
@@ -171,11 +160,9 @@ export class AuthService {
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Verification failed");
-      }
+      const data = await expectJson<
+        TwoFactorVerificationResponse | TwoFactorChallengeResponse
+      >(response);
 
       if ("token" in data && data.token) {
         localStorage.setItem("auth_token", data.token);
@@ -205,15 +192,7 @@ export class AuthService {
         body: JSON.stringify({ token }),
       });
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => null);
-        const message =
-          (data && typeof data.error === "string" && data.error) ||
-          "Failed to resend verification code";
-        throw new Error(message);
-      }
-
-      const data = (await response.json()) as TwoFactorChallengeResponse;
+      const data = await expectJson<TwoFactorChallengeResponse>(response);
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
       }
@@ -234,25 +213,23 @@ export class AuthService {
         body: JSON.stringify({}),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to enable two-factor");
-      }
+      const data = await expectJson<
+        TwoFactorStatusResponse | TwoFactorChallengeResponse
+      >(response);
 
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
       }
 
-      if (data.requiresTwoFactor) {
-        return data as TwoFactorChallengeResponse;
+      if (isTwoFactorChallengeResponse(data)) {
+        return data;
       }
 
       if (!data.user) {
         throw new Error("Failed to enable two-factor");
       }
 
-      return data as TwoFactorStatusResponse;
+      return data;
     } catch (error) {
       console.error("Two-factor enable error:", error);
       throw error;
@@ -269,25 +246,23 @@ export class AuthService {
         body: JSON.stringify({}),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to disable two-factor");
-      }
+      const data = await expectJson<
+        TwoFactorStatusResponse | TwoFactorChallengeResponse
+      >(response);
 
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
       }
 
-      if (data.requiresTwoFactor) {
-        return data as TwoFactorChallengeResponse;
+      if (isTwoFactorChallengeResponse(data)) {
+        return data;
       }
 
       if (!data.user) {
         throw new Error("Failed to disable two-factor");
       }
 
-      return data as TwoFactorStatusResponse;
+      return data;
     } catch (error) {
       console.error("Two-factor disable error:", error);
       throw error;
@@ -301,14 +276,7 @@ export class AuthService {
         headers: this.getAuthHeaders({ includeJson: false }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem("auth_token");
-        }
-        throw new Error(data.error || "Failed to get user info");
-      }
+      const data = await expectJson<{ user: PublicUser }>(response);
 
       const user = data.user as PublicUser;
 
@@ -317,6 +285,9 @@ export class AuthService {
 
       return user;
     } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        localStorage.removeItem("auth_token");
+      }
       console.error("Get user error:", error);
       throw error;
     }
@@ -368,17 +339,13 @@ export class AuthService {
         },
       );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to upload avatar");
-      }
+      const data = await expectJson<UpdateUserSettingsResponse>(response);
 
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
       }
 
-      return data as UpdateUserSettingsResponse;
+      return data;
     } catch (error) {
       console.error("Upload avatar error:", error);
       throw error;
@@ -395,14 +362,9 @@ export class AuthService {
         },
       );
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to load friends");
-      }
-
-      const { friends } = (await response.json()) as {
-        friends: FriendSummary[];
-      };
+      const { friends } = await expectJson<{ friends: FriendSummary[] }>(
+        response,
+      );
       return friends;
     } catch (error) {
       console.error("Get friends error:", error);
@@ -421,13 +383,9 @@ export class AuthService {
         },
       );
 
-      const data = await response.json();
+      const data = await expectJson<FriendResponse>(response);
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to add friend");
-      }
-
-      return (data as FriendResponse).user;
+      return data.user;
     } catch (error) {
       console.error("Add friend error:", error);
       throw error;
@@ -444,12 +402,7 @@ export class AuthService {
         },
       );
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(
-          (data as { error?: string }).error || "Failed to remove friend",
-        );
-      }
+      await expectJson<{ success: boolean }>(response);
     } catch (error) {
       console.error("Remove friend error:", error);
       throw error;
@@ -469,30 +422,37 @@ export class AuthService {
         },
       );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to update settings");
-      }
+      const data = await expectJson<
+        UpdateUserSettingsResponse | TwoFactorChallengeResponse
+      >(response);
 
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
       }
 
-      if (data.requiresTwoFactor) {
-        return data as TwoFactorChallengeResponse;
+      if (isTwoFactorChallengeResponse(data)) {
+        return data;
       }
 
-      if (!data.user) {
+      if (!("user" in data) || !data.user) {
         throw new Error("Failed to update settings");
       }
 
       await this.applyUserLanguage(data.user);
 
-      return data as UpdateUserSettingsResponse;
+      return data;
     } catch (error) {
       console.error("Update settings error:", error);
       throw error;
     }
   }
+}
+function isTwoFactorChallengeResponse(
+  data: unknown,
+): data is TwoFactorChallengeResponse {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    (data as Partial<TwoFactorChallengeResponse>).requiresTwoFactor === true
+  );
 }

@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { authenticateToken } from "../middleware/auth";
 import { GameHistoryModel } from "../models/gameHistory";
 import type { CreateGameHistoryInput, MatchType } from "../types/history";
+import { sendError } from "../utils/errorResponse";
 
 export async function historyRoutes(fastify: FastifyInstance) {
   // Create game history
@@ -11,23 +12,34 @@ export async function historyRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       try {
         if (!request.user) {
-          return reply.status(401).send({ error: "User not authenticated" });
+          return sendError(
+            reply,
+            401,
+            "AUTH_UNAUTHORIZED",
+            "User not authenticated",
+          );
         }
 
         const input = request.body;
 
         // Validate that the userId matches the authenticated user
         if (input.userId !== request.user.id) {
-          return reply
-            .status(403)
-            .send({ error: "Cannot create history for another user" });
+          return sendError(
+            reply,
+            403,
+            "HISTORY_FORBIDDEN_FOR_OTHER_USER",
+            "Cannot create history for another user",
+          );
         }
 
         const matchType = input.matchType ?? "quick";
         if (matchType !== "quick" && matchType !== "tournament") {
-          return reply
-            .status(400)
-            .send({ error: "Invalid match type provided" });
+          return sendError(
+            reply,
+            400,
+            "HISTORY_INVALID_MATCH_TYPE",
+            "Invalid match type provided",
+          );
         }
 
         const tournamentName = input.tournamentName
@@ -35,16 +47,22 @@ export async function historyRoutes(fastify: FastifyInstance) {
           : undefined;
         if (matchType === "tournament") {
           if (!tournamentName) {
-            return reply.status(400).send({
-              error: "Tournament name is required for tournament matches.",
-            });
+            return sendError(
+              reply,
+              400,
+              "HISTORY_TOURNAMENT_NAME_REQUIRED",
+              "Tournament name is required for tournament matches.",
+            );
           }
         }
 
         if (tournamentName && tournamentName.length > 30) {
-          return reply.status(400).send({
-            error: "Tournament name must be 30 characters or fewer.",
-          });
+          return sendError(
+            reply,
+            400,
+            "HISTORY_TOURNAMENT_NAME_TOO_LONG",
+            "Tournament name must be 30 characters or fewer.",
+          );
         }
 
         const history = await GameHistoryModel.create({
@@ -59,7 +77,7 @@ export async function historyRoutes(fastify: FastifyInstance) {
           error instanceof Error
             ? error.message
             : "Failed to create game history";
-        return reply.status(500).send({ error: message });
+        return sendError(reply, 500, "HISTORY_CREATE_FAILED", message);
       }
     },
   );
@@ -76,7 +94,12 @@ export async function historyRoutes(fastify: FastifyInstance) {
   }>("/", { preHandler: authenticateToken }, async (request, reply) => {
     try {
       if (!request.user) {
-        return reply.status(401).send({ error: "User not authenticated" });
+        return sendError(
+          reply,
+          401,
+          "AUTH_UNAUTHORIZED",
+          "User not authenticated",
+        );
       }
 
       const filters = {
@@ -96,28 +119,46 @@ export async function historyRoutes(fastify: FastifyInstance) {
 
       // Validate numeric parameters
       if (filters.tournamentId !== undefined && isNaN(filters.tournamentId)) {
-        return reply.status(400).send({ error: "Invalid tournamentId" });
+        return sendError(
+          reply,
+          400,
+          "HISTORY_INVALID_TOURNAMENT_ID",
+          "Invalid tournamentId",
+        );
       }
       if (
         filters.limit !== undefined &&
         (isNaN(filters.limit) || filters.limit <= 0 || filters.limit > 10)
       ) {
-        return reply.status(400).send({
-          error: "Invalid limit (must be between 1 and 10)",
-        });
+        return sendError(
+          reply,
+          400,
+          "HISTORY_INVALID_LIMIT",
+          "Invalid limit (must be between 1 and 10)",
+        );
       }
       if (
         filters.offset !== undefined &&
         (isNaN(filters.offset) || filters.offset < 0)
       ) {
-        return reply.status(400).send({ error: "Invalid offset" });
+        return sendError(
+          reply,
+          400,
+          "HISTORY_INVALID_OFFSET",
+          "Invalid offset",
+        );
       }
       if (
         filters.matchType !== undefined &&
         filters.matchType !== "quick" &&
         filters.matchType !== "tournament"
       ) {
-        return reply.status(400).send({ error: "Invalid matchType" });
+        return sendError(
+          reply,
+          400,
+          "HISTORY_INVALID_MATCH_TYPE",
+          "Invalid matchType",
+        );
       }
 
       const history = await GameHistoryModel.findByUserId(
@@ -127,7 +168,12 @@ export async function historyRoutes(fastify: FastifyInstance) {
       return reply.send({ history });
     } catch (error) {
       fastify.log.error(error);
-      return reply.status(500).send({ error: "Failed to fetch game history" });
+      return sendError(
+        reply,
+        500,
+        "HISTORY_FETCH_FAILED",
+        "Failed to fetch game history",
+      );
     }
   });
 
@@ -138,14 +184,24 @@ export async function historyRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       try {
         if (!request.user) {
-          return reply.status(401).send({ error: "User not authenticated" });
+          return sendError(
+            reply,
+            401,
+            "AUTH_UNAUTHORIZED",
+            "User not authenticated",
+          );
         }
 
         const stats = await GameHistoryModel.getStats(request.user.id);
         return reply.send({ stats });
       } catch (error) {
         fastify.log.error(error);
-        return reply.status(500).send({ error: "Failed to fetch stats" });
+        return sendError(
+          reply,
+          500,
+          "HISTORY_STATS_FAILED",
+          "Failed to fetch stats",
+        );
       }
     },
   );

@@ -212,30 +212,9 @@ export class RegisterForm {
       this.onRegisterSuccess(response.user);
     } catch (error) {
       const errors = this.translations.errors || {};
-      let message =
-        errors.generic ||
-        (error instanceof Error && error.message) ||
-        "Registration failed";
-
-      if (error instanceof Error && error.message) {
-        const normalized = error.message.toLowerCase();
-        if (normalized.includes("email") && normalized.includes("exists")) {
-          message =
-            errors.emailExists ||
-            errors.emailInvalid ||
-            "A user with this email already exists.";
-        } else if (
-          normalized.includes("username") &&
-          normalized.includes("exists")
-        ) {
-          message =
-            errors.usernameExists ||
-            errors.usernameLength ||
-            "A user with this username already exists.";
-        }
-      }
-
-      this.notificationService.error(message);
+      this.notificationService.apiError(error, {
+        fallbackMessage: errors.generic || "Registration failed",
+      });
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = submitLabel;
