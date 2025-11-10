@@ -21,6 +21,7 @@ build/
 !database/migrations/*.sql
 !database/schema.sql
 !database/seed.sql
+database/.schema-hash
 *.db
 *.sqlite
 *.sqlite3
@@ -29,6 +30,8 @@ build/
 
 backend/database/transcendence.db
 backend/database/transcendence.db*
+backend/uploads/
+uploads/
 
 
 # SSL Certificates (security - never commit private keys)

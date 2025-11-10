@@ -5,28 +5,16 @@ import staticFiles from "@fastify/static";
 import multipart from "@fastify/multipart";
 import path from "path";
 import fs from "fs";
-import https from "https";
 import secureJsonParse from "secure-json-parse";
 import { initializeDatabase } from "./database/init";
 import { authRoutes } from "./routes/auth";
 import { userRoutes } from "./routes/user";
 import { historyRoutes } from "./routes/history";
 
-const httpsOptions =
-  process.env.NODE_ENV === "production"
-    ? {
-        key: fs.readFileSync(path.join(process.cwd(), "ssl", "key.pem")),
-        cert: fs.readFileSync(path.join(process.cwd(), "ssl", "cert.pem")),
-      }
-    : undefined;
-
 const fastify = Fastify({
   logger: true,
-  serverFactory: httpsOptions
-    ? (handler) => {
-        return https.createServer(httpsOptions, handler);
-      }
-    : undefined,
+  // If serverFactory is not specified, Fastify automatically creates an HTTP server
+  // Internally uses http.createServer() as the default server factory
 });
 
 // Allow empty JSON bodies (parsed as {}) for endpoints that don't require payloads.
@@ -41,6 +29,10 @@ fastify.addContentTypeParser(
         done(null, {});
         return;
       }
+      // Securely parse incoming JSON payloads.
+      // - Uses secure-json-parse to prevent prototype/constructor pollution.
+      // - Removes any "__proto__" or "constructor" properties from the parsed object
+      //   so malicious payloads cannot tamper with object prototypes or constructors.
       const parsed = secureJsonParse(text, undefined, {
         protoAction: "remove",
         constructorAction: "remove",

@@ -1,20 +1,18 @@
+import crypto from "node:crypto";
 import fs from "fs";
 import path from "path";
 import { db } from "./connection";
-import { runMigrations } from "./migrate";
 
 export async function initializeDatabase(): Promise<void> {
   try {
-    // Try different possible schema paths
     const possiblePaths = [
       "/app/database/schema.sql", // Docker container path
       path.join(process.cwd(), "database", "schema.sql"), // Local development from root
-      path.join(__dirname, "../../../database", "schema.sql"), // Relative to this file
-      path.join(process.cwd(), "database", "shcema.sql"), // Fallback for typo
+      path.join(process.cwd(), "../database", "schema.sql"), // Local development from backend or frontend
     ];
 
     let schemaPath: string | null = null;
-    let schema: string = "";
+    let schema: string | null = null;
 
     for (const testPath of possiblePaths) {
       if (fs.existsSync(testPath)) {
@@ -28,11 +26,34 @@ export async function initializeDatabase(): Promise<void> {
       throw new Error("Schema file not found in any expected location");
     }
 
-    console.log(`Loading database schema from: ${schemaPath}`);
-    await db.exec(schema);
+    if (!schema) {
+      throw new Error("Failed to load schema file");
+    }
 
-    // Run migrations after schema initialization
-    await runMigrations();
+    console.log(`Loading database schema from: ${schemaPath}`);
+
+    const schemaHash = crypto.createHash("sha256").update(schema).digest("hex");
+    const schemaDir = path.dirname(schemaPath);
+    const hashFile = path.join(schemaDir, ".schema-hash");
+    let previousHash: string | null = null;
+
+    if (fs.existsSync(hashFile)) {
+      previousHash = fs.readFileSync(hashFile, "utf8").trim();
+    }
+
+    const shouldResetDatabase =
+      previousHash === null || previousHash !== schemaHash;
+
+    if (shouldResetDatabase) {
+      console.warn(
+        previousHash
+          ? "Detected schema change; resetting local database."
+          : "No previous schema hash found; resetting local database to ensure consistency.",
+      );
+      db.reset();
+      db.exec(schema);
+      fs.writeFileSync(hashFile, `${schemaHash}\n`, "utf8");
+    }
 
     console.log("Database initialized successfully");
   } catch (error) {
