@@ -50,8 +50,102 @@
     "twoFactorCodePrompt": "Zadej šestimístný kód z e-mailu."
   },
   "settings": {
-    "languageTitle": "Nastav výchozí jazyk",
-    "languageDescription": "Vyber preferovaný jazyk"
+    "pageTitle": "Uživatelské nastavení",
+    "backButton": "Zpět domů",
+    "buttons": {
+      "save": "Uložit změny",
+      "saving": "Ukládání..."
+    },
+    "errors": {
+      "updateFailed": "Nepodařilo se uložit nastavení"
+    },
+    "profile": {
+      "title": "Profil",
+      "chooseImage": "Vybrat obrázek",
+      "imageRequirements": "PNG, JPG, WEBP (max. 5 MB)",
+      "usernameLabel": "Uživatelské jméno",
+      "emailLabel": "E-mail",
+      "languageTitle": "Nastav výchozí jazyk",
+      "languageDescription": "Vyber preferovaný jazyk",
+      "changePasswordTitle": "Změnit heslo",
+      "changePasswordDescription": "Pole pro heslo nech prázdné, pokud chceš ponechat stávající heslo. Při změně hesla zadej i současné heslo pro ověření.",
+      "currentPasswordLabel": "Současné heslo",
+      "newPasswordLabel": "Nové heslo",
+      "confirmPasswordLabel": "Potvrzení nového hesla"
+    },
+    "security": {
+      "title": "Zabezpečení – dvoufázové ověření (2FA)",
+      "statusEnabled": "Dvoufázové ověření je <strong>zapnuté</strong>. Účet je chráněn další vrstvou zabezpečení.",
+      "statusDisabled": "Dvoufázové ověření je <strong>vypnuté</strong>. Zapni ho pro lepší zabezpečení účtu.",
+      "enableButton": "Zapnout 2FA",
+      "disableButton": "Vypnout 2FA",
+      "errors": {
+        "enableFailed": "Nepodařilo se zapnout dvoufázové ověření.",
+        "disableFailed": "Nepodařilo se vypnout dvoufázové ověření.",
+        "invalidCode": "Neplatný ověřovací kód. Zkus to znovu."
+      },
+      "dialog": {
+        "resend": "Zaslat kód znovu",
+        "cancel": "Zrušit",
+        "emailDestination": "Poslali jsme ověřovací kód na {{destination}}. Zadej ho pro pokračování.",
+        "emailFallback": "Zadej šestimístný kód z e-mailu."
+      }
+    },
+    "friends": {
+      "title": "Přátelé",
+      "placeholder": "Uživatelské jméno přítele",
+      "addButton": "Přidat přítele",
+      "adding": "Přidávám...",
+      "removeButton": "Odebrat",
+      "removing": "Odebírám...",
+      "loading": "Načítám seznam přátel...",
+      "empty": "Zatím nemáš přidané žádné přátele.",
+      "online": "Online",
+      "offline": "Offline",
+      "ariaRemove": "Odebrat {{username}} ze seznamu přátel",
+      "avatarAlt": "Avatar uživatele {{username}}",
+      "errors": {
+        "addFailed": "Nepodařilo se přidat přítele",
+        "removeFailed": "Nepodařilo se odebrat přítele",
+        "loadFailed": "Nepodařilo se načíst seznam přátel"
+      }
+    },
+    "history": {
+      "title": "Historie zápasů a statistiky",
+      "loadingStats": "Načítám statistiky...",
+      "loadError": "Historii zápasů se nepodařilo načíst. Zkus to později.",
+      "noStats": "Statistiky nejsou dostupné",
+      "wins": "Výhry",
+      "losses": "Prohry",
+      "totalGames": "Počet zápasů",
+      "winRate": "Úspěšnost",
+      "empty": "Zatím žádné zápasy. Zahraj si pár her a uvidíš historii zde!",
+      "recentMatches": "Poslední zápasy",
+      "loadMore": "Načíst další",
+      "loading": "Načítám...",
+      "filters": {
+        "all": "Vše",
+        "quick": "Rychlé",
+        "tournament": "Turnaj"
+      },
+      "types": {
+        "quick": "Rychlý zápas",
+        "tournament": "Turnaj"
+      },
+      "badges": {
+        "quick": "⚡ Rychlý zápas",
+        "tournament": "🏆 Turnaj"
+      },
+      "labels": {
+        "score": "Skóre",
+        "with": "Spoluhráč:",
+        "tournamentFallback": "Turnaj"
+      },
+      "results": {
+        "win": "Výhra",
+        "loss": "Prohra"
+      }
+    }
   },
   "quickPlay": {
     "pageTitleSetup": "Rychlá hra - nastavení",

@@ -50,8 +50,102 @@
     "twoFactorCodePrompt": "メールに届いた6桁のコードを入力してください。"
   },
   "settings": {
-    "languageTitle": "既定の言語を設定",
-    "languageDescription": "使用する言語を選択"
+    "pageTitle": "ユーザー設定",
+    "backButton": "ホームに戻る",
+    "buttons": {
+      "save": "変更を保存",
+      "saving": "保存中..."
+    },
+    "errors": {
+      "updateFailed": "設定の更新に失敗しました"
+    },
+    "profile": {
+      "title": "プロフィール",
+      "chooseImage": "画像を選択",
+      "imageRequirements": "PNG / JPG / WEBP (最大 5MB)",
+      "usernameLabel": "ユーザー名",
+      "emailLabel": "メールアドレス",
+      "languageTitle": "既定の言語を設定",
+      "languageDescription": "希望する言語を選択してください",
+      "changePasswordTitle": "パスワードを変更",
+      "changePasswordDescription": "パスワードを変更しない場合は各欄を空のままにしてください。変更する場合は確認のため現在のパスワードも入力してください。",
+      "currentPasswordLabel": "現在のパスワード",
+      "newPasswordLabel": "新しいパスワード",
+      "confirmPasswordLabel": "新しいパスワード（確認）"
+    },
+    "security": {
+      "title": "セキュリティ - 二要素認証 (2FA)",
+      "statusEnabled": "二要素認証は<strong>有効</strong>です。アカウントは追加のセキュリティで保護されています。",
+      "statusDisabled": "二要素認証は<strong>無効</strong>です。より高い安全性のために有効化してください。",
+      "enableButton": "2FA を有効化",
+      "disableButton": "2FA を無効化",
+      "errors": {
+        "enableFailed": "二要素認証を有効化できませんでした。",
+        "disableFailed": "二要素認証を無効化できませんでした。",
+        "invalidCode": "認証コードが正しくありません。もう一度お試しください。"
+      },
+      "dialog": {
+        "resend": "コードを再送",
+        "cancel": "キャンセル",
+        "emailDestination": "{{destination}} に認証コードを送信しました。続行するには入力してください。",
+        "emailFallback": "メールに届いた6桁のコードを入力してください。"
+      }
+    },
+    "friends": {
+      "title": "友達",
+      "placeholder": "友達のユーザー名",
+      "addButton": "友達追加",
+      "adding": "追加中...",
+      "removeButton": "削除",
+      "removing": "削除中...",
+      "loading": "友達一覧を読み込み中...",
+      "empty": "まだ友達がいません。",
+      "online": "オンライン",
+      "offline": "オフライン",
+      "ariaRemove": "{{username}} を友達リストから削除",
+      "avatarAlt": "{{username}} のアバター",
+      "errors": {
+        "addFailed": "友達を追加できませんでした",
+        "removeFailed": "友達を削除できませんでした",
+        "loadFailed": "友達一覧を読み込めませんでした"
+      }
+    },
+    "history": {
+      "title": "対戦履歴と統計",
+      "loadingStats": "統計を読み込み中...",
+      "loadError": "対戦履歴を読み込めませんでした。時間をおいて再度お試しください。",
+      "noStats": "統計はまだありません",
+      "wins": "勝利",
+      "losses": "敗北",
+      "totalGames": "対戦数",
+      "winRate": "勝率",
+      "empty": "まだ対戦がありません。プレイするとここに履歴が表示されます。",
+      "recentMatches": "最近の対戦",
+      "loadMore": "さらに読み込む",
+      "loading": "読み込み中...",
+      "filters": {
+        "all": "すべて",
+        "quick": "クイック",
+        "tournament": "トーナメント"
+      },
+      "types": {
+        "quick": "クイックマッチ",
+        "tournament": "トーナメント"
+      },
+      "badges": {
+        "quick": "⚡ クイックマッチ",
+        "tournament": "🏆 トーナメント"
+      },
+      "labels": {
+        "score": "スコア",
+        "with": "チームメイト:",
+        "tournamentFallback": "トーナメント"
+      },
+      "results": {
+        "win": "勝ち",
+        "loss": "負け"
+      }
+    }
   },
   "quickPlay": {
     "pageTitleSetup": "クイックプレイ設定",

@@ -6,7 +6,7 @@ import type {
   TwoFactorChallengeResponse,
   TwoFactorVerificationResponse,
 } from "../../shared/types/user";
-import { i18next } from "../../i18n";
+import { i18next, onLanguageChange } from "../../i18n";
 
 export class SecuritySection {
   private container: HTMLElement;
@@ -24,6 +24,7 @@ export class SecuritySection {
     event: string;
     handler: EventListener;
   }> = [];
+  private unsubscribeLanguage?: () => void;
 
   constructor(
     container: HTMLElement,
@@ -33,18 +34,28 @@ export class SecuritySection {
     this.container = container;
     this.onUserUpdate = onUserUpdate;
     this.onEmailRestore = onEmailRestore;
+    this.unsubscribeLanguage = onLanguageChange(() => {
+      if (this.user) {
+        this.render(this.user);
+      }
+    });
   }
 
   render(user: PublicUser): void {
     this.removeListeners();
     this.user = user;
     const twoFactorStatus = user.two_factor_enabled
-      ? "Two-factor authentication is <strong>enabled</strong>. Your account is protected with an extra layer of security."
-      : "Two-factor authentication is <strong>disabled</strong>. Enable it for additional account security.";
+      ? i18next.t("settings.security.statusEnabled")
+      : i18next.t("settings.security.statusDisabled");
 
     this.container.innerHTML = `
       <section class="space-y-4 border-t border-gray-700 pt-4">
-        <h3 class="text-lg font-semibold text-cyan-200">Security - Two-Factor Authentication (2FA)</h3>
+        <h3 class="text-lg font-semibold text-cyan-200">
+          ${i18next.t(
+            "settings.security.title",
+            "Security - Two-Factor Authentication (2FA)",
+          )}
+        </h3>
         <div class="border border-cyan-500/30 rounded-lg p-4 bg-gray-900/40 space-y-3">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
@@ -53,8 +64,8 @@ export class SecuritySection {
               </p>
             </div>
             <div class="flex gap-2">
-              ${!user.two_factor_enabled ? `<button type="button" id="enable-2fa-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition disabled:opacity-60">Enable 2FA</button>` : ""}
-              ${user.two_factor_enabled ? `<button type="button" id="disable-2fa-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition disabled:opacity-60">Disable 2FA</button>` : ""}
+              ${!user.two_factor_enabled ? `<button type="button" id="enable-2fa-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition disabled:opacity-60">${i18next.t("settings.security.enableButton", "Enable 2FA")}</button>` : ""}
+              ${user.two_factor_enabled ? `<button type="button" id="disable-2fa-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition disabled:opacity-60">${i18next.t("settings.security.disableButton", "Disable 2FA")}</button>` : ""}
             </div>
           </div>
         </div>
@@ -120,7 +131,10 @@ export class SecuritySection {
       }
     } catch (error) {
       NotificationService.getInstance().apiError(error, {
-        fallbackMessage: "Failed to enable two-factor authentication.",
+        fallbackMessage: i18next.t(
+          "settings.security.errors.enableFailed",
+          "Failed to enable two-factor authentication.",
+        ),
       });
       this.setTwoFactorButtonsDisabled(false);
     }
@@ -152,7 +166,10 @@ export class SecuritySection {
       }
     } catch (error) {
       NotificationService.getInstance().apiError(error, {
-        fallbackMessage: "Failed to disable two-factor authentication.",
+        fallbackMessage: i18next.t(
+          "settings.security.errors.disableFailed",
+          "Failed to disable two-factor authentication.",
+        ),
       });
       this.setTwoFactorButtonsDisabled(false);
     }
@@ -176,8 +193,8 @@ export class SecuritySection {
     dialogContent.innerHTML = "";
     this.twoFactorComponent = new TwoFactorVerification(dialogContent, {
       message: this.buildTwoFactorMessage(challenge),
-      resendLabel: "Resend Code",
-      cancelLabel: "Cancel",
+      resendLabel: i18next.t("settings.security.dialog.resend", "Resend Code"),
+      cancelLabel: i18next.t("settings.security.dialog.cancel", "Cancel"),
       onSubmit: async (code) => {
         await this.handleTwoFactorVerificationSubmit(code);
       },
@@ -232,7 +249,10 @@ export class SecuritySection {
     } catch (error) {
       console.error("Two-factor verification failed:", error);
       NotificationService.getInstance().apiError(error, {
-        fallbackMessage: "Invalid verification code. Please try again.",
+        fallbackMessage: i18next.t(
+          "settings.security.errors.invalidCode",
+          "Invalid verification code. Please try again.",
+        ),
       });
       this.twoFactorComponent?.resetCode();
       this.twoFactorComponent?.focus();
@@ -285,18 +305,23 @@ export class SecuritySection {
     }
 
     if (challenge.destination) {
-      return `We sent a verification code to ${challenge.destination}. Enter it to continue.`;
+      return i18next.t("settings.security.dialog.emailDestination", {
+        destination: challenge.destination,
+      });
     }
 
-    return "Enter the 6-digit code from your email.";
+    return i18next.t(
+      "settings.security.dialog.emailFallback",
+      i18next.t("notifications.twoFactorCodePrompt"),
+    );
   }
 
   private updateTwoFactorUi(user: PublicUser): void {
     const statusText = document.getElementById("twofactor-status-text");
     if (statusText) {
       statusText.innerHTML = user.two_factor_enabled
-        ? "Two-factor authentication is <strong>enabled</strong>. Your account is protected with an extra layer of security."
-        : "Two-factor authentication is <strong>disabled</strong>. Enable it for additional account security.";
+        ? i18next.t("settings.security.statusEnabled")
+        : i18next.t("settings.security.statusDisabled");
     }
 
     this.render(user);
@@ -331,5 +356,7 @@ export class SecuritySection {
     this.twoFactorComponent = null;
     this.activeTwoFactorChallenge = null;
     this.pendingTwoFactorCallback = null;
+    this.unsubscribeLanguage?.();
+    this.unsubscribeLanguage = undefined;
   }
 }

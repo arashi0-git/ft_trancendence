@@ -50,8 +50,102 @@
     "twoFactorCodePrompt": "Enter the 6-digit code from your email."
   },
   "settings": {
-    "languageTitle": "Set Default Language",
-    "languageDescription": "Select your preferred language"
+    "pageTitle": "User Settings",
+    "backButton": "Back to Home",
+    "buttons": {
+      "save": "Save Changes",
+      "saving": "Saving..."
+    },
+    "errors": {
+      "updateFailed": "Failed to update settings"
+    },
+    "profile": {
+      "title": "Profile",
+      "chooseImage": "Choose Image",
+      "imageRequirements": "PNG, JPG, WEBP (max 5MB)",
+      "usernameLabel": "Username",
+      "emailLabel": "Email",
+      "languageTitle": "Set Default Language",
+      "languageDescription": "Select your preferred language",
+      "changePasswordTitle": "Change Password",
+      "changePasswordDescription": "Leave the password fields blank to keep your current password. When changing your password, provide your current password for verification.",
+      "currentPasswordLabel": "Current password",
+      "newPasswordLabel": "New password",
+      "confirmPasswordLabel": "Confirm new password"
+    },
+    "security": {
+      "title": "Security - Two-Factor Authentication (2FA)",
+      "statusEnabled": "Two-factor authentication is <strong>enabled</strong>. Your account is protected with an extra layer of security.",
+      "statusDisabled": "Two-factor authentication is <strong>disabled</strong>. Enable it for additional account security.",
+      "enableButton": "Enable 2FA",
+      "disableButton": "Disable 2FA",
+      "errors": {
+        "enableFailed": "Failed to enable two-factor authentication.",
+        "disableFailed": "Failed to disable two-factor authentication.",
+        "invalidCode": "Invalid verification code. Please try again."
+      },
+      "dialog": {
+        "resend": "Resend Code",
+        "cancel": "Cancel",
+        "emailDestination": "We sent a verification code to {{destination}}. Enter it to continue.",
+        "emailFallback": "Enter the 6-digit code from your email."
+      }
+    },
+    "friends": {
+      "title": "Friends",
+      "placeholder": "Friend username",
+      "addButton": "Add Friend",
+      "adding": "Adding...",
+      "removeButton": "Remove",
+      "removing": "Removing...",
+      "loading": "Loading friends list...",
+      "empty": "You have not added any friends yet.",
+      "online": "Online",
+      "offline": "Offline",
+      "ariaRemove": "Remove {{username}} from friends list",
+      "avatarAlt": "{{username}}'s avatar",
+      "errors": {
+        "addFailed": "Failed to add friend",
+        "removeFailed": "Failed to remove friend",
+        "loadFailed": "Failed to load friends list"
+      }
+    },
+    "history": {
+      "title": "Match History & Stats",
+      "loadingStats": "Loading stats...",
+      "loadError": "Failed to load match history. Please try again later.",
+      "noStats": "No stats available",
+      "wins": "Wins",
+      "losses": "Losses",
+      "totalGames": "Total Games",
+      "winRate": "Win Rate",
+      "empty": "No matches yet. Play some games to see your history here!",
+      "recentMatches": "Recent Matches",
+      "loadMore": "Load More",
+      "loading": "Loading...",
+      "filters": {
+        "all": "All",
+        "quick": "Quick",
+        "tournament": "Tournament"
+      },
+      "types": {
+        "quick": "Quick Match",
+        "tournament": "Tournament"
+      },
+      "badges": {
+        "quick": "⚡ Quick Match",
+        "tournament": "🏆 Tournament"
+      },
+      "labels": {
+        "score": "Score",
+        "with": "With:",
+        "tournamentFallback": "Tournament"
+      },
+      "results": {
+        "win": "Win",
+        "loss": "Loss"
+      }
+    }
   },
   "quickPlay": {
     "pageTitleSetup": "Quick Play Setup",

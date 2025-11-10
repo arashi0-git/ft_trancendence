@@ -41,13 +41,16 @@ export class ProfileSection {
 
     this.container.innerHTML = `
       <section class="space-y-4">
-        <h3 class="text-lg font-semibold text-cyan-200">Profile</h3>
+        <h3 class="text-lg font-semibold text-cyan-200">
+          ${i18next.t("settings.profile.title", "Profile")}
+        </h3>
         <div class="flex items-center space-x-4">
           <div class="relative w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
             <img
               id="profile-image-preview"
               src="${sanitizedProfileUrl ? AuthService.resolveAssetUrl(sanitizedProfileUrl) : ""}"
-              alt="Profile"
+              alt=""
+              role="img"
               class="w-full h-full object-cover ${sanitizedProfileUrl ? "" : "hidden"}"
             />
             <div
@@ -62,7 +65,7 @@ export class ProfileSection {
               for="profile-image-input"
               class="cursor-pointer inline-block bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded transition"
             >
-              Choose Image
+              ${i18next.t("settings.profile.chooseImage", "Choose Image")}
             </label>
             <input
               type="file"
@@ -70,12 +73,19 @@ export class ProfileSection {
               accept="image/png,image/jpeg,image/jpg,image/webp"
               class="hidden"
             />
-            <p class="text-xs text-gray-400 mt-2">PNG, JPG, WEBP (max 5MB)</p>
+            <p class="text-xs text-gray-400 mt-2">
+              ${i18next.t(
+                "settings.profile.imageRequirements",
+                "PNG, JPG, WEBP (max 5MB)",
+              )}
+            </p>
           </div>
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm text-gray-300 mb-1" for="username">Username</label>
+          <label class="block text-sm text-gray-300 mb-1" for="username">
+            ${i18next.t("settings.profile.usernameLabel", "Username")}
+          </label>
           <input
             type="text"
             id="username"
@@ -87,7 +97,9 @@ export class ProfileSection {
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm text-gray-300 mb-1" for="email">Email</label>
+          <label class="block text-sm text-gray-300 mb-1" for="email">
+            ${i18next.t("settings.profile.emailLabel", "Email")}
+          </label>
           <input
             type="email"
             id="email"
@@ -100,10 +112,16 @@ export class ProfileSection {
 
         <div class="space-y-2">
           <h4 class="text-md font-semibold text-cyan-200">
-            ${i18next.t("settings.languageTitle", "Set Default Language")}
+            ${i18next.t(
+              "settings.profile.languageTitle",
+              "Set Default Language",
+            )}
           </h4>
           <p class="text-xs text-gray-400 mb-2">
-            ${i18next.t("settings.languageDescription", "Select your preferred language")}
+            ${i18next.t(
+              "settings.profile.languageDescription",
+              "Select your preferred language",
+            )}
           </p>
           <div class="grid grid-cols-3 gap-2">
             <button
@@ -146,12 +164,25 @@ export class ProfileSection {
         </div>
 
         <div class="pt-4 space-y-4">
-          <h4 class="text-md font-semibold text-cyan-200">Change Password</h4>
+          <h4 class="text-md font-semibold text-cyan-200">
+            ${i18next.t(
+              "settings.profile.changePasswordTitle",
+              "Change Password",
+            )}
+          </h4>
           <p class="text-xs text-gray-400">
-            Leave the password fields blank to keep your current password. When changing your password, provide your current password for verification.
+            ${i18next.t(
+              "settings.profile.changePasswordDescription",
+              "Leave the password fields blank to keep your current password. When changing your password, provide your current password for verification.",
+            )}
           </p>
           <div>
-            <label class="block text-sm text-gray-300 mb-1" for="current-password">Current password</label>
+            <label class="block text-sm text-gray-300 mb-1" for="current-password">
+              ${i18next.t(
+                "settings.profile.currentPasswordLabel",
+                "Current password",
+              )}
+            </label>
             <input
               id="current-password"
               name="currentPassword"
@@ -162,7 +193,12 @@ export class ProfileSection {
           </div>
           <div class="grid gap-4 sm:grid-cols-2">
             <div>
-              <label class="block text-sm text-gray-300 mb-1" for="new-password">New password</label>
+              <label class="block text-sm text-gray-300 mb-1" for="new-password">
+                ${i18next.t(
+                  "settings.profile.newPasswordLabel",
+                  "New password",
+                )}
+              </label>
               <input
                 id="new-password"
                 name="newPassword"
@@ -172,7 +208,12 @@ export class ProfileSection {
               />
             </div>
             <div>
-              <label class="block text-sm text-gray-300 mb-1" for="confirm-password">Confirm new password</label>
+              <label class="block text-sm text-gray-300 mb-1" for="confirm-password">
+                ${i18next.t(
+                  "settings.profile.confirmPasswordLabel",
+                  "Confirm new password",
+                )}
+              </label>
               <input
                 id="confirm-password"
                 name="confirmPassword"
@@ -190,13 +231,14 @@ export class ProfileSection {
             id="save-profile-btn"
             class="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white py-3 px-6 rounded-lg font-semibold transition"
           >
-            Save Changes
+            ${i18next.t("settings.buttons.save", "Save Changes")}
           </button>
         </div>
       </section>
     `;
 
     this.attachListeners();
+    this.registerAvatarErrorHandler();
   }
 
   private attachListeners(): void {
@@ -215,6 +257,23 @@ export class ProfileSection {
     document
       .getElementById("lang-btn-jp")
       ?.addEventListener("click", () => this.handleLanguageChange("jp"));
+  }
+
+  private registerAvatarErrorHandler(): void {
+    const img = document.getElementById(
+      "profile-image-preview",
+    ) as HTMLImageElement | null;
+    const placeholder = document.getElementById("profile-image-placeholder");
+
+    if (!img || !placeholder) {
+      return;
+    }
+
+    img.addEventListener("error", () => {
+      img.classList.add("hidden");
+      img.removeAttribute("src");
+      placeholder.classList.remove("hidden");
+    });
   }
 
   private async handleAvatarChange(event: Event): Promise<void> {
