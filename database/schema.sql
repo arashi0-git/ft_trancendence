@@ -1,5 +1,5 @@
 
--- Enable Write-Ahead Logging mode for better concurent database access
+-- Enable Write-Ahead Logging mode for better concurrent database access
 PRAGMA journal_mode = WAL;
 
 CREATE TABLE IF NOT EXISTS users (
@@ -60,7 +60,6 @@ CREATE TABLE IF NOT EXISTS game_history (
     opponent_info TEXT,
     finished_at DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_game_history_user ON game_history(user_id);
