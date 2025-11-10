@@ -5,7 +5,6 @@ import staticFiles from "@fastify/static";
 import multipart from "@fastify/multipart";
 import path from "path";
 import fs from "fs";
-import https from "https";
 import secureJsonParse from "secure-json-parse";
 import { initializeDatabase } from "./database/init";
 import { authRoutes } from "./routes/auth";

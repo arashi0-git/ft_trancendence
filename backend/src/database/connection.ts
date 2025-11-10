@@ -4,19 +4,12 @@ import fs from "node:fs";
 
 export class DatabaseWrapper {
   private db: Database.Database;
+  private readonly dbPath: string;
 
   constructor(dbPath: string) {
-    const dir = path.dirname(dbPath);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-
-    try {
-      this.db = new Database(dbPath);
-      this.db.pragma("foreign_keys = ON");
-      console.log("Connected to SQLite database");
-    } catch (err) {
-      console.error("Error opening database:", err);
-      throw err;
-    }
+    this.dbPath = dbPath;
+    this.ensureDirectory();
+    this.db = this.createConnection();
   }
 
   exec(sql: string): void {
@@ -44,6 +37,48 @@ export class DatabaseWrapper {
       console.log("Database connection closed");
     } catch (err) {
       console.error("Error closing database:", err);
+      throw err;
+    }
+  }
+
+  reset(): void {
+    this.close();
+    const files = [this.dbPath, this.dbPath + "-wal", this.dbPath + "-shm"];
+    for (const p of files) {
+      try {
+        if (fs.existsSync(p)) {
+          fs.unlinkSync(p);
+        }
+      } catch (err) {
+        console.error("Error deleting database file:", err);
+        throw err;
+      }
+    }
+    this.ensureDirectory();
+    this.db = this.createConnection();
+    console.log("Database reset and reopened");
+  }
+
+  getPath(): string {
+    return this.dbPath;
+  }
+
+  private ensureDirectory(): void {
+    const dir = path.dirname(this.dbPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true }); // mkdir -p
+    }
+  }
+
+  private createConnection(): Database.Database {
+    try {
+      const connection = new Database(this.dbPath);
+      // Enable foreign key constraints for data integrity
+      connection.pragma("foreign_keys = ON");
+      console.log("Connected to SQLite database");
+      return connection;
+    } catch (err) {
+      console.error("Error opening database:", err);
       throw err;
     }
   }
