@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS game_history (
     is_winner BOOLEAN,
     opponent_info TEXT,
     finished_at DATETIME NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_game_history_user ON game_history(user_id);
