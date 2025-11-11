@@ -184,10 +184,10 @@
     "registrationError": "Failed to display the player registration screen.",
     "gameOverTitle": "Game Finished!",
     "controls": {
-      "playerLeftOuter": "Player 1 (Left-Outer):W/S",
-      "playerRightOuter": "Player 2 (Right-Outer): ↑/↓",
-      "playerLeftInner": "Player 3 (Left-Inner): R/F",
-      "playerRightInner": "Player 4 (Right-Inner): I/K"
+      "leftOuter": "Left-Outer",
+      "rightOuter": "Right-Outer",
+      "leftInner": "Left-Inner",
+      "rightInner": "Right-Inner"
     }
   },
   "playerSelector": {
@@ -403,8 +403,8 @@
       "heading": "{{player1}} vs {{player2}}",
       "details": "{{identifier}} - First to {{points}} points wins",
       "identifier": "{{roundName}} - {{matchLabel}}",
-      "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>: W/S (Up/Down)",
-      "controlsRight": "<strong class=\"text-white\">{{player}}</strong>: ↑/↓ (Up/Down)",
+      "controlsLeft": "<strong class=\"text-white\">{{player}} (Left-Outer):</strong> W/S",
+      "controlsRight": "<strong class=\"text-white\">{{player}} (Right-Outer):</strong> ↑/↓",
       "playerDefault": "Player {{index}}",
       "matchNumber": "Match {{number}}"
     },
