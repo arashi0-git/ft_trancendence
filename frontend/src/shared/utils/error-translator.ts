@@ -11,6 +11,17 @@ export function translateApiError(
   options: ErrorTranslationOptions = {},
 ): string {
   if (error instanceof ApiError) {
+    const statusKeyMap: Record<number, string> = {
+      413: "errors.STATUS_413",
+    };
+
+    if (typeof error.status === "number" && statusKeyMap[error.status]) {
+      const key = statusKeyMap[error.status];
+      if (i18next.exists(key)) {
+        return i18next.t(key);
+      }
+    }
+
     if (error.code) {
       const key = `errors.${error.code}`;
       if (i18next.exists(key)) {

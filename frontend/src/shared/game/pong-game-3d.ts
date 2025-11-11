@@ -308,12 +308,8 @@ export class PongGame3D {
   private readonly GAME_KEYS = [
     "ArrowUp",
     "ArrowDown",
-    "ArrowLeft",
-    "ArrowRight",
     "KeyW",
     "KeyS",
-    "KeyA",
-    "KeyD",
     "KeyR",
     "KeyF",
     "KeyI",

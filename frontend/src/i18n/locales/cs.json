@@ -49,9 +49,117 @@
     "sessionExpired": "Platnost relace vypršela. Přihlas se prosím znovu.",
     "twoFactorCodePrompt": "Zadej šestimístný kód z e-mailu."
   },
+  "twoFactor": {
+    "dialog": {
+      "title": "Dvoufázové ověření",
+      "codeLabel": "Ověřovací kód",
+      "codePlaceholder": "123456",
+      "submit": "Ověřit kód",
+      "resend": "Znovu odeslat kód na e-mail",
+      "cancel": "Zrušit"
+    }
+  },
   "settings": {
-    "languageTitle": "Nastav výchozí jazyk",
-    "languageDescription": "Vyber preferovaný jazyk"
+    "pageTitle": "Uživatelské nastavení",
+    "backButton": "Zpět domů",
+    "buttons": {
+      "save": "Uložit změny",
+      "saving": "Ukládání..."
+    },
+    "errors": {
+      "updateFailed": "Nepodařilo se uložit nastavení"
+    },
+    "profile": {
+      "title": "Profil",
+      "chooseImage": "Vybrat obrázek",
+      "imageRequirements": "PNG, JPG, WEBP (max. 5 MB)",
+      "usernameLabel": "Uživatelské jméno",
+      "emailLabel": "E-mail",
+      "languageTitle": "Nastav výchozí jazyk",
+      "languageDescription": "Vyber preferovaný jazyk",
+      "changePasswordTitle": "Změnit heslo",
+      "changePasswordDescription": "Pole pro heslo nech prázdné, pokud chceš ponechat stávající heslo. Při změně hesla zadej i současné heslo pro ověření.",
+      "currentPasswordLabel": "Současné heslo",
+      "newPasswordLabel": "Nové heslo",
+      "confirmPasswordLabel": "Potvrzení nového hesla"
+    },
+    "security": {
+      "title": "Zabezpečení – dvoufázové ověření (2FA)",
+      "statusEnabled": "Dvoufázové ověření je <strong>zapnuté</strong>. Účet je chráněn další vrstvou zabezpečení.",
+      "statusDisabled": "Dvoufázové ověření je <strong>vypnuté</strong>. Zapni ho pro lepší zabezpečení účtu.",
+      "enableButton": "Zapnout 2FA",
+      "disableButton": "Vypnout 2FA",
+      "errors": {
+        "enableFailed": "Nepodařilo se zapnout dvoufázové ověření.",
+        "disableFailed": "Nepodařilo se vypnout dvoufázové ověření.",
+        "invalidCode": "Neplatný ověřovací kód. Zkus to znovu."
+      },
+      "dialog": {
+        "resend": "Zaslat kód znovu",
+        "cancel": "Zrušit",
+        "emailDestination": "Poslali jsme ověřovací kód na {{destination}}. Zadej ho pro pokračování.",
+        "emailFallback": "Zadej šestimístný kód z e-mailu.",
+        "loginMessage": "Zadej ověřovací kód z e-mailu pro pokračování.",
+        "enableMessage": "Zadej ověřovací kód z e-mailu pro zapnutí dvoufázového ověření.",
+        "disableMessage": "Zadej ověřovací kód z e-mailu pro vypnutí dvoufázového ověření.",
+        "emailChangeMessage": "Zadej ověřovací kód z e-mailu pro potvrzení změny e-mailu."
+      }
+    },
+    "friends": {
+      "title": "Přátelé",
+      "placeholder": "Uživatelské jméno přítele",
+      "addButton": "Přidat přítele",
+      "adding": "Přidávám...",
+      "removeButton": "Odebrat",
+      "removing": "Odebírám...",
+      "loading": "Načítám seznam přátel...",
+      "empty": "Zatím nemáš přidané žádné přátele.",
+      "online": "Online",
+      "offline": "Offline",
+      "ariaRemove": "Odebrat {{username}} ze seznamu přátel",
+      "avatarAlt": "Avatar uživatele {{username}}",
+      "errors": {
+        "addFailed": "Nepodařilo se přidat přítele",
+        "removeFailed": "Nepodařilo se odebrat přítele",
+        "loadFailed": "Nepodařilo se načíst seznam přátel"
+      }
+    },
+    "history": {
+      "title": "Historie zápasů a statistiky",
+      "loadingStats": "Načítám statistiky...",
+      "loadError": "Historii zápasů se nepodařilo načíst. Zkus to později.",
+      "noStats": "Statistiky nejsou dostupné",
+      "wins": "Výhry",
+      "losses": "Prohry",
+      "totalGames": "Počet zápasů",
+      "winRate": "Úspěšnost",
+      "empty": "Zatím žádné zápasy. Zahraj si pár her a uvidíš historii zde!",
+      "recentMatches": "Poslední zápasy",
+      "loadMore": "Načíst další",
+      "loading": "Načítám...",
+      "filters": {
+        "all": "Vše",
+        "quick": "Rychlé",
+        "tournament": "Turnaj"
+      },
+      "types": {
+        "quick": "Rychlý zápas",
+        "tournament": "Turnaj"
+      },
+      "badges": {
+        "quick": "⚡ Rychlý zápas",
+        "tournament": "🏆 Turnaj"
+      },
+      "labels": {
+        "score": "Skóre",
+        "with": "Spoluhráč:",
+        "tournamentFallback": "Turnaj"
+      },
+      "results": {
+        "win": "Výhra",
+        "loss": "Prohra"
+      }
+    }
   },
   "quickPlay": {
     "pageTitleSetup": "Rychlá hra - nastavení",
@@ -76,10 +184,10 @@
     "registrationError": "Nepodařilo se zobrazit obrazovku registrace hráčů.",
     "gameOverTitle": "Hra skončila!",
     "controls": {
-      "playerLeftOuter": "Hráč 1 (levý krajní): W/S",
-      "playerRightOuter": "Hráč 2 (pravý krajní): ↑/↓",
-      "playerLeftInner": "Hráč 3 (levý vnitřní): R/F",
-      "playerRightInner": "Hráč 4 (pravý vnitřní): I/K"
+      "leftOuter": "levý krajní",
+      "rightOuter": "pravý krajní",
+      "leftInner": "levý vnitřní",
+      "rightInner": "pravý vnitřní"
     }
   },
   "playerSelector": {
@@ -176,7 +284,8 @@
       "codeLabel": "Ověřovací kód",
       "codePlaceholder": "123456",
       "submit": "Ověřit kód",
-      "cancel": "Zpět na přihlášení"
+      "cancel": "Zpět na přihlášení",
+      "resend": "Znovu odeslat kód e-mailem"
     },
     "alerts": {
       "welcome": "Vítej zpět, {{username}}!",
@@ -295,8 +404,8 @@
       "heading": "{{player1}} versus {{player2}}",
       "details": "{{identifier}} - vítězí první na {{points}} bodů",
       "identifier": "{{roundName}} - {{matchLabel}}",
-      "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>: W/S (nahoru/dolů)",
-      "controlsRight": "<strong class=\"text-white\">{{player}}</strong>: ↑/↓ (nahoru/dolů)",
+      "controlsLeft": "<strong class=\"text-white\">{{player}} (levý krajní):</strong> W/S",
+      "controlsRight": "<strong class=\"text-white\">{{player}} (pravý krajní):</strong> ↑/↓",
       "playerDefault": "Hráč {{index}}",
       "matchNumber": "Zápas {{number}}"
     },
@@ -353,6 +462,7 @@
     "AVATAR_PROCESSING_FAILED": "Zpracování avatara se nezdařilo",
     "AVATAR_SAVE_FAILED": "Avatar se nepodařilo uložit",
     "AVATAR_TOO_LARGE": "Soubor avatara překračuje limit 2 MB",
+    "STATUS_413": "Požadavek je příliš velký, server jej neumí zpracovat",
     "AVATAR_UPLOAD_FAILED": "Nahrání avatara se nezdařilo",
     "AVATAR_DIMENSIONS_TOO_LARGE": "Rozměry obrázku jsou příliš velké (max. 4096x4096 px)",
     "FRIENDS_LIST_FAILED": "Nepodařilo se načíst seznam přátel",

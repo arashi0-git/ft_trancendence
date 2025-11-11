@@ -11,7 +11,7 @@ import type {
   UpdateUserSettingsPayload,
 } from "../../shared/types/user";
 import { router } from "../../routes/router";
-import { i18next } from "../../i18n";
+import { i18next, onLanguageChange } from "../../i18n";
 
 export class UserSettingsPage extends SpacePageBase {
   private service: UserSettingsService;
@@ -20,10 +20,14 @@ export class UserSettingsPage extends SpacePageBase {
   private friendsSection: FriendsSection | null = null;
   private historySection: HistorySection | null = null;
   private initialEmail: string = "";
+  private unsubscribeLanguage?: () => void;
 
   constructor(container: HTMLElement) {
     super(container);
     this.service = new UserSettingsService();
+    this.unsubscribeLanguage = onLanguageChange(() => {
+      this.updateStaticText();
+    });
   }
 
   render(): void {
@@ -93,14 +97,19 @@ export class UserSettingsPage extends SpacePageBase {
     this.friendsSection?.destroy();
     this.historySection?.destroy();
     this.initialEmail = "";
+    this.unsubscribeLanguage?.();
+    this.unsubscribeLanguage = undefined;
   }
 
   private getTemplate(): string {
     return this.getSpaceTemplate(`
       <div class="max-w-2xl mx-auto p-4">
         <div class="bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-xl p-6 border border-cyan-500/30">
-          <h2 class="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
-            User Settings
+          <h2
+            id="user-settings-title"
+            class="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400"
+          >
+            ${i18next.t("settings.pageTitle", "User Settings")}
           </h2>
 
           <form id="user-settings-form" class="space-y-6">
@@ -119,7 +128,7 @@ export class UserSettingsPage extends SpacePageBase {
               id="back-to-home-btn"
               class="w-full bg-yellow-600 bg-opacity-30 hover:bg-opacity-50 text-white py-3 px-6 rounded-lg font-semibold border border-yellow-500 shadow-lg transition-all duration-200"
             >
-              Back to Home
+              ${i18next.t("settings.backButton", "Back to Home")}
             </button>
           </div>
         </div>
@@ -160,12 +169,16 @@ export class UserSettingsPage extends SpacePageBase {
     try {
       if (saveButton) {
         saveButton.disabled = true;
-        saveButton.textContent = "Saving...";
+        saveButton.textContent = i18next.t(
+          "settings.buttons.saving",
+          "Saving...",
+        );
       }
 
       const profileData = this.profileSection?.getFormData();
       const passwordData = this.profileSection?.getPasswordData();
       const hasAvatarChange = this.profileSection?.hasAvatarChange() ?? false;
+      let updatedAvatarUser: PublicUser | null = null;
 
       const trimmedUsername = profileData?.username?.trim() ?? "";
       const trimmedEmail = profileData?.email?.trim() ?? "";
@@ -177,7 +190,7 @@ export class UserSettingsPage extends SpacePageBase {
       }
 
       const normalizedEmail = trimmedEmail.toLowerCase();
-      const normalizedCurrentEmail = currentUser.email.toLowerCase();
+      const normalizedCurrentEmail = (currentUser.email || "").toLowerCase();
       if (trimmedEmail && normalizedEmail !== normalizedCurrentEmail) {
         payload.email = trimmedEmail;
       }
@@ -234,7 +247,14 @@ export class UserSettingsPage extends SpacePageBase {
       }
 
       if (hasAvatarChange && this.profileSection) {
-        await this.profileSection.uploadAvatar();
+        const avatarResponse = await this.profileSection.uploadAvatar();
+        if (avatarResponse) {
+          updatedAvatarUser = avatarResponse;
+          currentUser = avatarResponse;
+          this.service.setCurrentUser(avatarResponse);
+          this.profileSection.render(avatarResponse);
+          this.securitySection?.render(avatarResponse);
+        }
       }
 
       if (passwordData?.currentPassword) {
@@ -242,6 +262,15 @@ export class UserSettingsPage extends SpacePageBase {
       }
       if (passwordData?.newPassword) {
         payload.newPassword = passwordData.newPassword;
+      }
+
+      const requiresSettingsUpdate = Object.keys(payload).length > 0;
+
+      if (!requiresSettingsUpdate) {
+        NotificationService.getInstance().success(
+          i18next.t("notifications.profileUpdateSuccess"),
+        );
+        return;
       }
 
       // Save settings
@@ -261,8 +290,18 @@ export class UserSettingsPage extends SpacePageBase {
       }
 
       // Update UI with new user data
-      if (response.user) {
-        this.handleUserUpdate(response.user);
+      let nextUser = response.user ?? updatedAvatarUser;
+      if (response.user && updatedAvatarUser) {
+        nextUser = {
+          ...response.user,
+          profile_image_url:
+            response.user.profile_image_url ??
+            updatedAvatarUser.profile_image_url,
+        };
+      }
+
+      if (nextUser) {
+        this.handleUserUpdate(nextUser);
       }
 
       NotificationService.getInstance().success(
@@ -271,13 +310,28 @@ export class UserSettingsPage extends SpacePageBase {
     } catch (error) {
       NotificationService.getInstance().handleUnexpectedError(
         error,
-        "Failed to update settings",
+        i18next.t("settings.errors.updateFailed", "Failed to update settings"),
       );
     } finally {
       if (saveButton) {
         saveButton.disabled = false;
-        saveButton.textContent = "Save Changes";
+        saveButton.textContent = i18next.t(
+          "settings.buttons.save",
+          "Save Changes",
+        );
       }
+    }
+  }
+
+  private updateStaticText(): void {
+    const heading = document.getElementById("user-settings-title");
+    if (heading) {
+      heading.textContent = i18next.t("settings.pageTitle", "User Settings");
+    }
+
+    const backButton = document.getElementById("back-to-home-btn");
+    if (backButton) {
+      backButton.textContent = i18next.t("settings.backButton", "Back to Home");
     }
   }
 

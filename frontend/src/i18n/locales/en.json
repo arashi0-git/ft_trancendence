@@ -49,9 +49,117 @@
     "sessionExpired": "Your session has expired. Please log in again.",
     "twoFactorCodePrompt": "Enter the 6-digit code from your email."
   },
+  "twoFactor": {
+    "dialog": {
+      "title": "Two-Factor Verification",
+      "codeLabel": "Verification Code",
+      "codePlaceholder": "123456",
+      "submit": "Verify Code",
+      "resend": "Resend email code",
+      "cancel": "Cancel"
+    }
+  },
   "settings": {
-    "languageTitle": "Set Default Language",
-    "languageDescription": "Select your preferred language"
+    "pageTitle": "User Settings",
+    "backButton": "Back to Home",
+    "buttons": {
+      "save": "Save Changes",
+      "saving": "Saving..."
+    },
+    "errors": {
+      "updateFailed": "Failed to update settings"
+    },
+    "profile": {
+      "title": "Profile",
+      "chooseImage": "Choose Image",
+      "imageRequirements": "PNG, JPG, WEBP (max 5MB)",
+      "usernameLabel": "Username",
+      "emailLabel": "Email",
+      "languageTitle": "Set Default Language",
+      "languageDescription": "Select your preferred language",
+      "changePasswordTitle": "Change Password",
+      "changePasswordDescription": "Leave the password fields blank to keep your current password. When changing your password, provide your current password for verification.",
+      "currentPasswordLabel": "Current password",
+      "newPasswordLabel": "New password",
+      "confirmPasswordLabel": "Confirm new password"
+    },
+    "security": {
+      "title": "Security - Two-Factor Authentication (2FA)",
+      "statusEnabled": "Two-factor authentication is <strong>enabled</strong>. Your account is protected with an extra layer of security.",
+      "statusDisabled": "Two-factor authentication is <strong>disabled</strong>. Enable it for additional account security.",
+      "enableButton": "Enable 2FA",
+      "disableButton": "Disable 2FA",
+      "errors": {
+        "enableFailed": "Failed to enable two-factor authentication.",
+        "disableFailed": "Failed to disable two-factor authentication.",
+        "invalidCode": "Invalid verification code. Please try again."
+      },
+      "dialog": {
+        "resend": "Resend Code",
+        "cancel": "Cancel",
+        "emailDestination": "We sent a verification code to {{destination}}. Enter it to continue.",
+        "emailFallback": "Enter the 6-digit code from your email.",
+        "loginMessage": "Enter the verification code we emailed you to continue.",
+        "enableMessage": "Enter the verification code we emailed you to turn on two-factor authentication.",
+        "disableMessage": "Enter the verification code we emailed you to disable two-factor authentication.",
+        "emailChangeMessage": "Enter the verification code we emailed you to confirm your email change."
+      }
+    },
+    "friends": {
+      "title": "Friends",
+      "placeholder": "Friend username",
+      "addButton": "Add Friend",
+      "adding": "Adding...",
+      "removeButton": "Remove",
+      "removing": "Removing...",
+      "loading": "Loading friends list...",
+      "empty": "You have not added any friends yet.",
+      "online": "Online",
+      "offline": "Offline",
+      "ariaRemove": "Remove {{username}} from friends list",
+      "avatarAlt": "{{username}}'s avatar",
+      "errors": {
+        "addFailed": "Failed to add friend",
+        "removeFailed": "Failed to remove friend",
+        "loadFailed": "Failed to load friends list"
+      }
+    },
+    "history": {
+      "title": "Match History & Stats",
+      "loadingStats": "Loading stats...",
+      "loadError": "Failed to load match history. Please try again later.",
+      "noStats": "No stats available",
+      "wins": "Wins",
+      "losses": "Losses",
+      "totalGames": "Total Games",
+      "winRate": "Win Rate",
+      "empty": "No matches yet. Play some games to see your history here!",
+      "recentMatches": "Recent Matches",
+      "loadMore": "Load More",
+      "loading": "Loading...",
+      "filters": {
+        "all": "All",
+        "quick": "Quick",
+        "tournament": "Tournament"
+      },
+      "types": {
+        "quick": "Quick Match",
+        "tournament": "Tournament"
+      },
+      "badges": {
+        "quick": "⚡ Quick Match",
+        "tournament": "🏆 Tournament"
+      },
+      "labels": {
+        "score": "Score",
+        "with": "With:",
+        "tournamentFallback": "Tournament"
+      },
+      "results": {
+        "win": "Win",
+        "loss": "Loss"
+      }
+    }
   },
   "quickPlay": {
     "pageTitleSetup": "Quick Play Setup",
@@ -76,10 +184,10 @@
     "registrationError": "Failed to display the player registration screen.",
     "gameOverTitle": "Game Finished!",
     "controls": {
-      "playerLeftOuter": "Player 1 (Left-Outer):W/S",
-      "playerRightOuter": "Player 2 (Right-Outer): ↑/↓",
-      "playerLeftInner": "Player 3 (Left-Inner): R/F",
-      "playerRightInner": "Player 4 (Right-Inner): I/K"
+      "leftOuter": "Left-Outer",
+      "rightOuter": "Right-Outer",
+      "leftInner": "Left-Inner",
+      "rightInner": "Right-Inner"
     }
   },
   "playerSelector": {
@@ -176,7 +284,8 @@
       "codeLabel": "Verification Code",
       "codePlaceholder": "123456",
       "submit": "Verify Code",
-      "cancel": "Back to Login"
+      "cancel": "Back to Login",
+      "resend": "Resend email code"
     },
     "alerts": {
       "welcome": "Welcome back, {{username}}!",
@@ -294,8 +403,8 @@
       "heading": "{{player1}} vs {{player2}}",
       "details": "{{identifier}} - First to {{points}} points wins",
       "identifier": "{{roundName}} - {{matchLabel}}",
-      "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>: W/S (Up/Down)",
-      "controlsRight": "<strong class=\"text-white\">{{player}}</strong>: ↑/↓ (Up/Down)",
+      "controlsLeft": "<strong class=\"text-white\">{{player}} (Left-Outer):</strong> W/S",
+      "controlsRight": "<strong class=\"text-white\">{{player}} (Right-Outer):</strong> ↑/↓",
       "playerDefault": "Player {{index}}",
       "matchNumber": "Match {{number}}"
     },
@@ -352,6 +461,7 @@
     "AVATAR_PROCESSING_FAILED": "Failed to process avatar",
     "AVATAR_SAVE_FAILED": "Failed to save avatar",
     "AVATAR_TOO_LARGE": "Avatar file exceeds the 2MB size limit",
+    "STATUS_413": "The request payload is too large for the server to process",
     "AVATAR_UPLOAD_FAILED": "Failed to upload avatar",
     "AVATAR_DIMENSIONS_TOO_LARGE": "Image dimensions are too large. Maximum allowed is 4096x4096 pixels",
     "FRIENDS_LIST_FAILED": "Failed to load friends list",
