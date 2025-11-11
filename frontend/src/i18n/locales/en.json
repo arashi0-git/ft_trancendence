@@ -284,7 +284,8 @@
       "codeLabel": "Verification Code",
       "codePlaceholder": "123456",
       "submit": "Verify Code",
-      "cancel": "Back to Login"
+      "cancel": "Back to Login",
+      "resend": "Resend email code"
     },
     "alerts": {
       "welcome": "Welcome back, {{username}}!",
@@ -460,7 +461,7 @@
     "AVATAR_PROCESSING_FAILED": "Failed to process avatar",
     "AVATAR_SAVE_FAILED": "Failed to save avatar",
     "AVATAR_TOO_LARGE": "Avatar file exceeds the 2MB size limit",
-    "STATUS_413": "Request failed because the file is too large",
+    "STATUS_413": "The request payload is too large for the server to process",
     "AVATAR_UPLOAD_FAILED": "Failed to upload avatar",
     "AVATAR_DIMENSIONS_TOO_LARGE": "Image dimensions are too large. Maximum allowed is 4096x4096 pixels",
     "FRIENDS_LIST_FAILED": "Failed to load friends list",

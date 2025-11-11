@@ -35,8 +35,28 @@ export class SecuritySection {
     this.onUserUpdate = onUserUpdate;
     this.onEmailRestore = onEmailRestore;
     this.unsubscribeLanguage = onLanguageChange(() => {
-      if (this.user) {
-        this.render(this.user);
+      if (!this.user) {
+        return;
+      }
+
+      const activeChallenge = this.activeTwoFactorChallenge;
+      const pendingCallback = this.pendingTwoFactorCallback;
+
+      this.render(this.user);
+
+      if (activeChallenge) {
+        const successHandler =
+          pendingCallback ??
+          ((result: TwoFactorVerificationResponse) => {
+            if (result.user) {
+              this.onUserUpdate(result.user);
+            }
+            NotificationService.getInstance().success(
+              i18next.t("notifications.twoFactorVerified"),
+            );
+          });
+
+        this.showTwoFactorDialog(activeChallenge, successHandler);
       }
     });
   }

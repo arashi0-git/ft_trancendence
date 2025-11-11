@@ -12,7 +12,7 @@ export function translateApiError(
 ): string {
   if (error instanceof ApiError) {
     const statusKeyMap: Record<number, string> = {
-      413: "errors.AVATAR_TOO_LARGE",
+      413: "errors.STATUS_413",
     };
 
     if (typeof error.status === "number" && statusKeyMap[error.status]) {

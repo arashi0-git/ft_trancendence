@@ -162,8 +162,12 @@ export class LoginForm {
 
     this.twoFactorComponent = new TwoFactorVerification(dialogContainer, {
       message: this.buildTwoFactorMessage(this.twoFactorChallenge),
-      resendLabel: "Resend email code",
-      cancelLabel: "Back to Login",
+      resendLabel: i18next.t("login.twoFactor.resend", {
+        defaultValue: "Resend email code",
+      }),
+      cancelLabel: i18next.t("login.twoFactor.cancel", {
+        defaultValue: "Back to Login",
+      }),
       onSubmit: async (code) => {
         await this.verifyTwoFactorCode(code);
         if (this.twoFactorComponent) {
@@ -316,16 +320,31 @@ export class LoginForm {
   }
 
   private buildTwoFactorMessage(challenge: TwoFactorChallengeResponse): string {
+    const loginMessageKey = "login.twoFactor.message";
+    if (i18next.exists(loginMessageKey)) {
+      const translated = i18next.t(loginMessageKey, {
+        destination: challenge.destination,
+      });
+      if (translated && translated !== loginMessageKey) {
+        return translated;
+      }
+    }
+
     const trimmed = challenge.message?.trim();
     if (trimmed && trimmed.length > 0) {
       return trimmed;
     }
 
     if (challenge.destination) {
-      return `We sent a verification code to ${challenge.destination}. Enter it to continue.`;
+      return i18next.t("settings.security.dialog.emailDestination", {
+        destination: challenge.destination,
+        defaultValue: `We sent a verification code to ${challenge.destination}. Enter it to continue.`,
+      });
     }
 
-    return "Enter the 6-digit code we emailed you to continue.";
+    return i18next.t("notifications.twoFactorCodePrompt", {
+      defaultValue: "Enter the 6-digit code we emailed you to continue.",
+    });
   }
 
   private isTwoFactorChallenge(

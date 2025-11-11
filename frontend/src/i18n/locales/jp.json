@@ -284,7 +284,8 @@
       "codeLabel": "認証コード",
       "codePlaceholder": "123456",
       "submit": "コードを確認",
-      "cancel": "ログイン画面に戻る"
+      "cancel": "ログイン画面に戻る",
+      "resend": "確認コードを再送"
     },
     "alerts": {
       "welcome": "お帰りなさい、{{username}} さん！",
@@ -461,7 +462,7 @@
     "AVATAR_PROCESSING_FAILED": "アバターの処理に失敗しました",
     "AVATAR_SAVE_FAILED": "アバターの保存に失敗しました",
     "AVATAR_TOO_LARGE": "アバターのサイズが2MBを超えています",
-    "STATUS_413": "ファイルが大きすぎるため、リクエストが失敗しました",
+    "STATUS_413": "リクエストのデータが大きすぎるため、サーバーで処理できません",
     "AVATAR_UPLOAD_FAILED": "アバターのアップロードに失敗しました",
     "AVATAR_DIMENSIONS_TOO_LARGE": "画像の縦横サイズが大きすぎます（最大4096x4096ピクセル）",
     "FRIENDS_LIST_FAILED": "フレンド一覧の取得に失敗しました",
