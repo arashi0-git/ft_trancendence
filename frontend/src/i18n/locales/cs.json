@@ -447,6 +447,7 @@
     "AVATAR_PROCESSING_FAILED": "Zpracování avatara se nezdařilo",
     "AVATAR_SAVE_FAILED": "Avatar se nepodařilo uložit",
     "AVATAR_TOO_LARGE": "Soubor avatara překračuje limit 2 MB",
+    "STATUS_413": "Soubor je příliš velký",
     "AVATAR_UPLOAD_FAILED": "Nahrání avatara se nezdařilo",
     "AVATAR_DIMENSIONS_TOO_LARGE": "Rozměry obrázku jsou příliš velké (max. 4096x4096 px)",
     "FRIENDS_LIST_FAILED": "Nepodařilo se načíst seznam přátel",

@@ -446,6 +446,7 @@
     "AVATAR_PROCESSING_FAILED": "Failed to process avatar",
     "AVATAR_SAVE_FAILED": "Failed to save avatar",
     "AVATAR_TOO_LARGE": "Avatar file exceeds the 2MB size limit",
+    "STATUS_413": "Request failed because the file is too large",
     "AVATAR_UPLOAD_FAILED": "Failed to upload avatar",
     "AVATAR_DIMENSIONS_TOO_LARGE": "Image dimensions are too large. Maximum allowed is 4096x4096 pixels",
     "FRIENDS_LIST_FAILED": "Failed to load friends list",

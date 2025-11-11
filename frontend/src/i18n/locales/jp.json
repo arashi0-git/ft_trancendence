@@ -447,6 +447,7 @@
     "AVATAR_PROCESSING_FAILED": "アバターの処理に失敗しました",
     "AVATAR_SAVE_FAILED": "アバターの保存に失敗しました",
     "AVATAR_TOO_LARGE": "アバターのサイズが2MBを超えています",
+    "STATUS_413": "ファイルが大きすぎるため、リクエストが失敗しました",
     "AVATAR_UPLOAD_FAILED": "アバターのアップロードに失敗しました",
     "AVATAR_DIMENSIONS_TOO_LARGE": "画像の縦横サイズが大きすぎます（最大4096x4096ピクセル）",
     "FRIENDS_LIST_FAILED": "フレンド一覧の取得に失敗しました",
