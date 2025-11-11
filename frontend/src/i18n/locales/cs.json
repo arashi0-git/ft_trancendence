@@ -184,10 +184,10 @@
     "registrationError": "Nepodařilo se zobrazit obrazovku registrace hráčů.",
     "gameOverTitle": "Hra skončila!",
     "controls": {
-      "playerLeftOuter": "Hráč 1 (levý krajní): W/S",
-      "playerRightOuter": "Hráč 2 (pravý krajní): ↑/↓",
-      "playerLeftInner": "Hráč 3 (levý vnitřní): R/F",
-      "playerRightInner": "Hráč 4 (pravý vnitřní): I/K"
+      "leftOuter": "levý krajní",
+      "rightOuter": "pravý krajní",
+      "leftInner": "levý vnitřní",
+      "rightInner": "pravý vnitřní"
     }
   },
   "playerSelector": {
@@ -404,8 +404,8 @@
       "heading": "{{player1}} versus {{player2}}",
       "details": "{{identifier}} - vítězí první na {{points}} bodů",
       "identifier": "{{roundName}} - {{matchLabel}}",
-      "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>: W/S (nahoru/dolů)",
-      "controlsRight": "<strong class=\"text-white\">{{player}}</strong>: ↑/↓ (nahoru/dolů)",
+      "controlsLeft": "<strong class=\"text-white\">{{player}} (levý krajní):</strong> W/S",
+      "controlsRight": "<strong class=\"text-white\">{{player}} (pravý krajní):</strong> ↑/↓",
       "playerDefault": "Hráč {{index}}",
       "matchNumber": "Zápas {{number}}"
     },

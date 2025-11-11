@@ -184,10 +184,10 @@
     "registrationError": "プレイヤー登録画面の表示に失敗しました。",
     "gameOverTitle": "ゲーム終了！",
     "controls": {
-      "playerLeftOuter": "プレイヤー1(左外):W/S",
-      "playerRightOuter": "プレイヤー2(右外）：↑/↓",
-      "playerLeftInner": "プレイヤー3(左内）： R/F",
-      "playerRightInner": "プレイヤー4(右内）： I/K"
+      "leftOuter": "左外",
+      "rightOuter": "右外",
+      "leftInner": "左内",
+      "rightInner": "右内"
     }
   },
   "playerSelector": {
@@ -404,8 +404,8 @@
       "heading": "{{player1}} 対 {{player2}}",
       "details": "{{identifier}} - 先に{{points}}ポイント取った方が勝利",
       "identifier": "{{roundName}} - {{matchLabel}}",
-      "controlsLeft": "<strong class=\"text-white\">{{player}}</strong>:W/S(上下)",
-      "controlsRight": "<strong class=\"text-white\">{{player}}</strong>：↑/↓（上下）",
+      "controlsLeft": "<strong class=\"text-white\">{{player}}（左外）:</strong> W/S",
+      "controlsRight": "<strong class=\"text-white\">{{player}}（右外）:</strong> ↑/↓",
       "playerDefault": "プレイヤー{{index}}",
       "matchNumber": "第{{number}}試合"
     },

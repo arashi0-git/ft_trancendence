@@ -16,6 +16,7 @@ import type {
 import { setLanguage, type SupportedLanguage } from "../../i18n";
 import { expectJson } from "../utils/http";
 import { ApiError } from "../utils/api-error";
+import { gameCustomizationService } from "./game-customization.service";
 
 declare const __API_BASE_URL__: string | undefined;
 
@@ -107,6 +108,7 @@ export class AuthService {
       // Apply user's language preference after registration
       if (data.user) {
         await this.applyUserLanguage(data.user);
+        gameCustomizationService.resetToDefaults();
       }
 
       return data as AuthResponse;
@@ -138,6 +140,7 @@ export class AuthService {
 
       if (data.user) {
         await this.applyUserLanguage(data.user);
+        gameCustomizationService.resetToDefaults();
       }
 
       return data;
@@ -171,6 +174,7 @@ export class AuthService {
       // Apply user's language preference after 2FA verification
       if (data.user) {
         await this.applyUserLanguage(data.user);
+        gameCustomizationService.resetToDefaults();
       }
 
       return data as TwoFactorVerificationResponse;
@@ -307,6 +311,7 @@ export class AuthService {
     } finally {
       // This block will always execute, ensuring the token is removed.
       localStorage.removeItem("auth_token");
+      gameCustomizationService.resetToDefaults();
     }
   }
 

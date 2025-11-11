@@ -136,21 +136,34 @@ export class QuickPlayPage extends SpacePageBase {
           </button>
         </div>
 
-        <div id="game-over-modal" class="hidden absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-75 z-50">
-          <div class="bg-white p-8 rounded-lg shadow-xl text-center text-black">
-            <h2 id="game-over-title" class="text-3xl font-bold mb-4">${this.t.gameOverTitle || "Game finished!"}</h2>
-            <p class="text-xl mb-2">
-              <span id="game-over-winner-label">${this.t.winner || "Winner:"}</span>
-              <span id="winner-name" class="font-semibold"></span>
+        <div
+          id="game-over-modal"
+          class="hidden absolute inset-0 flex items-center justify-center bg-black/60 z-50 px-4 backdrop-blur"
+        >
+          <div
+            class="w-full max-w-md bg-purple-400/20 border border-purple-400/50 rounded-2xl shadow-2xl p-8 text-center text-white backdrop-blur-lg"
+          >
+            <h2
+              id="game-over-title"
+              class="text-3xl font-bold mb-4 text-purple-100"
+            >
+              ${this.t.gameOverTitle || "Game finished!"}
+            </h2>
+            <p class="text-xl mb-2 text-white">
+              <span id="game-over-winner-label" class="text-purple-300 font-semibold">${this.t.winner || "Winner:"}</span>
+              <span id="winner-name" class="font-semibold text-white"></span>
             </p>
-            <p class="text-lg mb-6">
-              <span id="game-over-score-label">${this.t.finalScore || "Final Score:"}</span>
-              <span id="final-score" class="font-semibold"></span>
+            <p class="text-lg mb-6 text-white">
+              <span id="game-over-score-label" class="text-purple-300 font-semibold">${this.t.finalScore || "Final Score:"}</span>
+              <span id="final-score" class="font-semibold text-white"></span>
             </p>
-            <button id="reset-game-modal-btn" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded">
+            <button
+              id="reset-game-modal-btn"
+              class="w-full bg-purple-600 bg-opacity-40 hover:bg-opacity-60 text-white py-3 px-6 rounded-lg font-semibold border border-purple-500 shadow-lg transition-all duration-200"
+            >
               ${this.t.resetGameButton || this.t.resetGame || "Reset Game"}
             </button>
-          </div>  
+          </div>
         </div>
       </div>
     `;
@@ -262,6 +275,12 @@ export class QuickPlayPage extends SpacePageBase {
     playerCount: number,
     playerSelections: (PlayerOption | null)[],
   ): string {
+    const controls = this.t.controls || {};
+    const sideLabel = (key: string, fallback: string): string =>
+      controls[key] || fallback;
+    const keysValue = (key: string, fallback: string): string =>
+      controls[`${key}Keys`] || fallback;
+
     const getPlayerName = (index: number): string => {
       const player = playerSelections[index];
       return player?.displayName || `Player ${index + 1}`;
@@ -269,14 +288,14 @@ export class QuickPlayPage extends SpacePageBase {
 
     const p1Name = getPlayerName(0);
     const p2Name = getPlayerName(1);
-    const p1Controls = `<p><strong class="text-white">${p1Name} (Left-Outer):</strong> W/S</p>`;
-    const p2Controls = `<p><strong class="text-white">${p2Name} (Right-Outer):</strong> ↑/↓</p>`;
+    const p1Controls = `<p><strong class="text-white">${p1Name} (${sideLabel("leftOuter", "Left-Outer")}):</strong> ${keysValue("leftOuter", "W/S")}</p>`;
+    const p2Controls = `<p><strong class="text-white">${p2Name} (${sideLabel("rightOuter", "Right-Outer")}):</strong> ${keysValue("rightOuter", "↑/↓")}</p>`;
 
     if (playerCount === 4) {
       const p3Name = getPlayerName(2);
       const p4Name = getPlayerName(3);
-      const p3Controls = `<p><strong class="text-white">${p3Name} (Left-Inner):</strong> R/F</p>`;
-      const p4Controls = `<p><strong class="text-white">${p4Name} (Right-Inner):</strong> I/K</p>`;
+      const p3Controls = `<p><strong class="text-white">${p3Name} (${sideLabel("leftInner", "Left-Inner")}):</strong> ${keysValue("leftInner", "R/F")}</p>`;
+      const p4Controls = `<p><strong class="text-white">${p4Name} (${sideLabel("rightInner", "Right-Inner")}):</strong> ${keysValue("rightInner", "I/K")}</p>`;
       return `${p1Controls}${p2Controls}${p3Controls}${p4Controls}`;
     }
     return `${p1Controls}${p2Controls}`;
