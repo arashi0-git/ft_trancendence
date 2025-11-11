@@ -37,7 +37,7 @@ RUN mkdir -p /app/data
 
 EXPOSE 3000 
 
-CMD ["sh", "-c", "if [ \"$NODE_ENV\" = \"production\" ]; then npm start; else npm run dev; fi"]
+CMD ["npm", "start"]
 
 
 

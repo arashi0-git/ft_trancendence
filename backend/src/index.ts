@@ -74,22 +74,6 @@ async function setupRoutes() {
   await fastify.register(authRoutes, { prefix: "/api/auth" });
   await fastify.register(userRoutes, { prefix: "/api/users" });
   await fastify.register(historyRoutes, { prefix: "/api/history" });
-  // ヘルスチェック
-  fastify.get("/api/health", async (_request, _reply) => {
-    return { status: "ok", timestamp: new Date().toISOString() };
-  });
-
-  // API基本ルート
-  fastify.get("/api", async (_request, _reply) => {
-    return {
-      message: "ft_transcendence API",
-      version: "1.0.0",
-      endpoints: {
-        health: "/api/health",
-        updateProfile: "/api/users/me",
-      },
-    };
-  });
 }
 
 // サーバー起動
@@ -103,7 +87,6 @@ async function start() {
     const host = process.env.HOST || "0.0.0.0";
 
     await fastify.listen({ port, host });
-
     fastify.log.info(
       `ft_transcendence backend server listening on ${host}:${port}`,
     );

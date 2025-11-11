@@ -12,7 +12,7 @@ export interface AuthTokenPayload extends jwt.JwtPayload {
   id: number;
   username: string;
   email: string;
-  tokenVersion?: number;
+  tokenVersion: number;
 }
 
 export class AuthUtils {
@@ -41,35 +41,28 @@ export class AuthUtils {
   }
 
   static verifyToken(token: string): AuthTokenPayload {
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
 
-      if (typeof decoded === "string") {
-        throw new Error("Invalid token payload");
-      }
-
-      const payload = decoded as AuthTokenPayload;
-
-      if (
-        typeof payload.id !== "number" ||
-        typeof payload.username !== "string" ||
-        typeof payload.email !== "string"
-      ) {
-        throw new Error("Invalid token payload");
-      }
-
-      return payload;
-    } catch (error) {
-      // Use error to provide more specific error message without exposing internals
-      const isExpired =
-        error instanceof Error && error.message.includes("expired");
-      const errorMessage = isExpired ? "Token expired" : "Invalid token";
-
-      throw new Error(errorMessage);
+    if (typeof decoded === "string") {
+      throw new Error("Invalid token payload");
     }
+
+    const payload = decoded as AuthTokenPayload;
+
+    if (
+      typeof payload.id !== "number" ||
+      typeof payload.username !== "string" ||
+      typeof payload.email !== "string" ||
+      typeof payload.tokenVersion !== "number"
+    ) {
+      throw new Error("Invalid token payload");
+    }
+
+    return payload;
   }
 
   static extractTokenFromHeader(authorization?: string): string | null {
+    // if request isn't from a login user
     if (!authorization || !authorization.startsWith("Bearer ")) {
       return null;
     }
