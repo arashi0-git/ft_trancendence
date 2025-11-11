@@ -136,21 +136,34 @@ export class QuickPlayPage extends SpacePageBase {
           </button>
         </div>
 
-        <div id="game-over-modal" class="hidden absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-75 z-50">
-          <div class="bg-white p-8 rounded-lg shadow-xl text-center text-black">
-            <h2 id="game-over-title" class="text-3xl font-bold mb-4">${this.t.gameOverTitle || "Game finished!"}</h2>
-            <p class="text-xl mb-2">
-              <span id="game-over-winner-label">${this.t.winner || "Winner:"}</span>
-              <span id="winner-name" class="font-semibold"></span>
+        <div
+          id="game-over-modal"
+          class="hidden absolute inset-0 flex items-center justify-center bg-black/60 z-50 px-4 backdrop-blur"
+        >
+          <div
+            class="w-full max-w-md bg-purple-400/20 border border-purple-400/50 rounded-2xl shadow-2xl p-8 text-center text-white backdrop-blur-lg"
+          >
+            <h2
+              id="game-over-title"
+              class="text-3xl font-bold mb-4 text-purple-100"
+            >
+              ${this.t.gameOverTitle || "Game finished!"}
+            </h2>
+            <p class="text-xl mb-2 text-white">
+              <span id="game-over-winner-label" class="text-purple-300 font-semibold">${this.t.winner || "Winner:"}</span>
+              <span id="winner-name" class="font-semibold text-white"></span>
             </p>
-            <p class="text-lg mb-6">
-              <span id="game-over-score-label">${this.t.finalScore || "Final Score:"}</span>
-              <span id="final-score" class="font-semibold"></span>
+            <p class="text-lg mb-6 text-white">
+              <span id="game-over-score-label" class="text-purple-300 font-semibold">${this.t.finalScore || "Final Score:"}</span>
+              <span id="final-score" class="font-semibold text-white"></span>
             </p>
-            <button id="reset-game-modal-btn" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded">
+            <button
+              id="reset-game-modal-btn"
+              class="w-full bg-purple-600 bg-opacity-40 hover:bg-opacity-60 text-white py-3 px-6 rounded-lg font-semibold border border-purple-500 shadow-lg transition-all duration-200"
+            >
               ${this.t.resetGameButton || this.t.resetGame || "Reset Game"}
             </button>
-          </div>  
+          </div>
         </div>
       </div>
     `;
