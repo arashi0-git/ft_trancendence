@@ -233,7 +233,7 @@ export class LoginForm {
     }
 
     submitBtn.disabled = true;
-    submitBtn.textContent = "Logging in...";
+    submitBtn.textContent = this.t.status?.loggingIn || "Logging in...";
 
     try {
       const response = await AuthService.login(loginData);
