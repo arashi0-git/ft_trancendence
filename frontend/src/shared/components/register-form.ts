@@ -29,6 +29,21 @@ export class RegisterForm {
   }
 
   private render(): void {
+    const title = this.translations.title || "Create an Account";
+    const usernameLabel = this.translations.usernameLabel || "Username";
+    const usernamePlaceholder =
+      this.translations.usernamePlaceholder || "Choose a username";
+    const emailLabel = this.translations.emailLabel || "Email";
+    const emailPlaceholder =
+      this.translations.emailPlaceholder || "you@example.com";
+    const passwordLabel = this.translations.passwordLabel || "Password";
+    const passwordPlaceholder =
+      this.translations.passwordPlaceholder || "Enter a secure password";
+    const passwordHelp =
+      this.translations.passwordHelp || "At least 6 characters.";
+    const confirmLabel = this.translations.confirmLabel || "Confirm Password";
+    const confirmPlaceholder =
+      this.translations.confirmPlaceholder || "Re-enter your password";
     const submitLabel = this.translations.submit || "Create account";
     const loginLabel =
       this.translations.login || "Already have an account? Sign in";
@@ -36,10 +51,10 @@ export class RegisterForm {
 
     this.container.innerHTML = `
       <div class="border border-cyan-500/30 rounded-lg p-6 bg-gray-900/95 shadow-xl backdrop-blur-sm">
-        <h2 class="text-2xl font-bold mb-4 text-center text-cyan-200">Create an Account</h2>
+        <h2 class="text-2xl font-bold mb-4 text-center text-cyan-200">${title}</h2>
         <form id="register-form" class="space-y-4">
           <div>
-            <label for="username" class="block text-sm font-medium text-gray-200">Username</label>
+            <label for="username" class="block text-sm font-medium text-gray-200">${usernameLabel}</label>
             <input
               type="text"
               id="username"
@@ -48,22 +63,22 @@ export class RegisterForm {
               minlength="3"
               maxlength="20"
               class="mt-1 block w-full px-3 py-2 bg-gray-950 border border-cyan-500/40 rounded-md shadow-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400"
-              placeholder="Choose a username"
+              placeholder="${usernamePlaceholder}"
             >
           </div>
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-200">Email</label>
+            <label for="email" class="block text-sm font-medium text-gray-200">${emailLabel}</label>
             <input
               type="email"
               id="email"
               name="email"
               required
               class="mt-1 block w-full px-3 py-2 bg-gray-950 border border-cyan-500/40 rounded-md shadow-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400"
-              placeholder="you@example.com"
+              placeholder="${emailPlaceholder}"
             >
           </div>
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-200">Password</label>
+            <label for="password" class="block text-sm font-medium text-gray-200">${passwordLabel}</label>
             <div class="mt-1 relative">
               <input
                 type="password"
@@ -72,7 +87,7 @@ export class RegisterForm {
                 required
                 minlength="6"
                 class="block w-full px-3 py-2 pr-10 bg-gray-950 border border-cyan-500/40 rounded-md shadow-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400"
-                placeholder="Enter a secure password"
+                placeholder="${passwordPlaceholder}"
               >
               <button
                 type="button"
@@ -82,10 +97,10 @@ export class RegisterForm {
                 data-visible="false"
               ></button>
             </div>
-            <p class="text-xs text-gray-400 mt-1">At least 6 characters.</p>
+            <p class="text-xs text-gray-400 mt-1">${passwordHelp}</p>
           </div>
           <div>
-            <label for="confirm-password" class="block text-sm font-medium text-gray-200">Confirm Password</label>
+            <label for="confirm-password" class="block text-sm font-medium text-gray-200">${confirmLabel}</label>
             <div class="mt-1 relative">
               <input
                 type="password"
@@ -93,7 +108,7 @@ export class RegisterForm {
                 name="confirm-password"
                 required
                 class="block w-full px-3 py-2 pr-10 bg-gray-950 border border-cyan-500/40 rounded-md shadow-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400"
-                placeholder="Re-enter your password"
+                placeholder="${confirmPlaceholder}"
               >
               <button
                 type="button"

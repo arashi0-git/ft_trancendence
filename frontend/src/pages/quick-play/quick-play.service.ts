@@ -179,7 +179,9 @@ export class QuickPlayService extends BaseGameService {
     }
 
     const playerNumber = userPlayerIndex + 1; // 1-indexed
-    const isWinner = data.winner === playerNumber;
+    const userIsTeam1 = playerNumber === 1 || playerNumber === 3;
+    const winnerIsTeam1 = data.winner === 1 || data.winner === 3;
+    const isWinner = userIsTeam1 === winnerIsTeam1;
 
     // Get user's score and opponent's score
     let myScore = 0;
