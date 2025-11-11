@@ -1,17 +1,15 @@
 import { FastifyInstance } from "fastify";
 import { UserService } from "../services/userService";
 import { AuthUtils } from "../utils/auth";
+import { CreateUserRequest } from "../types/user";
 import {
-  CreateUserRequest,
   LoginRequest,
   AuthResponse,
   TwoFactorChallengeResponse,
   TwoFactorVerifyRequest,
-  EnableTwoFactorRequest,
-  DisableTwoFactorRequest,
   TwoFactorResendRequest,
   TwoFactorVerificationResponse,
-} from "../types/user";
+} from "../types/auth";
 import { authenticateToken, optionalAuth } from "../middleware/auth";
 import { TwoFactorService } from "../services/twoFactorService";
 import { sendError } from "../utils/errorResponse";
@@ -41,6 +39,9 @@ export async function authRoutes(fastify: FastifyInstance) {
           );
         }
 
+        // ^  start of string anchor
+        // [^\s@]+  one or more characters that are not whitespace or '@'
+        // $  end of string anchor
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
           return sendError(
@@ -126,7 +127,6 @@ export async function authRoutes(fastify: FastifyInstance) {
         const challengeResponse: TwoFactorChallengeResponse = {
           requiresTwoFactor: true,
           twoFactorToken: challenge.token,
-          delivery: challenge.delivery,
           expiresIn: challenge.expiresIn,
           message: challenge.message,
           destination: challenge.destination,
@@ -153,7 +153,7 @@ export async function authRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post<{ Body: EnableTwoFactorRequest }>(
+  fastify.post(
     "/2fa/setup",
     { preHandler: authenticateToken },
     async (request, reply) => {
@@ -189,7 +189,6 @@ export async function authRoutes(fastify: FastifyInstance) {
         return reply.send({
           requiresTwoFactor: true,
           twoFactorToken: challenge.token,
-          delivery: challenge.delivery,
           expiresIn: challenge.expiresIn,
           message: challenge.message,
           destination: challenge.destination,
@@ -226,7 +225,6 @@ export async function authRoutes(fastify: FastifyInstance) {
         const response: TwoFactorChallengeResponse = {
           requiresTwoFactor: true,
           twoFactorToken: challenge.token,
-          delivery: challenge.delivery,
           expiresIn: challenge.expiresIn,
           message: challenge.message,
           destination: challenge.destination,
@@ -245,7 +243,7 @@ export async function authRoutes(fastify: FastifyInstance) {
     },
   );
 
-  fastify.post<{ Body: DisableTwoFactorRequest }>(
+  fastify.post(
     "/2fa/disable",
     { preHandler: authenticateToken },
     async (request, reply) => {
@@ -281,7 +279,6 @@ export async function authRoutes(fastify: FastifyInstance) {
         return reply.send({
           requiresTwoFactor: true,
           twoFactorToken: challenge.token,
-          delivery: challenge.delivery,
           expiresIn: challenge.expiresIn,
           message: challenge.message,
           destination: challenge.destination,

@@ -45,6 +45,7 @@
     "twoFactorResendDestination": "{{destination}} に新しい確認コードを送信しました。",
     "twoFactorResendGeneric": "新しい確認コードをメールに送信しました。",
     "passwordMismatch": "新しいパスワードと確認用パスワードが一致しません。",
+    "passwordAllFieldsRequired": "パスワードを変更する場合は、現在のパスワード・新しいパスワード・確認用パスワードの3つすべてを入力してください。",
     "emailChangeTwoFactor": "二要素認証が有効な場合、メールの変更は別々に保存してください。",
     "sessionExpired": "セッションの有効期限が切れました。もう一度ログインしてください。",
     "twoFactorCodePrompt": "メールに届いた6桁のコードを入力してください。"

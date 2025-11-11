@@ -36,7 +36,6 @@ export type TwoFactorPurpose =
 export interface TwoFactorChallengeResponse {
   requiresTwoFactor: true;
   twoFactorToken: string;
-  delivery: "email";
   destination?: string;
   expiresIn: number;
   message: string;

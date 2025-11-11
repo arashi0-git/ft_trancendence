@@ -1,7 +1,8 @@
 import { promises as fsPromises } from "fs";
 import path from "path";
 import { FriendModel } from "../models/friend";
-import { UserModel, UserWithoutPassword, stripPassword } from "../models/user";
+import { UserModel, stripPassword } from "../models/user";
+import { UserWithoutPassword } from "../types/user";
 
 function isSqliteConstraintViolation(
   error: unknown,

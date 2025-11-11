@@ -207,6 +207,21 @@ export class UserSettingsPage extends SpacePageBase {
           passwordData?.newPassword ||
           passwordData?.confirmPassword,
       );
+      const allPasswordFieldsFilled = Boolean(
+        passwordData?.currentPassword &&
+          passwordData?.newPassword &&
+          passwordData?.confirmPassword,
+      );
+
+      if (passwordChangeAttempted && !allPasswordFieldsFilled) {
+        NotificationService.getInstance().error(
+          i18next.t(
+            "notifications.passwordAllFieldsRequired",
+            "All password fields (current, new, confirm) must be filled to change password",
+          ),
+        );
+        return;
+      }
 
       const emailChangeRequested = Boolean(payload.email);
       const otherProfileFieldChanges =

@@ -6,7 +6,7 @@ import {
   TwoFactorPurpose,
 } from "../models/twoFactorChallenge";
 import { EmailService } from "./emailService";
-import { UserWithoutPassword } from "../models/user";
+import { UserWithoutPassword } from "../types/user";
 import { UserService } from "./userService";
 
 const CODE_TTL_MS = 10 * 60 * 1000; // 10 minutes
@@ -18,8 +18,6 @@ function generateNumericCode(): string {
   const value = crypto.randomInt(0, max);
   return value.toString().padStart(CODE_DIGITS, "0");
 }
-
-const DELIVERY_METHOD = "email" as const;
 
 const PURPOSE_MESSAGES: Record<TwoFactorPurpose, string> = {
   login: "A verification code has been sent to your email address.",
@@ -33,7 +31,6 @@ const PURPOSE_MESSAGES: Record<TwoFactorPurpose, string> = {
 
 export interface TwoFactorChallengeDetails {
   token: string;
-  delivery: typeof DELIVERY_METHOD;
   destination?: string;
   expiresIn: number;
   message: string;
@@ -77,7 +74,6 @@ export class TwoFactorService {
     return {
       token,
       purpose,
-      delivery: DELIVERY_METHOD,
       expiresIn: CODE_TTL_SECONDS,
       message: overrides?.message ?? PURPOSE_MESSAGES[purpose],
       destination: overrides?.destination,
