@@ -33,8 +33,7 @@ export async function initializeDatabase(): Promise<void> {
     console.log(`Loading database schema from: ${schemaPath}`);
 
     const schemaHash = crypto.createHash("sha256").update(schema).digest("hex");
-    const schemaDir = path.dirname(schemaPath);
-    const hashFile = path.join(schemaDir, ".schema-hash");
+    const hashFile = path.join(path.dirname(db.getPath()), ".schema-hash");
     let previousHash: string | null = null;
 
     if (fs.existsSync(hashFile)) {
@@ -51,9 +50,10 @@ export async function initializeDatabase(): Promise<void> {
           : "No previous schema hash found; resetting local database to ensure consistency.",
       );
       db.reset();
-      db.exec(schema);
       fs.writeFileSync(hashFile, `${schemaHash}\n`, "utf8");
     }
+
+    db.exec(schema);
 
     console.log("Database initialized successfully");
   } catch (error) {
