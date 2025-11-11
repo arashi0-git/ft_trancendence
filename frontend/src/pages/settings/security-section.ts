@@ -299,6 +299,27 @@ export class SecuritySection {
   }
 
   private buildTwoFactorMessage(challenge: TwoFactorChallengeResponse): string {
+    const purposeKeyMap: Partial<
+      Record<TwoFactorChallengeResponse["purpose"], string>
+    > = {
+      login: "settings.security.dialog.loginMessage",
+      enable_2fa: "settings.security.dialog.enableMessage",
+      disable_2fa: "settings.security.dialog.disableMessage",
+      email_change: "settings.security.dialog.emailChangeMessage",
+    };
+
+    const translationKey = challenge.purpose
+      ? purposeKeyMap[challenge.purpose]
+      : undefined;
+    if (translationKey) {
+      const translated = i18next.t(translationKey, {
+        destination: challenge.destination,
+      });
+      if (translated && translated !== translationKey) {
+        return translated;
+      }
+    }
+
     const trimmed = challenge.message?.trim();
     if (trimmed && trimmed.length > 0) {
       return trimmed;

@@ -49,6 +49,16 @@
     "sessionExpired": "セッションの有効期限が切れました。もう一度ログインしてください。",
     "twoFactorCodePrompt": "メールに届いた6桁のコードを入力してください。"
   },
+  "twoFactor": {
+    "dialog": {
+      "title": "二要素認証",
+      "codeLabel": "認証コード",
+      "codePlaceholder": "123456",
+      "submit": "コードを確認",
+      "resend": "確認コードを再送",
+      "cancel": "キャンセル"
+    }
+  },
   "settings": {
     "pageTitle": "ユーザー設定",
     "backButton": "ホームに戻る",
@@ -65,7 +75,7 @@
       "imageRequirements": "PNG / JPG / WEBP (最大 5MB)",
       "usernameLabel": "ユーザー名",
       "emailLabel": "メールアドレス",
-      "languageTitle": "既定の言語を設定",
+      "languageTitle": "言語の設定",
       "languageDescription": "希望する言語を選択してください",
       "changePasswordTitle": "パスワードを変更",
       "changePasswordDescription": "パスワードを変更しない場合は各欄を空のままにしてください。変更する場合は確認のため現在のパスワードも入力してください。",
@@ -88,7 +98,11 @@
         "resend": "コードを再送",
         "cancel": "キャンセル",
         "emailDestination": "{{destination}} に認証コードを送信しました。続行するには入力してください。",
-        "emailFallback": "メールに届いた6桁のコードを入力してください。"
+        "emailFallback": "メールに届いた6桁のコードを入力してください。",
+        "loginMessage": "続行するにはメールで送信した認証コードを入力してください。",
+        "enableMessage": "二要素認証を有効にするにはメールで送信した認証コードを入力してください。",
+        "disableMessage": "二要素認証を無効にするにはメールで送信した認証コードを入力してください。",
+        "emailChangeMessage": "メールアドレスの変更を確定するにはメールで送信した認証コードを入力してください。"
       }
     },
     "friends": {

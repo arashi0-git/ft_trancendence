@@ -49,6 +49,16 @@
     "sessionExpired": "Platnost relace vypršela. Přihlas se prosím znovu.",
     "twoFactorCodePrompt": "Zadej šestimístný kód z e-mailu."
   },
+  "twoFactor": {
+    "dialog": {
+      "title": "Dvoufázové ověření",
+      "codeLabel": "Ověřovací kód",
+      "codePlaceholder": "123456",
+      "submit": "Ověřit kód",
+      "resend": "Znovu odeslat kód na e-mail",
+      "cancel": "Zrušit"
+    }
+  },
   "settings": {
     "pageTitle": "Uživatelské nastavení",
     "backButton": "Zpět domů",
@@ -88,7 +98,11 @@
         "resend": "Zaslat kód znovu",
         "cancel": "Zrušit",
         "emailDestination": "Poslali jsme ověřovací kód na {{destination}}. Zadej ho pro pokračování.",
-        "emailFallback": "Zadej šestimístný kód z e-mailu."
+        "emailFallback": "Zadej šestimístný kód z e-mailu.",
+        "loginMessage": "Zadej ověřovací kód z e-mailu pro pokračování.",
+        "enableMessage": "Zadej ověřovací kód z e-mailu pro zapnutí dvoufázového ověření.",
+        "disableMessage": "Zadej ověřovací kód z e-mailu pro vypnutí dvoufázového ověření.",
+        "emailChangeMessage": "Zadej ověřovací kód z e-mailu pro potvrzení změny e-mailu."
       }
     },
     "friends": {

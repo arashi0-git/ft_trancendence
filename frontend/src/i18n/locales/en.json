@@ -49,6 +49,16 @@
     "sessionExpired": "Your session has expired. Please log in again.",
     "twoFactorCodePrompt": "Enter the 6-digit code from your email."
   },
+  "twoFactor": {
+    "dialog": {
+      "title": "Two-Factor Verification",
+      "codeLabel": "Verification Code",
+      "codePlaceholder": "123456",
+      "submit": "Verify Code",
+      "resend": "Resend email code",
+      "cancel": "Cancel"
+    }
+  },
   "settings": {
     "pageTitle": "User Settings",
     "backButton": "Back to Home",
@@ -88,7 +98,11 @@
         "resend": "Resend Code",
         "cancel": "Cancel",
         "emailDestination": "We sent a verification code to {{destination}}. Enter it to continue.",
-        "emailFallback": "Enter the 6-digit code from your email."
+        "emailFallback": "Enter the 6-digit code from your email.",
+        "loginMessage": "Enter the verification code we emailed you to continue.",
+        "enableMessage": "Enter the verification code we emailed you to turn on two-factor authentication.",
+        "disableMessage": "Enter the verification code we emailed you to disable two-factor authentication.",
+        "emailChangeMessage": "Enter the verification code we emailed you to confirm your email change."
       }
     },
     "friends": {
