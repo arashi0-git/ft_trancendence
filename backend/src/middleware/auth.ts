@@ -3,6 +3,7 @@ import { AuthUtils } from "../utils/auth";
 import { UserService } from "../services/userService";
 import { sendError } from "../utils/errorResponse";
 
+// add user property
 declare module "fastify" {
   interface FastifyRequest {
     user?: {
@@ -32,25 +33,18 @@ export async function authenticateToken(
     }
 
     const decoded = AuthUtils.verifyToken(token);
-
     const user = await UserService.getUserById(decoded.id);
     if (!user) {
       return sendError(reply, 401, "AUTH_USER_NOT_FOUND", "User not found");
     }
 
-    // Check token version to invalidate old tokens
-    if (
-      decoded.tokenVersion !== undefined &&
-      user.token_version !== undefined
-    ) {
-      if (decoded.tokenVersion < user.token_version) {
-        return sendError(
-          reply,
-          401,
-          "AUTH_TOKEN_INVALIDATED",
-          "Token has been invalidated",
-        );
-      }
+    if (decoded.tokenVersion < user.token_version) {
+      return sendError(
+        reply,
+        401,
+        "AUTH_TOKEN_INVALIDATED",
+        "Token has been invalidated",
+      );
     }
 
     request.user = {
@@ -87,11 +81,7 @@ export async function optionalAuth(
       return;
     }
 
-    if (
-      decoded.tokenVersion !== undefined &&
-      user.token_version !== undefined &&
-      decoded.tokenVersion < user.token_version
-    ) {
+    if (decoded.tokenVersion < user.token_version) {
       return;
     }
 

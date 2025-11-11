@@ -14,8 +14,8 @@ COPY backend/package*.json ./
 # 依存関係のインストール
 # RUN npm install && npm cache clean --force
 RUN npm ci \
- && rm -rf node_modules/.cache/esbuild \
- && npm rebuild esbuild
+    && rm -rf node_modules/.cache/esbuild \
+    && npm rebuild esbuild
 
 # アプリ本体
 COPY backend/ .
@@ -35,9 +35,9 @@ RUN mkdir -p /app/ssl
 ENV DATABASE_PATH=/app/data/transcendence.db
 RUN mkdir -p /app/data
 
-EXPOSE 3000 3001
+EXPOSE 3000 
 
-CMD ["sh", "-c", "if [ \"$NODE_ENV\" = \"production\" ]; then npm start; else npm run dev; fi"]
+CMD ["npm", "start"]
 
 
 

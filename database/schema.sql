@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     is_online BOOLEAN DEFAULT FALSE,
     last_login DATETIME DEFAULT CURRENT_TIMESTAMP,
-    token_version INTEGER DEFAULT 0,
+    token_version INTEGER NOT NULL DEFAULT 0,
     two_factor_enabled BOOLEAN DEFAULT FALSE,
     language TEXT DEFAULT 'en' CHECK(language IN ('en', 'cs', 'jp'))
 );

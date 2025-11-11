@@ -1,6 +1,5 @@
 import "dotenv/config";
 import Fastify from "fastify";
-import cors from "@fastify/cors";
 import staticFiles from "@fastify/static";
 import multipart from "@fastify/multipart";
 import path from "path";
@@ -50,51 +49,6 @@ fastify.addContentTypeParser(
 
 // プラグインの登録
 async function registerPlugins() {
-  // CORS設定
-  const trustedOriginsEnv =
-    process.env.CORS_ORIGINS || process.env.TRUSTED_ORIGINS || "";
-  const trustedOrigins = trustedOriginsEnv
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter((origin) => origin.length > 0);
-
-  const isProduction = process.env.NODE_ENV === "production";
-
-  if (isProduction && trustedOrigins.length === 0) {
-    fastify.log.error(
-      "CORS_ORIGINS (or TRUSTED_ORIGINS) must be configured in production",
-    );
-    throw new Error("Missing CORS whitelist configuration");
-  }
-
-  await fastify.register(cors, {
-    origin: (origin, cb) => {
-      // Allow server-to-server or same-origin requests without an Origin header
-      if (!origin) {
-        return cb(null, true);
-      }
-
-      if (trustedOrigins.length === 0) {
-        // Non-production with no whitelist
-        fastify.log.warn(
-          `CORS whitelist is empty; allowing origin ${origin} (non-production fallback)`,
-        );
-        return cb(null, true);
-      }
-
-      if (trustedOrigins.includes(origin)) {
-        return cb(null, origin);
-      }
-
-      fastify.log.warn(`Blocked CORS origin: ${origin}`);
-      return cb(new Error("CORS origin not allowed"), false);
-    },
-    credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
-    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    maxAge: 60 * 60 * 24, // 24 hours
-  });
-
   await fastify.register(multipart, {
     limits: {
       fileSize: 2 * 1024 * 1024, // 2MB
@@ -120,22 +74,6 @@ async function setupRoutes() {
   await fastify.register(authRoutes, { prefix: "/api/auth" });
   await fastify.register(userRoutes, { prefix: "/api/users" });
   await fastify.register(historyRoutes, { prefix: "/api/history" });
-  // ヘルスチェック
-  fastify.get("/api/health", async (_request, _reply) => {
-    return { status: "ok", timestamp: new Date().toISOString() };
-  });
-
-  // API基本ルート
-  fastify.get("/api", async (_request, _reply) => {
-    return {
-      message: "ft_transcendence API",
-      version: "1.0.0",
-      endpoints: {
-        health: "/api/health",
-        updateProfile: "/api/users/me",
-      },
-    };
-  });
 }
 
 // サーバー起動
@@ -149,7 +87,6 @@ async function start() {
     const host = process.env.HOST || "0.0.0.0";
 
     await fastify.listen({ port, host });
-
     fastify.log.info(
       `ft_transcendence backend server listening on ${host}:${port}`,
     );
@@ -167,13 +104,3 @@ process.on("SIGINT", async () => {
 });
 
 start();
-
-/*
-1. フロントエンド → POST /api/auth/register
-2. routes/auth.ts → 入力検証
-3. routes/auth.ts → UserService.createUser()
-4. UserService → AuthUtils.hashPassword()
-5. UserService → データベースに保存
-6. UserService → AuthUtils.generateToken()
-7. routes/auth.ts → レスポンス返却
-*/
