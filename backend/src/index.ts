@@ -1,5 +1,6 @@
 import "dotenv/config";
 import Fastify from "fastify";
+import helmet from "@fastify/helmet";
 import staticFiles from "@fastify/static";
 import multipart from "@fastify/multipart";
 import path from "path";
@@ -49,6 +50,19 @@ fastify.addContentTypeParser(
 
 // プラグインの登録
 async function registerPlugins() {
+  await fastify.register(helmet, {
+    global: true,
+    contentSecurityPolicy: {
+      useDefaults: false,
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+      },
+      reportOnly: false,
+    },
+    crossOriginEmbedderPolicy: false,
+  });
+
   await fastify.register(multipart, {
     limits: {
       fileSize: 2 * 1024 * 1024, // 2MB

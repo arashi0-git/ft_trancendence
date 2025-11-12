@@ -36,6 +36,14 @@ export class ProfileSection {
       : null;
     this.pendingLanguage = safeUserLanguage;
     const sanitizedProfileUrl = (user.profile_image_url ?? "").trim();
+    const hasProfileImage = sanitizedProfileUrl.length > 0;
+    const resolvedProfileImageUrl = hasProfileImage
+      ? AuthService.resolveAssetUrl(sanitizedProfileUrl)
+      : "";
+    const safeProfileImageSrc = hasProfileImage
+      ? escapeHtml(resolvedProfileImageUrl)
+      : "";
+    const placeholderInitial = escapeHtml(this.derivePlaceholderInitial(user));
     const selectedLanguage =
       this.pendingLanguage ?? safeUserLanguage ?? getCurrentLanguage();
 
@@ -48,16 +56,16 @@ export class ProfileSection {
           <div class="relative w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
             <img
               id="profile-image-preview"
-              src="${sanitizedProfileUrl ? AuthService.resolveAssetUrl(sanitizedProfileUrl) : ""}"
+              src="${safeProfileImageSrc}"
               alt=""
               role="img"
-              class="w-full h-full object-cover ${sanitizedProfileUrl ? "" : "hidden"}"
+              class="w-full h-full object-cover ${hasProfileImage ? "" : "hidden"}"
             />
             <div
               id="profile-image-placeholder"
-              class="text-4xl font-bold text-cyan-300 ${sanitizedProfileUrl ? "hidden" : ""}"
+              class="text-4xl font-bold text-cyan-300 ${hasProfileImage ? "hidden" : ""}"
             >
-              ${this.derivePlaceholderInitial(user)}
+              ${placeholderInitial}
             </div>
           </div>
           <div class="flex-1">
@@ -302,13 +310,8 @@ export class ProfileSection {
 
     this.selectedFile = file;
     this.revokePreviewUrl();
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      this.avatarPreviewUrl = e.target?.result as string;
-      this.updateAvatarPreview(this.avatarPreviewUrl);
-    };
-    reader.readAsDataURL(file);
+    this.avatarPreviewUrl = URL.createObjectURL(file);
+    this.updateAvatarPreview(this.avatarPreviewUrl);
   }
 
   private updateAvatarPreview(url: string | null): void {

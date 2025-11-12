@@ -8,6 +8,9 @@ import {
 } from "../types/user";
 import { AuthUtils } from "../utils/auth";
 
+const AVATAR_UPLOAD_PREFIX = "/uploads/avatars/";
+const AVATAR_FILENAME_REGEX = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
 export class UserService {
   private static normalizeEmail(email: string): string {
     return email.trim().toLowerCase();
@@ -239,25 +242,9 @@ export class UserService {
     }
 
     if (updates.profile_image_url !== undefined) {
-      const value = updates.profile_image_url;
-
-      if (value === null || value.trim().length === 0) {
-        profileUpdates.profile_image_url = null;
-      } else {
-        const trimmedValue = value.trim();
-
-        if (trimmedValue.length > 2048) {
-          throw new Error("Profile image URL must be 2048 characters or fewer");
-        }
-
-        if (!trimmedValue.startsWith("/uploads/avatars/")) {
-          throw new Error(
-            "Profile image URL must reference an uploaded avatar path",
-          );
-        }
-
-        profileUpdates.profile_image_url = trimmedValue;
-      }
+      profileUpdates.profile_image_url = this.validateProfileImagePath(
+        updates.profile_image_url,
+      );
     }
 
     if (typeof updates.language === "string") {
@@ -391,6 +378,46 @@ export class UserService {
       : undefined;
 
     return { user: updatedUser, token };
+  }
+
+  private static validateProfileImagePath(
+    value: string | null | undefined,
+  ): string | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    const trimmedValue = value.trim();
+    if (trimmedValue.length === 0) {
+      return null;
+    }
+
+    if (trimmedValue.length > 2048) {
+      throw new Error("Profile image URL must be 2048 characters or fewer");
+    }
+
+    if (!trimmedValue.startsWith(AVATAR_UPLOAD_PREFIX)) {
+      throw new Error(
+        "Profile image URL must reference an uploaded avatar path",
+      );
+    }
+
+    const relativePath = trimmedValue.slice(AVATAR_UPLOAD_PREFIX.length);
+    const isInvalidRelativePath =
+      relativePath.length === 0 ||
+      relativePath.length > 255 ||
+      relativePath.includes("/") ||
+      relativePath.includes("\\") ||
+      relativePath.includes("..") ||
+      !AVATAR_FILENAME_REGEX.test(relativePath);
+
+    if (isInvalidRelativePath) {
+      throw new Error(
+        "Profile image URL must reference a valid uploaded avatar filename",
+      );
+    }
+
+    return `${AVATAR_UPLOAD_PREFIX}${relativePath}`;
   }
 
   static async getPublicProfileById(id: number): Promise<PublicUser | null> {
