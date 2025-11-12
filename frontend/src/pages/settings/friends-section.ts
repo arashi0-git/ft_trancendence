@@ -150,11 +150,13 @@ export class FriendsSection {
     });
 
     if (profileImage.length > 0) {
-      const imageUrl = AuthService.resolveAssetUrl(profileImage);
+      const resolvedUrl = AuthService.resolveAssetUrl(profileImage);
+      const safeImageSrc =
+        resolvedUrl && resolvedUrl.length > 0 ? escapeHtml(resolvedUrl) : "";
       return `
         <div class="w-10 h-10 rounded-full overflow-hidden border border-cyan-500/20">
           <img
-            src="${imageUrl}"
+            src="${safeImageSrc}"
             alt="${altText}"
             class="w-full h-full object-cover"
           />

@@ -8,6 +8,7 @@ import {
 } from "../../shared/types/translations";
 import { i18next, onLanguageChange } from "../../i18n";
 import { AppHeader } from "../../shared/components/app-header";
+import { escapeHtml } from "../../shared/utils/html-utils";
 
 type QuickPlayStep = "registration" | "game";
 
@@ -286,14 +287,14 @@ export class QuickPlayPage extends SpacePageBase {
       return player?.displayName || `Player ${index + 1}`;
     };
 
-    const p1Name = getPlayerName(0);
-    const p2Name = getPlayerName(1);
+    const p1Name = escapeHtml(getPlayerName(0));
+    const p2Name = escapeHtml(getPlayerName(1));
     const p1Controls = `<p><strong class="text-white">${p1Name} (${sideLabel("leftOuter", "Left-Outer")}):</strong> ${keysValue("leftOuter", "W/S")}</p>`;
     const p2Controls = `<p><strong class="text-white">${p2Name} (${sideLabel("rightOuter", "Right-Outer")}):</strong> ${keysValue("rightOuter", "↑/↓")}</p>`;
 
     if (playerCount === 4) {
-      const p3Name = getPlayerName(2);
-      const p4Name = getPlayerName(3);
+      const p3Name = escapeHtml(getPlayerName(2));
+      const p4Name = escapeHtml(getPlayerName(3));
       const p3Controls = `<p><strong class="text-white">${p3Name} (${sideLabel("leftInner", "Left-Inner")}):</strong> ${keysValue("leftInner", "R/F")}</p>`;
       const p4Controls = `<p><strong class="text-white">${p4Name} (${sideLabel("rightInner", "Right-Inner")}):</strong> ${keysValue("rightInner", "I/K")}</p>`;
       return `${p1Controls}${p2Controls}${p3Controls}${p4Controls}`;

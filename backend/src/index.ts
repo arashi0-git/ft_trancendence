@@ -1,5 +1,6 @@
 import "dotenv/config";
 import Fastify from "fastify";
+import helmet from "@fastify/helmet";
 import staticFiles from "@fastify/static";
 import multipart from "@fastify/multipart";
 import path from "path";
@@ -49,6 +50,24 @@ fastify.addContentTypeParser(
 
 // プラグインの登録
 async function registerPlugins() {
+  await fastify.register(helmet, {
+    global: true,
+    contentSecurityPolicy: {
+      useDefaults: false,
+      directives: {
+        defaultSrc: ["'self'"], // デフォルト: 自分のドメインからのみリソース読み込み可能
+        scriptSrc: ["'self'"], // XSS対策: 外部スクリプトをブロック
+        styleSrc: ["'self'", "'unsafe-inline'"], // インラインスタイル許可（通知UI用、XSSリスク低）
+        connectSrc: ["'self'"], // API呼び出し許可（自ドメインのみ）
+        imgSrc: ["'self'", "data:", "blob:"], // 画像、アバター、BabylonJSテクスチャ
+        fontSrc: ["'self'", "data:"], // Webフォント
+        workerSrc: ["'self'", "blob:"], // BabylonJS Web Worker
+      },
+      reportOnly: false,
+    },
+    crossOriginEmbedderPolicy: false,
+  });
+
   await fastify.register(multipart, {
     limits: {
       fileSize: 2 * 1024 * 1024, // 2MB

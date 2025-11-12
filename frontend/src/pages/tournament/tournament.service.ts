@@ -143,6 +143,18 @@ export class TournamentService {
     const container = this.getContentContainer();
     if (!container) return;
 
+    // bracket, match, results画面にはトーナメントデータが必要
+    const requiresTournamentData = ["bracket", "match", "results"].includes(
+      this.currentStep,
+    );
+    if (requiresTournamentData && !this.tournamentData.getCurrentTournament()) {
+      console.warn(
+        `Cannot render ${this.currentStep} without tournament data, redirecting to home`,
+      );
+      router.navigate("/");
+      return;
+    }
+
     this.clearEventListeners();
 
     const renderer = this.viewRenderers[this.currentStep];
