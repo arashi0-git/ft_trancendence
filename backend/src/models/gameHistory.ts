@@ -77,16 +77,6 @@ export class GameHistoryModel {
     let query = `SELECT * FROM game_history WHERE user_id = ?`;
     const params: (number | string)[] = [userId];
 
-    if (filters?.tournamentId !== undefined) {
-      query += ` AND tournament_id = ?`;
-      params.push(filters.tournamentId);
-    }
-
-    if (filters?.isWinner !== undefined) {
-      query += ` AND is_winner = ?`;
-      params.push(filters.isWinner ? 1 : 0);
-    }
-
     if (filters?.matchType) {
       query += ` AND match_type = ?`;
       params.push(filters.matchType);

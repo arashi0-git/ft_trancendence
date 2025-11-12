@@ -24,8 +24,6 @@ export interface GameHistoryStats {
 
 export interface GameHistoryFilters {
   userId?: number;
-  tournamentId?: number;
-  isWinner?: boolean;
   matchType?: MatchType;
   limit?: number;
   offset?: number;
