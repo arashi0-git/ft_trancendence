@@ -55,7 +55,7 @@ async function registerPlugins() {
     contentSecurityPolicy: {
       useDefaults: false,
       directives: {
-        defaultSrc: ["'self'"],// デフォルト: 自分のドメインからのみリソース読み込み可能
+        defaultSrc: ["'self'"],//  自分のドメインからのみリソース読み込み可能
         scriptSrc: ["'self'"], // XSS対策: 外部スクリプトをブロック
         styleSrc: ["'self'", "'unsafe-inline'"], // インラインスタイル許可（通知UI用、XSSリスク低）
         connectSrc: ["'self'"], // API呼び出し許可（自ドメインのみ）
