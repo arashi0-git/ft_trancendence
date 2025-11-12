@@ -7,7 +7,7 @@ import type {
   AuthResult,
   LoginRequest,
   PublicUser,
-  TwoFactorChallengeResponse,
+  TwoFactorChallengeDetails,
 } from "../types/user";
 import { setupPasswordToggles } from "../utils/password-toggle-utils";
 
@@ -41,7 +41,7 @@ interface LoginTranslations {
 
 export class LoginForm {
   private container: HTMLElement;
-  private twoFactorChallenge: TwoFactorChallengeResponse | null = null;
+  private twoFactorChallenge: TwoFactorChallengeDetails | null = null;
   private twoFactorComponent: TwoFactorVerification | null = null;
   private notificationService = NotificationService.getInstance();
   private t: LoginTranslations = {};
@@ -319,7 +319,7 @@ export class LoginForm {
     this.renderLoginView();
   }
 
-  private buildTwoFactorMessage(challenge: TwoFactorChallengeResponse): string {
+  private buildTwoFactorMessage(challenge: TwoFactorChallengeDetails): string {
     const loginMessageKey = "login.twoFactor.message";
     if (i18next.exists(loginMessageKey)) {
       const translated = i18next.t(loginMessageKey, {
@@ -349,7 +349,7 @@ export class LoginForm {
 
   private isTwoFactorChallenge(
     result: AuthResult,
-  ): result is TwoFactorChallengeResponse {
+  ): result is TwoFactorChallengeDetails {
     return "requiresTwoFactor" in result && result.requiresTwoFactor === true;
   }
 

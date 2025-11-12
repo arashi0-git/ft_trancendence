@@ -65,6 +65,7 @@ export async function historyRoutes(fastify: FastifyInstance) {
           );
         }
 
+        // business logic
         const history = await GameHistoryModel.create({
           ...input,
           matchType,
@@ -82,7 +83,6 @@ export async function historyRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // Get current user's game history
   fastify.get<{
     Querystring: {
       tournamentId?: string;

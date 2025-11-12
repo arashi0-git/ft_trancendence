@@ -1,24 +1,23 @@
-import {
-  CreateUserRequest,
-  LoginRequest,
-  AuthResponse,
-  UserProfile,
-  TwoFactorChallengeResponse,
-} from "../types/user";
+import { CreateUserRequest, PublicUser } from "../types/user";
+import { LoginRequest, AuthResponse } from "../types/auth";
 import { UserService } from "./userService";
 import { AuthUtils } from "../utils/auth";
-import { TwoFactorService } from "./twoFactorService";
+import {
+  TwoFactorService,
+  TwoFactorChallengeDetails,
+} from "./twoFactorService";
 
 export class AuthService {
   static async register(userData: CreateUserRequest): Promise<AuthResponse> {
     try {
-      const userRecord = await UserService.createUser(userData);
-      const token = AuthUtils.generateToken(userRecord);
-      const user = UserService.toPublicUser(userRecord);
+      const createdUser = await UserService.createUser(userData);
+      await UserService.updateUserOnlineStatus(createdUser.id, true);
+      const updatedUser = await UserService.getUserById(createdUser.id);
+      const token = AuthUtils.generateToken(updatedUser ?? createdUser);
+      const user = UserService.toPublicUser(updatedUser ?? createdUser);
 
       // Log successful registration for security audit
       console.info(`User registered successfully: ${user.id}`);
-
       return { user, token };
     } catch (error) {
       console.error("Registration failed:", error);
@@ -28,41 +27,35 @@ export class AuthService {
 
   static async login(
     credentials: LoginRequest,
-  ): Promise<AuthResponse | TwoFactorChallengeResponse | null> {
-    const userRecord = await UserService.authenticateUser(
+  ): Promise<AuthResponse | TwoFactorChallengeDetails | null> {
+    const authenticatedUser = await UserService.authenticateUser(
       credentials.email,
       credentials.password,
     );
 
-    if (!userRecord) {
+    if (!authenticatedUser) {
       console.warn(`Failed login attempt for email: ${credentials.email}`);
       return null;
     }
 
-    if (userRecord.two_factor_enabled) {
-      const challenge = await TwoFactorService.startLoginChallenge(userRecord);
-      console.info(`2FA challenge issued for user: ${userRecord.id}`);
-      return {
-        requiresTwoFactor: true,
-        twoFactorToken: challenge.token,
-        delivery: challenge.delivery,
-        expiresIn: challenge.expiresIn,
-        message: challenge.message,
-        destination: challenge.destination,
-        purpose: challenge.purpose,
-      };
+    if (authenticatedUser.two_factor_enabled) {
+      const challenge =
+        await TwoFactorService.startLoginChallenge(authenticatedUser);
+      console.info(`2FA challenge issued for user: ${authenticatedUser.id}`);
+      return challenge;
     }
 
     const loggedIn =
-      (await UserService.markUserLoggedIn(userRecord.id)) ?? userRecord;
+      (await UserService.markUserLoggedIn(authenticatedUser.id)) ??
+      authenticatedUser;
 
     const token = AuthUtils.generateToken(loggedIn);
     const user = UserService.toPublicUser(loggedIn);
-    console.info(`User logged in successfully: ${userRecord.id}`);
+    console.info(`User logged in successfully: ${authenticatedUser.id}`);
     return { user, token };
   }
 
-  static async getProfile(userId: number): Promise<UserProfile | null> {
+  static async getProfile(userId: number): Promise<PublicUser | null> {
     return UserService.getPublicProfileById(userId);
   }
 

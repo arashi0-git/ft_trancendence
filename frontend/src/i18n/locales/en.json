@@ -45,6 +45,7 @@
     "twoFactorResendDestination": "Sent a new verification code to {{destination}}.",
     "twoFactorResendGeneric": "Sent a new verification code to your email.",
     "passwordMismatch": "New password and confirmation do not match.",
+    "passwordAllFieldsRequired": "All password fields (current, new, confirm) must be filled to change password.",
     "emailChangeTwoFactor": "Email changes must be saved separately when two-factor authentication is enabled.",
     "sessionExpired": "Your session has expired. Please log in again.",
     "twoFactorCodePrompt": "Enter the 6-digit code from your email."

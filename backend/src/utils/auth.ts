@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { UserWithoutPassword } from "../models/user";
+import { UserWithoutPassword } from "../types/user";
 
 const JWT_SECRET = process.env.JWT_SECRET || "";
 if (!JWT_SECRET) {

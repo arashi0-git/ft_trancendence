@@ -3,7 +3,7 @@ import { NotificationService } from "../../shared/services/notification.service"
 import { TwoFactorVerification } from "../../shared/components/two-factor-verification";
 import type {
   PublicUser,
-  TwoFactorChallengeResponse,
+  TwoFactorChallengeDetails,
   TwoFactorVerificationResponse,
 } from "../../shared/types/user";
 import { i18next, onLanguageChange } from "../../i18n";
@@ -13,7 +13,7 @@ export class SecuritySection {
   private user: PublicUser | null = null;
   private twoFactorDialog: HTMLElement | null = null;
   private twoFactorComponent: TwoFactorVerification | null = null;
-  private activeTwoFactorChallenge: TwoFactorChallengeResponse | null = null;
+  private activeTwoFactorChallenge: TwoFactorChallengeDetails | null = null;
   private pendingTwoFactorCallback:
     | ((result: TwoFactorVerificationResponse) => void)
     | null = null;
@@ -196,7 +196,7 @@ export class SecuritySection {
   }
 
   private showTwoFactorDialog(
-    challenge: TwoFactorChallengeResponse,
+    challenge: TwoFactorChallengeDetails,
     onSuccess: (result: TwoFactorVerificationResponse) => void,
   ): void {
     this.activeTwoFactorChallenge = challenge;
@@ -318,9 +318,9 @@ export class SecuritySection {
     this.hideTwoFactorDialog();
   }
 
-  private buildTwoFactorMessage(challenge: TwoFactorChallengeResponse): string {
+  private buildTwoFactorMessage(challenge: TwoFactorChallengeDetails): string {
     const purposeKeyMap: Partial<
-      Record<TwoFactorChallengeResponse["purpose"], string>
+      Record<TwoFactorChallengeDetails["purpose"], string>
     > = {
       login: "settings.security.dialog.loginMessage",
       enable_2fa: "settings.security.dialog.enableMessage",
@@ -385,7 +385,7 @@ export class SecuritySection {
   }
 
   showTwoFactorDialogForEmailChange(
-    challenge: TwoFactorChallengeResponse,
+    challenge: TwoFactorChallengeDetails,
     onSuccess: (result: TwoFactorVerificationResponse) => void,
   ): void {
     this.showTwoFactorDialog(challenge, onSuccess);

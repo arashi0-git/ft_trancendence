@@ -1,14 +1,10 @@
-import {
-  UserModel,
-  UserWithoutPassword,
-  stripPassword,
-  toPublicUser,
-} from "../models/user";
+import { UserModel, stripPassword, toPublicUser } from "../models/user";
 import {
   CreateUserRequest,
-  UserProfile,
+  UserWithoutPassword,
+  PublicUser,
   UpdateUserProfileRequest,
-  UpdateUserSettingsRequest,
+  UpdateUserWithPasswordRequest,
 } from "../types/user";
 import { AuthUtils } from "../utils/auth";
 
@@ -86,7 +82,7 @@ export class UserService {
     return updatedUser;
   }
 
-  static toPublicUser(user: UserWithoutPassword): UserProfile {
+  static toPublicUser(user: UserWithoutPassword): PublicUser {
     return toPublicUser(user);
   }
 
@@ -333,7 +329,7 @@ export class UserService {
 
   static async updateUserSettings(
     id: number,
-    updates: UpdateUserSettingsRequest,
+    updates: UpdateUserWithPasswordRequest,
   ): Promise<{ user: UserWithoutPassword; token?: string }> {
     const profileUpdates: UpdateUserProfileRequest = {};
     let profileUpdated = false;
@@ -397,7 +393,7 @@ export class UserService {
     return { user: updatedUser, token };
   }
 
-  static async getPublicProfileById(id: number): Promise<UserProfile | null> {
+  static async getPublicProfileById(id: number): Promise<PublicUser | null> {
     const user = await this.getUserById(id);
     return user ? this.toPublicUser(user) : null;
   }

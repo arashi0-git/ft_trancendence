@@ -45,6 +45,7 @@
     "twoFactorResendDestination": "Odeslán nový ověřovací kód na {{destination}}.",
     "twoFactorResendGeneric": "Odeslán nový ověřovací kód na tvůj e-mail.",
     "passwordMismatch": "Nové heslo a jeho potvrzení se neshodují.",
+    "passwordAllFieldsRequired": "Pro změnu hesla je nutné vyplnit všechna pole (současné heslo, nové heslo, potvrzení).",
     "emailChangeTwoFactor": "Změnu e-mailu odešlete samostatně, když je zapnuté dvoufázové ověření.",
     "sessionExpired": "Platnost relace vypršela. Přihlas se prosím znovu.",
     "twoFactorCodePrompt": "Zadej šestimístný kód z e-mailu."
