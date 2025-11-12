@@ -44,6 +44,7 @@
     "twoFactorVerified": "二要素認証が完了しました。",
     "twoFactorResendDestination": "{{destination}} に新しい確認コードを送信しました。",
     "twoFactorResendGeneric": "新しい確認コードをメールに送信しました。",
+    "twoFactorResendFailed": "確認コードの再送に失敗しました。もう一度お試しください。",
     "passwordMismatch": "新しいパスワードと確認用パスワードが一致しません。",
     "passwordAllFieldsRequired": "パスワードを変更する場合は、現在のパスワード・新しいパスワード・確認用パスワードの3つすべてを入力してください。",
     "emailChangeTwoFactor": "二要素認証が有効な場合、メールの変更は別々に保存してください。",
@@ -57,7 +58,9 @@
       "codePlaceholder": "123456",
       "submit": "コードを確認",
       "resend": "確認コードを再送",
-      "cancel": "キャンセル"
+      "cancel": "キャンセル",
+      "verifying": "確認しています...",
+      "resending": "再送しています..."
     }
   },
   "settings": {
@@ -74,6 +77,10 @@
       "title": "プロフィール",
       "chooseImage": "画像を選択",
       "imageRequirements": "PNG / JPG / WEBP (最大 5MB)",
+      "errors": {
+        "imageTooLarge": "画像サイズは 5MB 未満にしてください",
+        "invalidFormat": "PNG・JPG・WEBP 形式のみアップロードできます"
+      },
       "usernameLabel": "ユーザー名",
       "emailLabel": "メールアドレス",
       "languageTitle": "言語の設定",
@@ -482,6 +489,7 @@
     "HISTORY_INVALID_OFFSET": "オフセット値が不正です",
     "HISTORY_FETCH_FAILED": "対戦履歴の取得に失敗しました",
     "HISTORY_STATS_FAILED": "統計情報の取得に失敗しました",
+    "FAILED_TO_FETCH": "ネットワークに接続できませんでした。接続を確認してもう一度お試しください。",
     "UNKNOWN_ERROR": "エラーが発生しました。もう一度お試しください。"
   }
 }

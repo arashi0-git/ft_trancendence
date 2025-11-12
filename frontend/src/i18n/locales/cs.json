@@ -44,6 +44,7 @@
     "twoFactorVerified": "Dvoufázové ověření dokončeno.",
     "twoFactorResendDestination": "Odeslán nový ověřovací kód na {{destination}}.",
     "twoFactorResendGeneric": "Odeslán nový ověřovací kód na tvůj e-mail.",
+    "twoFactorResendFailed": "Nepodařilo se znovu odeslat kód. Zkus to prosím později.",
     "passwordMismatch": "Nové heslo a jeho potvrzení se neshodují.",
     "passwordAllFieldsRequired": "Pro změnu hesla je nutné vyplnit všechna pole (současné heslo, nové heslo, potvrzení).",
     "emailChangeTwoFactor": "Změnu e-mailu odešlete samostatně, když je zapnuté dvoufázové ověření.",
@@ -57,7 +58,9 @@
       "codePlaceholder": "123456",
       "submit": "Ověřit kód",
       "resend": "Znovu odeslat kód na e-mail",
-      "cancel": "Zrušit"
+      "cancel": "Zrušit",
+      "verifying": "Ověřuji...",
+      "resending": "Posílám znovu..."
     }
   },
   "settings": {
@@ -74,6 +77,10 @@
       "title": "Profil",
       "chooseImage": "Vybrat obrázek",
       "imageRequirements": "PNG, JPG, WEBP (max. 5 MB)",
+      "errors": {
+        "imageTooLarge": "Velikost obrázku musí být menší než 5 MB",
+        "invalidFormat": "Povolené jsou pouze obrázky PNG, JPG a WEBP"
+      },
       "usernameLabel": "Uživatelské jméno",
       "emailLabel": "E-mail",
       "languageTitle": "Nastav výchozí jazyk",
@@ -482,6 +489,7 @@
     "HISTORY_INVALID_OFFSET": "Neplatný offset",
     "HISTORY_FETCH_FAILED": "Historii her se nepodařilo načíst",
     "HISTORY_STATS_FAILED": "Statistiky se nepodařilo načíst",
+    "FAILED_TO_FETCH": "Nepodařilo se navázat spojení. Zkontroluj prosím připojení k internetu a zkus to znovu.",
     "UNKNOWN_ERROR": "Něco se pokazilo. Zkuste to prosím znovu."
   }
 }
