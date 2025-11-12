@@ -285,7 +285,10 @@ export class ProfileSection {
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
       NotificationService.getInstance().error(
-        "Image size must be less than 5MB",
+        i18next.t(
+          "settings.profile.errors.imageTooLarge",
+          "Image size must be less than 5MB",
+        ),
       );
       input.value = "";
       return;
@@ -294,7 +297,10 @@ export class ProfileSection {
     const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
       NotificationService.getInstance().error(
-        "Only PNG, JPG, and WEBP images are allowed",
+        i18next.t(
+          "settings.profile.errors.invalidFormat",
+          "Only PNG, JPG, and WEBP images are allowed",
+        ),
       );
       input.value = "";
       return;

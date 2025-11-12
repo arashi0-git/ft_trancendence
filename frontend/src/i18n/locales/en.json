@@ -44,6 +44,7 @@
     "twoFactorVerified": "Two-factor verification complete.",
     "twoFactorResendDestination": "Sent a new verification code to {{destination}}.",
     "twoFactorResendGeneric": "Sent a new verification code to your email.",
+    "twoFactorResendFailed": "Failed to resend code. Please try again.",
     "passwordMismatch": "New password and confirmation do not match.",
     "passwordAllFieldsRequired": "All password fields (current, new, confirm) must be filled to change password.",
     "emailChangeTwoFactor": "Email changes must be saved separately when two-factor authentication is enabled.",
@@ -57,7 +58,9 @@
       "codePlaceholder": "123456",
       "submit": "Verify Code",
       "resend": "Resend email code",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "verifying": "Verifying...",
+      "resending": "Resending..."
     }
   },
   "settings": {
@@ -74,6 +77,10 @@
       "title": "Profile",
       "chooseImage": "Choose Image",
       "imageRequirements": "PNG, JPG, WEBP (max 5MB)",
+      "errors": {
+        "imageTooLarge": "Image size must be less than 5MB",
+        "invalidFormat": "Only PNG, JPG, and WEBP images are allowed"
+      },
       "usernameLabel": "Username",
       "emailLabel": "Email",
       "languageTitle": "Set Default Language",
@@ -481,6 +488,7 @@
     "HISTORY_INVALID_OFFSET": "Invalid offset",
     "HISTORY_FETCH_FAILED": "Failed to fetch game history",
     "HISTORY_STATS_FAILED": "Failed to fetch stats",
+    "FAILED_TO_FETCH": "Network request failed. Please check your connection and try again.",
     "UNKNOWN_ERROR": "Something went wrong. Please try again."
   }
 }

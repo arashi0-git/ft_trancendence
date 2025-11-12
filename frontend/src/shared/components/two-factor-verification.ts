@@ -199,7 +199,10 @@ export class TwoFactorVerification {
       await this.options.onResend();
     } catch (error) {
       this.notificationService.apiError(error, {
-        fallbackMessage: "Failed to resend code",
+        fallbackMessage: i18next.t(
+          "notifications.twoFactorResendFailed",
+          "Failed to resend code. Please try again.",
+        ),
       });
     } finally {
       this.setResendLoading(false);
@@ -209,7 +212,7 @@ export class TwoFactorVerification {
   private setLoading(loading: boolean): void {
     this.elements.submit.disabled = loading;
     this.elements.submit.textContent = loading
-      ? "Verifying..."
+      ? i18next.t("twoFactor.dialog.verifying", "Verifying...")
       : this.options.verifyLabel;
     if (this.elements.resend) this.elements.resend.disabled = loading;
     if (this.elements.cancel) this.elements.cancel.disabled = loading;
@@ -219,7 +222,7 @@ export class TwoFactorVerification {
     if (!this.elements.resend) return;
     this.elements.resend.disabled = loading;
     this.elements.resend.textContent = loading
-      ? "Resending..."
+      ? i18next.t("twoFactor.dialog.resending", "Resending...")
       : this.options.resendLabel;
     this.elements.submit.disabled = loading;
     if (this.elements.cancel) this.elements.cancel.disabled = loading;
