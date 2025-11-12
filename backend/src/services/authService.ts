@@ -1,23 +1,23 @@
 import { CreateUserRequest, PublicUser } from "../types/user";
-import {
-  LoginRequest,
-  AuthResponse,
-  TwoFactorChallengeResponse,
-} from "../types/auth";
+import { LoginRequest, AuthResponse } from "../types/auth";
 import { UserService } from "./userService";
 import { AuthUtils } from "../utils/auth";
-import { TwoFactorService } from "./twoFactorService";
+import {
+  TwoFactorService,
+  TwoFactorChallengeDetails,
+} from "./twoFactorService";
 
 export class AuthService {
   static async register(userData: CreateUserRequest): Promise<AuthResponse> {
     try {
       const createdUser = await UserService.createUser(userData);
-      const token = AuthUtils.generateToken(createdUser);
-      const user = UserService.toPublicUser(createdUser);
+      await UserService.updateUserOnlineStatus(createdUser.id, true);
+      const updatedUser = await UserService.getUserById(createdUser.id);
+      const token = AuthUtils.generateToken(updatedUser ?? createdUser);
+      const user = UserService.toPublicUser(updatedUser ?? createdUser);
 
       // Log successful registration for security audit
       console.info(`User registered successfully: ${user.id}`);
-
       return { user, token };
     } catch (error) {
       console.error("Registration failed:", error);
@@ -27,7 +27,7 @@ export class AuthService {
 
   static async login(
     credentials: LoginRequest,
-  ): Promise<AuthResponse | TwoFactorChallengeResponse | null> {
+  ): Promise<AuthResponse | TwoFactorChallengeDetails | null> {
     const authenticatedUser = await UserService.authenticateUser(
       credentials.email,
       credentials.password,
@@ -42,14 +42,7 @@ export class AuthService {
       const challenge =
         await TwoFactorService.startLoginChallenge(authenticatedUser);
       console.info(`2FA challenge issued for user: ${authenticatedUser.id}`);
-      return {
-        requiresTwoFactor: true,
-        twoFactorToken: challenge.token,
-        expiresIn: challenge.expiresIn,
-        message: challenge.message,
-        destination: challenge.destination,
-        purpose: challenge.purpose,
-      };
+      return challenge;
     }
 
     const loggedIn =

@@ -33,7 +33,7 @@ export type TwoFactorPurpose =
   | "disable_2fa"
   | "email_change";
 
-export interface TwoFactorChallengeResponse {
+export interface TwoFactorChallengeDetails {
   requiresTwoFactor: true;
   twoFactorToken: string;
   destination?: string;
@@ -44,7 +44,7 @@ export interface TwoFactorChallengeResponse {
   token?: string;
 }
 
-export type AuthResult = AuthResponse | TwoFactorChallengeResponse;
+export type AuthResult = AuthResponse | TwoFactorChallengeDetails;
 
 export interface TwoFactorVerifyPayload {
   token: string;

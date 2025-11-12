@@ -7,7 +7,7 @@ import type {
   UpdateUserSettingsResponse,
   FriendResponse,
   FriendSummary,
-  TwoFactorChallengeResponse,
+  TwoFactorChallengeDetails,
   AuthResult,
   TwoFactorVerifyPayload,
   TwoFactorStatusResponse,
@@ -130,7 +130,7 @@ export class AuthService {
 
       const data = await expectJson<AuthResult>(response);
 
-      if (isTwoFactorChallengeResponse(data)) {
+      if (isTwoFactorChallengeDetails(data)) {
         return data;
       }
 
@@ -164,7 +164,7 @@ export class AuthService {
       });
 
       const data = await expectJson<
-        TwoFactorVerificationResponse | TwoFactorChallengeResponse
+        TwoFactorVerificationResponse | TwoFactorChallengeDetails
       >(response);
 
       if ("token" in data && data.token) {
@@ -172,7 +172,7 @@ export class AuthService {
       }
 
       // Apply user's language preference after 2FA verification
-      if (data.user) {
+      if ("user" in data && data.user) {
         await this.applyUserLanguage(data.user);
         gameCustomizationService.resetToDefaults();
       }
@@ -186,7 +186,7 @@ export class AuthService {
 
   static async resendTwoFactorCode(
     token: string,
-  ): Promise<TwoFactorChallengeResponse> {
+  ): Promise<TwoFactorChallengeDetails> {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/2fa/resend`, {
         method: "POST",
@@ -196,7 +196,7 @@ export class AuthService {
         body: JSON.stringify({ token }),
       });
 
-      const data = await expectJson<TwoFactorChallengeResponse>(response);
+      const data = await expectJson<TwoFactorChallengeDetails>(response);
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
       }
@@ -208,7 +208,7 @@ export class AuthService {
   }
 
   static async enableTwoFactor(): Promise<
-    TwoFactorStatusResponse | TwoFactorChallengeResponse
+    TwoFactorStatusResponse | TwoFactorChallengeDetails
   > {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/2fa/setup`, {
@@ -218,14 +218,14 @@ export class AuthService {
       });
 
       const data = await expectJson<
-        TwoFactorStatusResponse | TwoFactorChallengeResponse
+        TwoFactorStatusResponse | TwoFactorChallengeDetails
       >(response);
 
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
       }
 
-      if (isTwoFactorChallengeResponse(data)) {
+      if (isTwoFactorChallengeDetails(data)) {
         return data;
       }
 
@@ -241,7 +241,7 @@ export class AuthService {
   }
 
   static async disableTwoFactor(): Promise<
-    TwoFactorStatusResponse | TwoFactorChallengeResponse
+    TwoFactorStatusResponse | TwoFactorChallengeDetails
   > {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/2fa/disable`, {
@@ -251,14 +251,14 @@ export class AuthService {
       });
 
       const data = await expectJson<
-        TwoFactorStatusResponse | TwoFactorChallengeResponse
+        TwoFactorStatusResponse | TwoFactorChallengeDetails
       >(response);
 
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
       }
 
-      if (isTwoFactorChallengeResponse(data)) {
+      if (isTwoFactorChallengeDetails(data)) {
         return data;
       }
 
@@ -416,7 +416,7 @@ export class AuthService {
 
   static async updateSettings(
     payload: UpdateUserSettingsPayload,
-  ): Promise<UpdateUserSettingsResponse | TwoFactorChallengeResponse> {
+  ): Promise<UpdateUserSettingsResponse | TwoFactorChallengeDetails> {
     try {
       const response = await fetch(
         `${API_BASE_URL.replace(/\/$/, "")}/users/me`,
@@ -428,14 +428,14 @@ export class AuthService {
       );
 
       const data = await expectJson<
-        UpdateUserSettingsResponse | TwoFactorChallengeResponse
+        UpdateUserSettingsResponse | TwoFactorChallengeDetails
       >(response);
 
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
       }
 
-      if (isTwoFactorChallengeResponse(data)) {
+      if (isTwoFactorChallengeDetails(data)) {
         return data;
       }
 
@@ -452,12 +452,12 @@ export class AuthService {
     }
   }
 }
-function isTwoFactorChallengeResponse(
+function isTwoFactorChallengeDetails(
   data: unknown,
-): data is TwoFactorChallengeResponse {
+): data is TwoFactorChallengeDetails {
   return (
     typeof data === "object" &&
     data !== null &&
-    (data as Partial<TwoFactorChallengeResponse>).requiresTwoFactor === true
+    (data as Partial<TwoFactorChallengeDetails>).requiresTwoFactor === true
   );
 }

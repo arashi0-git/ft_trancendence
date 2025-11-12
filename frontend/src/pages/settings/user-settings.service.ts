@@ -6,7 +6,7 @@ import type {
   UpdateUserSettingsResponse,
   FriendSummary,
   TwoFactorStatusResponse,
-  TwoFactorChallengeResponse,
+  TwoFactorChallengeDetails,
 } from "../../shared/types/user";
 import { router } from "../../routes/router";
 import { i18next } from "../../i18n";
@@ -43,7 +43,7 @@ export class UserSettingsService {
 
   async saveSettings(
     payload: UpdateUserSettingsPayload,
-  ): Promise<UpdateUserSettingsResponse | TwoFactorChallengeResponse> {
+  ): Promise<UpdateUserSettingsResponse | TwoFactorChallengeDetails> {
     try {
       const response = await AuthService.updateSettings(payload);
       if (response.user) {
@@ -119,7 +119,7 @@ export class UserSettingsService {
   }
 
   async enableTwoFactor(): Promise<
-    TwoFactorStatusResponse | TwoFactorChallengeResponse
+    TwoFactorStatusResponse | TwoFactorChallengeDetails
   > {
     try {
       const result = await AuthService.enableTwoFactor();
@@ -142,7 +142,7 @@ export class UserSettingsService {
   }
 
   async disableTwoFactor(): Promise<
-    TwoFactorStatusResponse | TwoFactorChallengeResponse
+    TwoFactorStatusResponse | TwoFactorChallengeDetails
   > {
     try {
       const result = await AuthService.disableTwoFactor();

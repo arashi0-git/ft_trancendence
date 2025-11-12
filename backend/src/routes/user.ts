@@ -79,15 +79,7 @@ export async function userRoutes(fastify: FastifyInstance) {
               },
             );
 
-            return reply.send({
-              requiresTwoFactor: true,
-              twoFactorToken: challenge.token,
-              expiresIn: challenge.expiresIn,
-              message: challenge.message,
-              purpose: challenge.purpose,
-              destination: challenge.destination,
-              user,
-            });
+            return reply.send(challenge);
           }
         }
 

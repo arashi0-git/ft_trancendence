@@ -11,17 +11,6 @@ export interface AuthResponse {
   token: string;
 }
 
-export interface TwoFactorChallengeResponse {
-  requiresTwoFactor: true;
-  twoFactorToken: string;
-  destination?: string;
-  expiresIn: number;
-  message: string;
-  purpose: TwoFactorPurpose;
-  user?: PublicUser;
-  token?: string;
-}
-
 export interface TwoFactorVerifyRequest {
   token: string;
   code: string;

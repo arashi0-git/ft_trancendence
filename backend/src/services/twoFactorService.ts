@@ -8,6 +8,8 @@ import {
 import { EmailService } from "./emailService";
 import { UserWithoutPassword } from "../types/user";
 import { UserService } from "./userService";
+import { TwoFactorVerificationResponse } from "../types/auth";
+import { AuthUtils } from "../utils/auth";
 
 const CODE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const CODE_TTL_SECONDS = Math.floor(CODE_TTL_MS / 1000);
@@ -30,11 +32,14 @@ const PURPOSE_MESSAGES: Record<TwoFactorPurpose, string> = {
 };
 
 export interface TwoFactorChallengeDetails {
-  token: string;
+  requiresTwoFactor: boolean;
+  twoFactorToken: string;
   destination?: string;
   expiresIn: number;
   message: string;
   purpose: TwoFactorPurpose;
+  user?: UserWithoutPassword;
+  token?: string;
 }
 
 function serializePayload(payload?: unknown): string | null {
@@ -72,7 +77,8 @@ export class TwoFactorService {
     overrides?: { message?: string; destination?: string },
   ): TwoFactorChallengeDetails {
     return {
-      token,
+      requiresTwoFactor: true,
+      twoFactorToken: token,
       purpose,
       expiresIn: CODE_TTL_SECONDS,
       message: overrides?.message ?? PURPOSE_MESSAGES[purpose],
@@ -206,5 +212,103 @@ export class TwoFactorService {
 
   static buildEmailChangeMessage(newEmail: string): string {
     return `We emailed a verification code to ${newEmail}. Enter it to confirm your new email address.`;
+  }
+
+  static async setup(userId: number): Promise<TwoFactorChallengeDetails> {
+    const user = await UserService.getUserById(userId);
+    if (!user) {
+      const error = new Error("User not found");
+      error.name = "AUTH_USER_NOT_FOUND";
+      throw error;
+    }
+
+    if (user.two_factor_enabled) {
+      const error = new Error("Two-factor authentication is already enabled");
+      error.name = "AUTH_2FA_ALREADY_ENABLED";
+      throw error;
+    }
+
+    return this.startChallenge(user, "enable_2fa");
+  }
+
+  static async disable(userId: number): Promise<TwoFactorChallengeDetails> {
+    const user = await UserService.getUserById(userId);
+    if (!user) {
+      const error = new Error("User not found");
+      error.name = "AUTH_USER_NOT_FOUND";
+      throw error;
+    }
+
+    if (!user.two_factor_enabled) {
+      const error = new Error("Two-factor authentication is not enabled");
+      error.name = "AUTH_2FA_NOT_ENABLED";
+      throw error;
+    }
+
+    return this.startChallenge(user, "disable_2fa");
+  }
+
+  static async verifyAndProcessChallenge(
+    token: string,
+    code: string,
+  ): Promise<TwoFactorVerificationResponse> {
+    const { challenge, user } = await this.verifyChallenge(token, code);
+
+    let updatedUser = user;
+    let issuedToken: string;
+
+    switch (challenge.purpose) {
+      case "login": {
+        const loggedInUser =
+          (await UserService.markUserLoggedIn(user.id)) ?? user;
+        updatedUser = loggedInUser;
+        issuedToken = AuthUtils.generateToken(updatedUser);
+        break;
+      }
+      case "enable_2fa": {
+        updatedUser = await UserService.setTwoFactorEnabledStatus(
+          user.id,
+          true,
+        );
+        issuedToken = AuthUtils.generateToken(updatedUser);
+        break;
+      }
+      case "disable_2fa": {
+        updatedUser = await UserService.setTwoFactorEnabledStatus(
+          user.id,
+          false,
+        );
+        issuedToken = AuthUtils.generateToken(updatedUser);
+        break;
+      }
+      case "email_change": {
+        const payload = this.parsePayload<{ email: string }>(challenge.payload);
+        if (!payload?.email) {
+          throw new Error("Pending email update data missing");
+        }
+
+        updatedUser = await UserService.applyEmailChange(
+          user.id,
+          payload.email,
+        );
+        issuedToken = AuthUtils.generateToken(updatedUser);
+        break;
+      }
+      default: {
+        throw new Error("Unsupported verification purpose");
+      }
+    }
+
+    const response: TwoFactorVerificationResponse = {
+      user: UserService.toPublicUser(updatedUser),
+      token: issuedToken,
+      operation: challenge.purpose,
+    };
+
+    if (challenge.purpose !== "login") {
+      response.twoFactorEnabled = updatedUser.two_factor_enabled;
+    }
+
+    return response;
   }
 }
