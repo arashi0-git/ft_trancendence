@@ -83,6 +83,7 @@ export class LoginForm {
               id="email"
               name="email"
               required
+              maxlength="100"
               class="mt-1 block w-full px-3 py-2 bg-gray-950 border border-cyan-500/40 rounded-md shadow-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400"
               placeholder="${this.t.emailPlaceholder || "Enter your email"}"
             >
@@ -95,6 +96,7 @@ export class LoginForm {
                 id="password"
                 name="password"
                 required
+                maxlength="72"
                 class="block w-full px-3 py-2 pr-10 bg-gray-950 border border-cyan-500/40 rounded-md shadow-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400"
                 placeholder="${this.t.passwordPlaceholder || "Enter your password"}"
               >
