@@ -436,7 +436,9 @@
   "errors": {
     "AUTH_MISSING_FIELDS": "ユーザー名・メールアドレス・パスワードは必須です",
     "AUTH_PASSWORD_TOO_SHORT": "パスワードは6文字以上で入力してください",
+    "AUTH_PASSWORD_TOO_LONG": "パスワードは72文字以内で入力してください",
     "AUTH_INVALID_EMAIL": "メールアドレスの形式が正しくありません",
+    "AUTH_EMAIL_TOO_LONG": "メールアドレスは100文字以内で入力してください",
     "AUTH_USERNAME_LENGTH": "ユーザー名は3〜20文字で入力してください",
     "AUTH_USER_CONFLICT": "このユーザーは既に存在します",
     "AUTH_REGISTRATION_FAILED": "登録に失敗しました",

@@ -113,6 +113,7 @@ export class ProfileSection {
             id="email"
             name="email"
             value="${escapeHtml(user.email)}"
+            maxlength="100"
             class="w-full bg-gray-900/70 border border-cyan-500/30 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
             autocomplete="email"
           />
@@ -195,6 +196,7 @@ export class ProfileSection {
               id="current-password"
               name="currentPassword"
               type="password"
+              maxlength="72"
               class="w-full bg-gray-900/70 border border-cyan-500/30 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
               autocomplete="current-password"
             />
@@ -211,6 +213,7 @@ export class ProfileSection {
                 id="new-password"
                 name="newPassword"
                 type="password"
+                maxlength="72"
                 class="w-full bg-gray-900/70 border border-cyan-500/30 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
                 autocomplete="new-password"
               />
@@ -226,6 +229,7 @@ export class ProfileSection {
                 id="confirm-password"
                 name="confirmPassword"
                 type="password"
+                maxlength="72"
                 class="w-full bg-gray-900/70 border border-cyan-500/30 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
                 autocomplete="new-password"
               />

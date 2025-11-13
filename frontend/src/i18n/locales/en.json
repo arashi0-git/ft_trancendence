@@ -435,7 +435,9 @@
   "errors": {
     "AUTH_MISSING_FIELDS": "Username, email, and password are required",
     "AUTH_PASSWORD_TOO_SHORT": "Password must be at least 6 characters long",
+    "AUTH_PASSWORD_TOO_LONG": "Password must be 72 characters or fewer",
     "AUTH_INVALID_EMAIL": "Invalid email format",
+    "AUTH_EMAIL_TOO_LONG": "Email must be 100 characters or fewer",
     "AUTH_USERNAME_LENGTH": "Username must be between 3 and 20 characters",
     "AUTH_USER_CONFLICT": "User already exists",
     "AUTH_REGISTRATION_FAILED": "Registration failed",

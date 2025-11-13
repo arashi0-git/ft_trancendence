@@ -21,6 +21,10 @@ export class UserService {
       throw new Error("Email cannot be empty");
     }
 
+    if (email.length > 100) {
+      throw new Error("Email must be 100 characters or fewer");
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       throw new Error("Invalid email format");
@@ -102,6 +106,10 @@ export class UserService {
 
       this.validateEmailFormat(normalizedEmail);
 
+      if (userData.password.length > 72) {
+        throw new Error("Password must be 72 characters or fewer");
+      }
+
       if (await UserModel.findByEmail(normalizedEmail)) {
         throw new Error("User with this email already exists");
       }
@@ -140,6 +148,12 @@ export class UserService {
     password: string,
   ): Promise<UserWithoutPassword | null> {
     const normalizedEmail = this.normalizeEmail(email);
+    this.validateEmailFormat(normalizedEmail);
+
+    if (password.length > 72) {
+      return null; // Invalid password (too long)
+    }
+
     const user = await UserModel.findByEmail(normalizedEmail);
 
     if (!user) {
@@ -308,6 +322,10 @@ export class UserService {
 
     if (newPassword.length < 6) {
       throw new Error("New password must be at least 6 characters long");
+    }
+
+    if (newPassword.length > 72) {
+      throw new Error("New password must be 72 characters or fewer");
     }
 
     const newPasswordHash = await AuthUtils.hashPassword(newPassword);

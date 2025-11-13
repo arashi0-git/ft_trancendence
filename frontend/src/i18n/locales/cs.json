@@ -436,7 +436,9 @@
   "errors": {
     "AUTH_MISSING_FIELDS": "Uživatelské jméno, e-mail i heslo jsou povinné",
     "AUTH_PASSWORD_TOO_SHORT": "Heslo musí mít alespoň 6 znaků",
+    "AUTH_PASSWORD_TOO_LONG": "Heslo smí mít maximálně 72 znaků",
     "AUTH_INVALID_EMAIL": "Neplatný formát e-mailu",
+    "AUTH_EMAIL_TOO_LONG": "E-mail smí mít maximálně 100 znaků",
     "AUTH_USERNAME_LENGTH": "Uživatelské jméno musí mít 3 až 20 znaků",
     "AUTH_USER_CONFLICT": "Uživatel již existuje",
     "AUTH_REGISTRATION_FAILED": "Registrace se nezdařila",

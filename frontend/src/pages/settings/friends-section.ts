@@ -41,6 +41,7 @@ export class FriendsSection {
               "settings.friends.placeholder",
               "Friend username",
             )}"
+            maxlength="20"
             class="flex-1 bg-gray-900/70 border border-cyan-500/30 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
             autocomplete="off"
           />
