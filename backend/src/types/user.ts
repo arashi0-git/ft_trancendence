@@ -1,58 +1,24 @@
-import { PublicUser } from "../models/user";
-import type { TwoFactorPurpose } from "../models/twoFactorChallenge";
-
 export interface CreateUserRequest {
   username: string;
   email: string;
   password: string;
 }
 
-export type UserProfile = PublicUser;
-
-export interface LoginRequest {
+export interface UserWithoutPassword {
+  id: number;
+  username: string;
   email: string;
-  password: string;
+  profile_image_url: string | null;
+  created_at: string;
+  updated_at: string;
+  is_online: boolean;
+  last_login: string | null;
+  token_version: number;
+  two_factor_enabled: boolean;
+  language: string;
 }
 
-// APIレスポンス
-export interface AuthResponse {
-  user: PublicUser;
-  token: string;
-}
-
-export interface TwoFactorChallengeResponse {
-  requiresTwoFactor: true;
-  twoFactorToken: string;
-  delivery: "email";
-  destination?: string;
-  expiresIn: number;
-  message: string;
-  purpose: TwoFactorPurpose;
-  user?: PublicUser;
-  token?: string;
-}
-
-export interface TwoFactorVerifyRequest {
-  token: string;
-  code: string;
-}
-
-export interface TwoFactorVerificationResponse extends AuthResponse {
-  operation: TwoFactorPurpose;
-  twoFactorEnabled?: boolean;
-}
-
-export interface TwoFactorResendRequest {
-  token: string;
-}
-
-export interface EnableTwoFactorRequest {
-  currentPassword: string;
-}
-
-export interface DisableTwoFactorRequest {
-  currentPassword: string;
-}
+export type PublicUser = Omit<UserWithoutPassword, "token_version">;
 
 export interface UpdateUserProfileRequest {
   username?: string;
@@ -61,7 +27,8 @@ export interface UpdateUserProfileRequest {
   language?: string;
 }
 
-export interface UpdateUserSettingsRequest extends UpdateUserProfileRequest {
+export interface UpdateUserWithPasswordRequest
+  extends UpdateUserProfileRequest {
   currentPassword?: string;
   newPassword?: string;
 }

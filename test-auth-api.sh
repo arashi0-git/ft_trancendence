@@ -25,9 +25,6 @@ echo ""
 
 # 1. ヘルスチェック
 echo -e "${YELLOW}1. ヘルスチェック${NC}"
-echo "GET ${API_BASE}/health"
-HEALTH_RESPONSE=$(curl -s -X GET "${API_BASE}/health")
-echo "Response: ${HEALTH_RESPONSE}"
 
 if echo "${HEALTH_RESPONSE}" | grep -q "ok"; then
     echo -e "${GREEN}✅ ヘルスチェック成功${NC}"

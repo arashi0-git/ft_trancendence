@@ -7,7 +7,7 @@ import type {
   AuthResult,
   LoginRequest,
   PublicUser,
-  TwoFactorChallengeResponse,
+  TwoFactorChallengeDetails,
 } from "../types/user";
 import { setupPasswordToggles } from "../utils/password-toggle-utils";
 
@@ -41,7 +41,7 @@ interface LoginTranslations {
 
 export class LoginForm {
   private container: HTMLElement;
-  private twoFactorChallenge: TwoFactorChallengeResponse | null = null;
+  private twoFactorChallenge: TwoFactorChallengeDetails | null = null;
   private twoFactorComponent: TwoFactorVerification | null = null;
   private notificationService = NotificationService.getInstance();
   private t: LoginTranslations = {};
@@ -83,6 +83,7 @@ export class LoginForm {
               id="email"
               name="email"
               required
+              maxlength="100"
               class="mt-1 block w-full px-3 py-2 bg-gray-950 border border-cyan-500/40 rounded-md shadow-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400"
               placeholder="${this.t.emailPlaceholder || "Enter your email"}"
             >
@@ -95,6 +96,7 @@ export class LoginForm {
                 id="password"
                 name="password"
                 required
+                maxlength="72"
                 class="block w-full px-3 py-2 pr-10 bg-gray-950 border border-cyan-500/40 rounded-md shadow-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400"
                 placeholder="${this.t.passwordPlaceholder || "Enter your password"}"
               >
@@ -162,8 +164,12 @@ export class LoginForm {
 
     this.twoFactorComponent = new TwoFactorVerification(dialogContainer, {
       message: this.buildTwoFactorMessage(this.twoFactorChallenge),
-      resendLabel: "Resend email code",
-      cancelLabel: "Back to Login",
+      resendLabel: i18next.t("login.twoFactor.resend", {
+        defaultValue: "Resend email code",
+      }),
+      cancelLabel: i18next.t("login.twoFactor.cancel", {
+        defaultValue: "Back to Login",
+      }),
       onSubmit: async (code) => {
         await this.verifyTwoFactorCode(code);
         if (this.twoFactorComponent) {
@@ -229,7 +235,7 @@ export class LoginForm {
     }
 
     submitBtn.disabled = true;
-    submitBtn.textContent = "Logging in...";
+    submitBtn.textContent = this.t.status?.loggingIn || "Logging in...";
 
     try {
       const response = await AuthService.login(loginData);
@@ -315,22 +321,37 @@ export class LoginForm {
     this.renderLoginView();
   }
 
-  private buildTwoFactorMessage(challenge: TwoFactorChallengeResponse): string {
+  private buildTwoFactorMessage(challenge: TwoFactorChallengeDetails): string {
+    const loginMessageKey = "login.twoFactor.message";
+    if (i18next.exists(loginMessageKey)) {
+      const translated = i18next.t(loginMessageKey, {
+        destination: challenge.destination,
+      });
+      if (translated && translated !== loginMessageKey) {
+        return translated;
+      }
+    }
+
     const trimmed = challenge.message?.trim();
     if (trimmed && trimmed.length > 0) {
       return trimmed;
     }
 
     if (challenge.destination) {
-      return `We sent a verification code to ${challenge.destination}. Enter it to continue.`;
+      return i18next.t("settings.security.dialog.emailDestination", {
+        destination: challenge.destination,
+        defaultValue: `We sent a verification code to ${challenge.destination}. Enter it to continue.`,
+      });
     }
 
-    return "Enter the 6-digit code we emailed you to continue.";
+    return i18next.t("notifications.twoFactorCodePrompt", {
+      defaultValue: "Enter the 6-digit code we emailed you to continue.",
+    });
   }
 
   private isTwoFactorChallenge(
     result: AuthResult,
-  ): result is TwoFactorChallengeResponse {
+  ): result is TwoFactorChallengeDetails {
     return "requiresTwoFactor" in result && result.requiresTwoFactor === true;
   }
 

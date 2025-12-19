@@ -3,6 +3,7 @@ import { NotificationService } from "../../shared/services/notification.service"
 import { router } from "../../routes/router";
 import type { FriendSummary } from "../../shared/types/user";
 import { escapeHtml } from "../../shared/utils/html-utils";
+import { i18next, onLanguageChange } from "../../i18n";
 
 export class FriendsSection {
   private container: HTMLElement;
@@ -15,20 +16,32 @@ export class FriendsSection {
   private boundFriendKeydownHandler: ((e: KeyboardEvent) => void) | null = null;
   private boundFriendsListClickHandler: ((e: Event) => Promise<void>) | null =
     null;
+  private unsubscribeLanguage?: () => void;
 
   constructor(container: HTMLElement) {
     this.container = container;
+    this.unsubscribeLanguage = onLanguageChange(() => {
+      if (this.friendsLoaded || this.friendForm) {
+        this.render();
+      }
+    });
   }
 
   render(): void {
     this.container.innerHTML = `
       <section class="space-y-4 border-t border-gray-700 pt-4">
-        <h3 class="text-lg font-semibold text-cyan-200">Friends</h3>
+        <h3 class="text-lg font-semibold text-cyan-200">
+          ${i18next.t("settings.friends.title", "Friends")}
+        </h3>
         <div id="friend-form" class="flex gap-2">
           <input
             type="text"
             id="friend-username"
-            placeholder="Friend username"
+            placeholder="${i18next.t(
+              "settings.friends.placeholder",
+              "Friend username",
+            )}"
+            maxlength="20"
             class="flex-1 bg-gray-900/70 border border-cyan-500/30 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
             autocomplete="off"
           />
@@ -37,7 +50,7 @@ export class FriendsSection {
             data-friend-action="submit"
             class="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded transition disabled:opacity-60"
           >
-            Add Friend
+            ${i18next.t("settings.friends.addButton", "Add Friend")}
           </button>
         </div>
         <div id="friends-list-container" class="space-y-2">
@@ -82,12 +95,18 @@ export class FriendsSection {
   }
 
   private renderFriendsLoading(): string {
-    return `<p class="text-xs text-gray-400">Loading friends list...</p>`;
+    return `<p class="text-xs text-gray-400">${i18next.t(
+      "settings.friends.loading",
+      "Loading friends list...",
+    )}</p>`;
   }
 
   private renderFriendsList(): string {
     if (this.friends.length === 0) {
-      return `<p class="text-xs text-gray-400">You have not added any friends yet.</p>`;
+      return `<p class="text-xs text-gray-400">${i18next.t(
+        "settings.friends.empty",
+        "You have not added any friends yet.",
+      )}</p>`;
     }
 
     return this.friends
@@ -98,7 +117,13 @@ export class FriendsSection {
           ${this.renderFriendAvatar(user)}
           <div>
             <p class="text-sm font-semibold text-white">${escapeHtml(user.username)}</p>
-            <p class="text-xs text-gray-400">${user.is_online ? "Online" : "Offline"}</p>
+            <p class="text-xs text-gray-400">
+              ${
+                user.is_online
+                  ? i18next.t("settings.friends.online", "Online")
+                  : i18next.t("settings.friends.offline", "Offline")
+              }
+            </p>
           </div>
         </div>
         <button
@@ -106,9 +131,11 @@ export class FriendsSection {
           class="text-xs font-semibold text-red-300 hover:text-red-200 border border-red-400/40 px-3 py-1.5 rounded transition disabled:opacity-60 disabled:cursor-not-allowed"
           data-friend-action="remove"
           data-user-id="${user.id}"
-          aria-label="Remove ${escapeHtml(user.username)} from friends list"
+          aria-label="${i18next.t("settings.friends.ariaRemove", {
+            username: escapeHtml(user.username),
+          })}"
         >
-          Remove
+          ${i18next.t("settings.friends.removeButton", "Remove")}
         </button>
       </div>
     `,
@@ -118,14 +145,20 @@ export class FriendsSection {
 
   private renderFriendAvatar(user: FriendSummary): string {
     const profileImage = (user.profile_image_url ?? "").trim();
+    const safeUsername = escapeHtml(user.username);
+    const altText = i18next.t("settings.friends.avatarAlt", {
+      username: safeUsername,
+    });
 
     if (profileImage.length > 0) {
-      const imageUrl = AuthService.resolveAssetUrl(profileImage);
+      const resolvedUrl = AuthService.resolveAssetUrl(profileImage);
+      const safeImageSrc =
+        resolvedUrl && resolvedUrl.length > 0 ? escapeHtml(resolvedUrl) : "";
       return `
         <div class="w-10 h-10 rounded-full overflow-hidden border border-cyan-500/20">
           <img
-            src="${imageUrl}"
-            alt="${escapeHtml(user.username)}'s avatar"
+            src="${safeImageSrc}"
+            alt="${altText}"
             class="w-full h-full object-cover"
           />
         </div>
@@ -189,7 +222,10 @@ export class FriendsSection {
     try {
       if (submitButton) {
         submitButton.disabled = true;
-        submitButton.textContent = "Adding...";
+        submitButton.textContent = i18next.t(
+          "settings.friends.adding",
+          "Adding...",
+        );
       }
 
       await this.addFriend(username);
@@ -200,7 +236,7 @@ export class FriendsSection {
     } catch (error) {
       NotificationService.getInstance().handleUnexpectedError(
         error,
-        "Failed to add friend",
+        i18next.t("settings.friends.errors.addFailed", "Failed to add friend"),
       );
     } finally {
       if (submitButton) {
@@ -227,10 +263,12 @@ export class FriendsSection {
     const userId = parseInt(dataUserId, 10);
     if (isNaN(userId)) return;
 
-    const originalText = button.textContent ?? "Remove";
+    const originalText =
+      button.textContent ??
+      i18next.t("settings.friends.removeButton", "Remove");
 
     button.disabled = true;
-    button.textContent = "Removing...";
+    button.textContent = i18next.t("settings.friends.removing", "Removing...");
 
     try {
       await this.removeFriend(userId);
@@ -238,7 +276,10 @@ export class FriendsSection {
     } catch (error) {
       NotificationService.getInstance().handleUnexpectedError(
         error,
-        "Failed to remove friend",
+        i18next.t(
+          "settings.friends.errors.removeFailed",
+          "Failed to remove friend",
+        ),
       );
       button.disabled = false;
       button.textContent = originalText;
@@ -276,7 +317,10 @@ export class FriendsSection {
     } catch (error) {
       NotificationService.getInstance().handleUnexpectedError(
         error,
-        "Failed to load friends list",
+        i18next.t(
+          "settings.friends.errors.loadFailed",
+          "Failed to load friends list",
+        ),
       );
       throw error;
     }
@@ -347,5 +391,7 @@ export class FriendsSection {
     this.boundFriendClickHandler = null;
     this.boundFriendKeydownHandler = null;
     this.boundFriendsListClickHandler = null;
+    this.unsubscribeLanguage?.();
+    this.unsubscribeLanguage = undefined;
   }
 }

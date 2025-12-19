@@ -34,9 +34,14 @@ export class TwoFactorVerification {
     this.container = container;
     this.options = {
       message: options.message,
-      verifyLabel: options.verifyLabel ?? "Verify Code",
-      resendLabel: options.resendLabel ?? "Resend email code",
-      cancelLabel: options.cancelLabel ?? "Cancel",
+      verifyLabel:
+        options.verifyLabel ??
+        i18next.t("twoFactor.dialog.submit", "Verify Code"),
+      resendLabel:
+        options.resendLabel ??
+        i18next.t("twoFactor.dialog.resend", "Resend email code"),
+      cancelLabel:
+        options.cancelLabel ?? i18next.t("twoFactor.dialog.cancel", "Cancel"),
       showCancel: options.showCancel ?? true,
       onSubmit: options.onSubmit,
       onResend: options.onResend,
@@ -56,7 +61,10 @@ export class TwoFactorVerification {
 
     const title = document.createElement("h2");
     title.className = "text-2xl font-bold mb-4 text-center text-cyan-200";
-    title.textContent = "Two-Factor Verification";
+    title.textContent = i18next.t(
+      "twoFactor.dialog.title",
+      "Two-Factor Verification",
+    );
 
     const message = document.createElement("p");
     message.dataset.message = "";
@@ -75,7 +83,10 @@ export class TwoFactorVerification {
     const label = document.createElement("label");
     label.htmlFor = "code";
     label.className = "text-sm font-medium text-gray-200";
-    label.textContent = "Verification Code";
+    label.textContent = i18next.t(
+      "twoFactor.dialog.codeLabel",
+      "Verification Code",
+    );
 
     let resendButton: HTMLButtonElement | null = null;
     if (this.options.onResend) {
@@ -96,7 +107,7 @@ export class TwoFactorVerification {
     input.inputMode = "numeric";
     input.className =
       "block w-full px-3 py-2 bg-gray-950 border border-cyan-500/40 rounded-md shadow-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400 tracking-widest text-center";
-    input.placeholder = "123456";
+    input.placeholder = i18next.t("twoFactor.dialog.codePlaceholder", "123456");
 
     labelRow.appendChild(label);
     if (resendButton) {
@@ -188,7 +199,10 @@ export class TwoFactorVerification {
       await this.options.onResend();
     } catch (error) {
       this.notificationService.apiError(error, {
-        fallbackMessage: "Failed to resend code",
+        fallbackMessage: i18next.t(
+          "notifications.twoFactorResendFailed",
+          "Failed to resend code. Please try again.",
+        ),
       });
     } finally {
       this.setResendLoading(false);
@@ -198,7 +212,7 @@ export class TwoFactorVerification {
   private setLoading(loading: boolean): void {
     this.elements.submit.disabled = loading;
     this.elements.submit.textContent = loading
-      ? "Verifying..."
+      ? i18next.t("twoFactor.dialog.verifying", "Verifying...")
       : this.options.verifyLabel;
     if (this.elements.resend) this.elements.resend.disabled = loading;
     if (this.elements.cancel) this.elements.cancel.disabled = loading;
@@ -208,7 +222,7 @@ export class TwoFactorVerification {
     if (!this.elements.resend) return;
     this.elements.resend.disabled = loading;
     this.elements.resend.textContent = loading
-      ? "Resending..."
+      ? i18next.t("twoFactor.dialog.resending", "Resending...")
       : this.options.resendLabel;
     this.elements.submit.disabled = loading;
     if (this.elements.cancel) this.elements.cancel.disabled = loading;

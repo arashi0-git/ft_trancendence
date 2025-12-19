@@ -2,7 +2,10 @@ import { FastifyInstance } from "fastify";
 import { authenticateToken } from "../middleware/auth";
 import { UserService } from "../services/userService";
 import { FriendService } from "../services/friendService";
-import { FriendUserRequest, UpdateUserSettingsRequest } from "../types/user";
+import {
+  FriendUserRequest,
+  UpdateUserWithPasswordRequest,
+} from "../types/user";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
@@ -16,7 +19,7 @@ const ALLOWED_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp"]);
 const OUTPUT_FORMAT: "png" | "webp" = "webp";
 
 export async function userRoutes(fastify: FastifyInstance) {
-  fastify.patch<{ Body: UpdateUserSettingsRequest }>(
+  fastify.patch<{ Body: UpdateUserWithPasswordRequest }>(
     "/me",
     { preHandler: authenticateToken },
     async (request, reply) => {
@@ -30,7 +33,7 @@ export async function userRoutes(fastify: FastifyInstance) {
           );
         }
 
-        const payload: UpdateUserSettingsRequest = {
+        const payload: UpdateUserWithPasswordRequest = {
           ...(request.body || {}),
         };
 
@@ -76,16 +79,7 @@ export async function userRoutes(fastify: FastifyInstance) {
               },
             );
 
-            return reply.send({
-              requiresTwoFactor: true,
-              twoFactorToken: challenge.token,
-              delivery: challenge.delivery,
-              expiresIn: challenge.expiresIn,
-              message: challenge.message,
-              purpose: challenge.purpose,
-              destination: challenge.destination,
-              user,
-            });
+            return reply.send(challenge);
           }
         }
 

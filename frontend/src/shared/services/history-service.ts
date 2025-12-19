@@ -86,12 +86,6 @@ export class HistoryService {
   ): Promise<GameHistory[]> {
     try {
       const params = new URLSearchParams();
-      if (filters?.tournamentId !== undefined) {
-        params.append("tournamentId", filters.tournamentId.toString());
-      }
-      if (filters?.isWinner !== undefined) {
-        params.append("isWinner", filters.isWinner.toString());
-      }
       if (filters?.matchType) {
         params.append("matchType", filters.matchType);
       }

@@ -3,6 +3,7 @@ export interface Route {
   handler: (params?: Record<string, string>, query?: URLSearchParams) => void;
   params?: Record<string, string>;
   query?: URLSearchParams;
+  guard?: (path: string) => string | null;
 }
 
 export type RouterEventType = "routeChange";
@@ -24,8 +25,9 @@ export class Router {
   addRoute(
     path: string,
     handler: (params?: Record<string, string>, query?: URLSearchParams) => void,
+    options?: { guard?: (path: string) => string | null },
   ): void {
-    this.routes.push({ path, handler });
+    this.routes.push({ path, handler, guard: options?.guard });
   }
 
   navigate(path: string, pushState: boolean = true): void {
@@ -54,6 +56,11 @@ export class Router {
     for (const route of this.routes) {
       const match = this.matchPath(route.path, path);
       if (match) {
+        const guardRedirect = route.guard?.(path);
+        if (guardRedirect) {
+          this.navigate(guardRedirect);
+          return null;
+        }
         return {
           ...route,
           params: match.params,

@@ -65,6 +65,7 @@ export async function historyRoutes(fastify: FastifyInstance) {
           );
         }
 
+        // business logic
         const history = await GameHistoryModel.create({
           ...input,
           matchType,
@@ -82,11 +83,8 @@ export async function historyRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // Get current user's game history
   fastify.get<{
     Querystring: {
-      tournamentId?: string;
-      isWinner?: string;
       matchType?: string;
       limit?: string;
       offset?: string;
@@ -103,29 +101,12 @@ export async function historyRoutes(fastify: FastifyInstance) {
       }
 
       const filters = {
-        tournamentId: request.query.tournamentId
-          ? Number(request.query.tournamentId)
-          : undefined,
-        isWinner:
-          request.query.isWinner === "true"
-            ? true
-            : request.query.isWinner === "false"
-              ? false
-              : undefined,
         matchType: request.query.matchType as MatchType | undefined,
         limit: request.query.limit ? Number(request.query.limit) : undefined,
         offset: request.query.offset ? Number(request.query.offset) : undefined,
       };
 
       // Validate numeric parameters
-      if (filters.tournamentId !== undefined && isNaN(filters.tournamentId)) {
-        return sendError(
-          reply,
-          400,
-          "HISTORY_INVALID_TOURNAMENT_ID",
-          "Invalid tournamentId",
-        );
-      }
       if (
         filters.limit !== undefined &&
         (isNaN(filters.limit) || filters.limit <= 0 || filters.limit > 10)

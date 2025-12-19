@@ -1,4 +1,5 @@
 import { db } from "../database/connection";
+import { UserWithoutPassword, PublicUser } from "../types/user";
 
 export interface UserRecord {
   id: number;
@@ -20,14 +21,6 @@ export interface CreateUserParams {
   email: string;
   passwordHash: string;
 }
-
-export type UserWithoutPassword = Omit<
-  UserRecord,
-  "password_hash" | "two_factor_enabled"
-> & {
-  two_factor_enabled: boolean;
-};
-export type PublicUser = Omit<UserWithoutPassword, "token_version">;
 
 export function stripPassword(user: UserRecord): UserWithoutPassword {
   const { password_hash: _password_hash, two_factor_enabled, ...rest } = user;

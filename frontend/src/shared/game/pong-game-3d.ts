@@ -54,7 +54,7 @@ const PADDLE_LENGTH_MULTIPLIERS: Record<PaddleLengthSetting, number> = {
 const BALL_SIZE_MULTIPLIERS: Record<BallSizeSetting, number> = {
   small: 0.75,
   normal: 1,
-  big: 3,
+  big: 2,
 };
 
 const BALL_SPEED_MULTIPLIERS: Record<BallSpeedSetting, number> = {
@@ -308,12 +308,8 @@ export class PongGame3D {
   private readonly GAME_KEYS = [
     "ArrowUp",
     "ArrowDown",
-    "ArrowLeft",
-    "ArrowRight",
     "KeyW",
     "KeyS",
-    "KeyA",
-    "KeyD",
     "KeyR",
     "KeyF",
     "KeyI",

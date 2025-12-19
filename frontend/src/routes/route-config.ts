@@ -23,7 +23,6 @@ export const routeConfig: Record<string, PageConstructor> = {
   "/tournament/bracket": TournamentPage,
   "/tournament/match/:matchId": TournamentPage,
   "/tournament/results": TournamentPage,
-
   "/game-settings": GameSettingsPage,
   "/settings": UserSettingsPage,
   "/login": LoginPage,

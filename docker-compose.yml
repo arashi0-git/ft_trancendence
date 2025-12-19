@@ -16,37 +16,37 @@ services:
         condition: service_started
       ssl-cert:
         condition: service_completed_successfully
+    networks:
+      - app-network
+    restart: unless-stopped
 
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
     container_name: ft_transcendence_backend
-    # DEVELOPMENT ONLY: Expose port 3000 for Vite dev server proxy
-    # To run local backend alongside Docker: stop Docker or change local backend port
-    # PRODUCTION: Comment out the ports section to prevent direct backend access
     ports:
       - "3000:3000"  # Remove this in production deployment
     volumes:
-      # - /app/node_modules
-      - ./backend/src:/app/src
       - ./database:/app/database # SQLite用
     environment:
       - NODE_ENV=development
       - DATABASE_PATH=/app/database/transcendence.db
-
     depends_on:
       ssl-cert:
         condition: service_completed_successfully
+    networks:
+      - app-network
+    restart: unless-stopped
 
-  database:
-    image: alpine:latest
-    container_name: ft_transcendence_database
-    command: tail -f /dev/null # SQLiteなのでファイルベース、コンテナは永続化のみ
-    volumes:
-      - ./database:/data
-    environment:
-      - DB_PATH=/data/transcendence.db
+  # database:
+  #   image: alpine:latest
+  #   container_name: ft_transcendence_database
+  #   command: tail -f /dev/null # SQLiteなのでファイルベース、コンテナは永続化のみ
+  #   volumes:
+  #     - ./database:/data
+  #   environment:
+  #     - DB_PATH=/data/transcendence.db
 
   # 開発用のHTTPS証明書生成
   ssl-cert:
@@ -70,5 +70,5 @@ services:
       - ./ssl:/certs
 
 networks:
-  default:
-    name: ft_transcendence_network
+  app-network:
+    driver: bridge

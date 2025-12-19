@@ -1,20 +1,15 @@
 import { FastifyInstance } from "fastify";
 import { UserService } from "../services/userService";
-import { AuthUtils } from "../utils/auth";
+import { CreateUserRequest } from "../types/user";
 import {
-  CreateUserRequest,
   LoginRequest,
-  AuthResponse,
-  TwoFactorChallengeResponse,
   TwoFactorVerifyRequest,
-  EnableTwoFactorRequest,
-  DisableTwoFactorRequest,
   TwoFactorResendRequest,
-  TwoFactorVerificationResponse,
-} from "../types/user";
+} from "../types/auth";
 import { authenticateToken, optionalAuth } from "../middleware/auth";
 import { TwoFactorService } from "../services/twoFactorService";
 import { sendError } from "../utils/errorResponse";
+import { AuthService } from "../services/authService";
 
 export async function authRoutes(fastify: FastifyInstance) {
   fastify.post<{ Body: CreateUserRequest }>(
@@ -22,7 +17,7 @@ export async function authRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       try {
         const { username, email, password } = request.body;
-
+        // Validation
         if (!username || !email || !password) {
           return sendError(
             reply,
@@ -60,38 +55,25 @@ export async function authRoutes(fastify: FastifyInstance) {
           );
         }
 
-        const user = await UserService.createUser({
-          username,
-          email,
-          password,
-        });
-        await UserService.updateUserOnlineStatus(user.id, true);
-        const updatedUser = await UserService.getUserById(user.id);
-        const token = AuthUtils.generateToken(user);
-
-        const response: AuthResponse = {
-          user: UserService.toPublicUser(updatedUser ?? user),
-          token,
-        };
-
+        // Business logic
+        const response = await AuthService.register(request.body);
         return reply.status(201).send(response);
       } catch (error) {
         fastify.log.error(error);
-        const statusCode =
-          error instanceof Error &&
-          (error.message.includes("already exists") ||
-            error.message.includes("UNIQUE constraint"))
-            ? 409
-            : 400;
 
-        const message =
-          error instanceof Error ? error.message : "Registration failed";
-        const errorCode =
-          statusCode === 409
-            ? "AUTH_USER_CONFLICT"
-            : "AUTH_REGISTRATION_FAILED";
+        const isError = error instanceof Error;
+        const errorMessage = isError ? error.message : "Registration failed";
+        const isDuplicate =
+          isError &&
+          (errorMessage.includes("already exists") ||
+            errorMessage.includes("UNIQUE constraint"));
 
-        return sendError(reply, statusCode, errorCode, message);
+        const statusCode = isDuplicate ? 409 : 500;
+        const errorCode = isDuplicate
+          ? "AUTH_USER_CONFLICT"
+          : "AUTH_REGISTRATION_FAILED";
+
+        return sendError(reply, statusCode, errorCode, errorMessage);
       }
     },
   );
@@ -99,7 +81,7 @@ export async function authRoutes(fastify: FastifyInstance) {
   fastify.post<{ Body: LoginRequest }>("/login", async (request, reply) => {
     try {
       const { email, password } = request.body;
-
+      // Validation
       if (!email || !password) {
         return sendError(
           reply,
@@ -109,9 +91,9 @@ export async function authRoutes(fastify: FastifyInstance) {
         );
       }
 
-      const user = await UserService.authenticateUser(email, password);
-
-      if (!user) {
+      // Business logic
+      const response = await AuthService.login({ email, password });
+      if (!response) {
         return sendError(
           reply,
           401,
@@ -119,33 +101,6 @@ export async function authRoutes(fastify: FastifyInstance) {
           "Invalid email or password",
         );
       }
-
-      if (user.two_factor_enabled) {
-        const challenge = await TwoFactorService.startLoginChallenge(user);
-
-        const challengeResponse: TwoFactorChallengeResponse = {
-          requiresTwoFactor: true,
-          twoFactorToken: challenge.token,
-          delivery: challenge.delivery,
-          expiresIn: challenge.expiresIn,
-          message: challenge.message,
-          destination: challenge.destination,
-          purpose: challenge.purpose,
-        };
-
-        return reply.send(challengeResponse);
-      }
-
-      const loggedInUser =
-        (await UserService.markUserLoggedIn(user.id)) ?? user;
-
-      const token = AuthUtils.generateToken(loggedInUser);
-
-      const response: AuthResponse = {
-        user: UserService.toPublicUser(loggedInUser),
-        token,
-      };
-
       return reply.send(response);
     } catch (error) {
       fastify.log.error(error);
@@ -153,7 +108,7 @@ export async function authRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post<{ Body: EnableTwoFactorRequest }>(
+  fastify.post(
     "/2fa/setup",
     { preHandler: authenticateToken },
     async (request, reply) => {
@@ -167,42 +122,31 @@ export async function authRoutes(fastify: FastifyInstance) {
           );
         }
 
-        const user = await UserService.getUserById(request.user.id);
-        if (!user) {
-          return sendError(reply, 404, "AUTH_USER_NOT_FOUND", "User not found");
-        }
-
-        if (user.two_factor_enabled) {
-          return sendError(
-            reply,
-            400,
-            "AUTH_2FA_ALREADY_ENABLED",
-            "Two-factor authentication is already enabled",
-          );
-        }
-
-        const challenge = await TwoFactorService.startChallenge(
-          user,
-          "enable_2fa",
-        );
-
-        return reply.send({
-          requiresTwoFactor: true,
-          twoFactorToken: challenge.token,
-          delivery: challenge.delivery,
-          expiresIn: challenge.expiresIn,
-          message: challenge.message,
-          destination: challenge.destination,
-          purpose: challenge.purpose,
-        });
+        // Business logic
+        const response = await TwoFactorService.setup(request.user.id);
+        return reply.send(response);
       } catch (error) {
         fastify.log.error(error);
-        return sendError(
-          reply,
-          500,
-          "AUTH_2FA_ENABLE_FAILED",
-          "Failed to enable two-factor authentication",
-        );
+
+        const isError = error instanceof Error;
+        const errorMessage = isError
+          ? error.message
+          : "Failed to enable two-factor authentication";
+
+        let statusCode = 500;
+        let errorCode = "AUTH_2FA_ENABLE_FAILED";
+
+        if (isError) {
+          if (error.name === "AUTH_USER_NOT_FOUND") {
+            statusCode = 404;
+            errorCode = error.name;
+          } else if (error.name === "AUTH_2FA_ALREADY_ENABLED") {
+            statusCode = 400;
+            errorCode = error.name;
+          }
+        }
+
+        return sendError(reply, statusCode, errorCode, errorMessage);
       }
     },
   );
@@ -221,19 +165,9 @@ export async function authRoutes(fastify: FastifyInstance) {
           );
         }
 
+        // Business logic
         const challenge = await TwoFactorService.resendChallenge(token);
-
-        const response: TwoFactorChallengeResponse = {
-          requiresTwoFactor: true,
-          twoFactorToken: challenge.token,
-          delivery: challenge.delivery,
-          expiresIn: challenge.expiresIn,
-          message: challenge.message,
-          destination: challenge.destination,
-          purpose: challenge.purpose,
-        };
-
-        return reply.send(response);
+        return reply.send(challenge);
       } catch (error) {
         fastify.log.error(error);
         const message =
@@ -245,7 +179,7 @@ export async function authRoutes(fastify: FastifyInstance) {
     },
   );
 
-  fastify.post<{ Body: DisableTwoFactorRequest }>(
+  fastify.post(
     "/2fa/disable",
     { preHandler: authenticateToken },
     async (request, reply) => {
@@ -259,42 +193,31 @@ export async function authRoutes(fastify: FastifyInstance) {
           );
         }
 
-        const user = await UserService.getUserById(request.user.id);
-        if (!user) {
-          return sendError(reply, 404, "AUTH_USER_NOT_FOUND", "User not found");
-        }
-
-        if (!user.two_factor_enabled) {
-          return sendError(
-            reply,
-            400,
-            "AUTH_2FA_NOT_ENABLED",
-            "Two-factor authentication is not enabled",
-          );
-        }
-
-        const challenge = await TwoFactorService.startChallenge(
-          user,
-          "disable_2fa",
-        );
-
-        return reply.send({
-          requiresTwoFactor: true,
-          twoFactorToken: challenge.token,
-          delivery: challenge.delivery,
-          expiresIn: challenge.expiresIn,
-          message: challenge.message,
-          destination: challenge.destination,
-          purpose: challenge.purpose,
-        });
+        // Business logic
+        const response = await TwoFactorService.disable(request.user.id);
+        return reply.send(response);
       } catch (error) {
         fastify.log.error(error);
-        return sendError(
-          reply,
-          500,
-          "AUTH_2FA_DISABLE_FAILED",
-          "Failed to disable two-factor authentication",
-        );
+
+        const isError = error instanceof Error;
+        const errorMessage = isError
+          ? error.message
+          : "Failed to disable two-factor authentication";
+
+        let statusCode = 500;
+        let errorCode = "AUTH_2FA_DISABLE_FAILED";
+
+        if (isError) {
+          if (error.name === "AUTH_USER_NOT_FOUND") {
+            statusCode = 404;
+            errorCode = error.name;
+          } else if (error.name === "AUTH_2FA_NOT_ENABLED") {
+            statusCode = 400;
+            errorCode = error.name;
+          }
+        }
+
+        return sendError(reply, statusCode, errorCode, errorMessage);
       }
     },
   );
@@ -315,68 +238,11 @@ export async function authRoutes(fastify: FastifyInstance) {
           );
         }
 
-        const { challenge, user } = await TwoFactorService.verifyChallenge(
+        // Business logic
+        const response = await TwoFactorService.verifyAndProcessChallenge(
           token,
           code,
         );
-
-        let updatedUser = user;
-        let issuedToken: string;
-
-        switch (challenge.purpose) {
-          case "login": {
-            const loggedInUser =
-              (await UserService.markUserLoggedIn(user.id)) ?? user;
-            updatedUser = loggedInUser;
-            issuedToken = AuthUtils.generateToken(updatedUser);
-            break;
-          }
-          case "enable_2fa": {
-            updatedUser = await UserService.setTwoFactorEnabledStatus(
-              user.id,
-              true,
-            );
-            issuedToken = AuthUtils.generateToken(updatedUser);
-            break;
-          }
-          case "disable_2fa": {
-            updatedUser = await UserService.setTwoFactorEnabledStatus(
-              user.id,
-              false,
-            );
-            issuedToken = AuthUtils.generateToken(updatedUser);
-            break;
-          }
-          case "email_change": {
-            const payload = TwoFactorService.parsePayload<{ email: string }>(
-              challenge.payload,
-            );
-            if (!payload?.email) {
-              throw new Error("Pending email update data missing");
-            }
-
-            updatedUser = await UserService.applyEmailChange(
-              user.id,
-              payload.email,
-            );
-            issuedToken = AuthUtils.generateToken(updatedUser);
-            break;
-          }
-          default: {
-            throw new Error("Unsupported verification purpose");
-          }
-        }
-
-        const response: TwoFactorVerificationResponse = {
-          user: UserService.toPublicUser(updatedUser),
-          token: issuedToken,
-          operation: challenge.purpose,
-        };
-
-        if (challenge.purpose !== "login") {
-          response.twoFactorEnabled = updatedUser.two_factor_enabled;
-        }
-
         return reply.send(response);
       } catch (error) {
         fastify.log.error(error);
@@ -403,6 +269,7 @@ export async function authRoutes(fastify: FastifyInstance) {
           );
         }
 
+        // Business logic
         const user = await UserService.getUserById(request.user.id);
 
         if (!user) {
@@ -436,8 +303,8 @@ export async function authRoutes(fastify: FastifyInstance) {
           );
         }
 
+        // Business logic
         await UserService.updateUserOnlineStatus(request.user.id, false);
-
         return reply.send({ message: "Logged out successfully" });
       } catch (error) {
         fastify.log.error(error);

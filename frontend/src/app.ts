@@ -1,5 +1,6 @@
 import { router } from "./routes/router";
 import { routeConfig, type PageComponent } from "./routes/route-config";
+import { TournamentDataService } from "./shared/services/tournament-data.service";
 
 export class App {
   private currentPage: PageComponent | null = null;
@@ -27,10 +28,34 @@ export class App {
   }
 
   private setupRoutes(): void {
+    const tournamentDataService = TournamentDataService.getInstance();
+    const guardedTournamentPaths = new Set([
+      "/tournament/bracket",
+      "/tournament/results",
+      "/tournament/match/:matchId",
+    ]);
+
     Object.entries(routeConfig).forEach(([path, PageClass]) => {
-      router.addRoute(path, () => {
-        this.renderPage(PageClass);
-      });
+      const guard = guardedTournamentPaths.has(path)
+        ? (currentPath: string) => {
+            const hasTournament = tournamentDataService.getCurrentTournament();
+            if (!hasTournament) {
+              console.log(
+                `Redirecting from ${currentPath} to / (no tournament data)`,
+              );
+              return "/";
+            }
+            return null;
+          }
+        : undefined;
+
+      router.addRoute(
+        path,
+        () => {
+          this.renderPage(PageClass);
+        },
+        guard ? { guard } : undefined,
+      );
     });
   }
 

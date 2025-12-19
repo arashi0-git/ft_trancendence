@@ -1,16 +1,15 @@
-import {
-  UserModel,
-  UserWithoutPassword,
-  stripPassword,
-  toPublicUser,
-} from "../models/user";
+import { UserModel, stripPassword, toPublicUser } from "../models/user";
 import {
   CreateUserRequest,
-  UserProfile,
+  UserWithoutPassword,
+  PublicUser,
   UpdateUserProfileRequest,
-  UpdateUserSettingsRequest,
+  UpdateUserWithPasswordRequest,
 } from "../types/user";
 import { AuthUtils } from "../utils/auth";
+
+const AVATAR_UPLOAD_PREFIX = "/uploads/avatars/";
+const AVATAR_FILENAME_REGEX = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
 export class UserService {
   private static normalizeEmail(email: string): string {
@@ -20,6 +19,10 @@ export class UserService {
   private static validateEmailFormat(email: string): void {
     if (email.length === 0) {
       throw new Error("Email cannot be empty");
+    }
+
+    if (email.length > 100) {
+      throw new Error("Email must be 100 characters or fewer");
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -86,7 +89,7 @@ export class UserService {
     return updatedUser;
   }
 
-  static toPublicUser(user: UserWithoutPassword): UserProfile {
+  static toPublicUser(user: UserWithoutPassword): PublicUser {
     return toPublicUser(user);
   }
 
@@ -102,6 +105,10 @@ export class UserService {
       }
 
       this.validateEmailFormat(normalizedEmail);
+
+      if (userData.password.length > 72) {
+        throw new Error("Password must be 72 characters or fewer");
+      }
 
       if (await UserModel.findByEmail(normalizedEmail)) {
         throw new Error("User with this email already exists");
@@ -141,6 +148,12 @@ export class UserService {
     password: string,
   ): Promise<UserWithoutPassword | null> {
     const normalizedEmail = this.normalizeEmail(email);
+    this.validateEmailFormat(normalizedEmail);
+
+    if (password.length > 72) {
+      return null; // Invalid password (too long)
+    }
+
     const user = await UserModel.findByEmail(normalizedEmail);
 
     if (!user) {
@@ -243,25 +256,9 @@ export class UserService {
     }
 
     if (updates.profile_image_url !== undefined) {
-      const value = updates.profile_image_url;
-
-      if (value === null || value.trim().length === 0) {
-        profileUpdates.profile_image_url = null;
-      } else {
-        const trimmedValue = value.trim();
-
-        if (trimmedValue.length > 2048) {
-          throw new Error("Profile image URL must be 2048 characters or fewer");
-        }
-
-        if (!trimmedValue.startsWith("/uploads/avatars/")) {
-          throw new Error(
-            "Profile image URL must reference an uploaded avatar path",
-          );
-        }
-
-        profileUpdates.profile_image_url = trimmedValue;
-      }
+      profileUpdates.profile_image_url = this.validateProfileImagePath(
+        updates.profile_image_url,
+      );
     }
 
     if (typeof updates.language === "string") {
@@ -327,13 +324,17 @@ export class UserService {
       throw new Error("New password must be at least 6 characters long");
     }
 
+    if (newPassword.length > 72) {
+      throw new Error("New password must be 72 characters or fewer");
+    }
+
     const newPasswordHash = await AuthUtils.hashPassword(newPassword);
     await UserModel.updatePasswordHash(id, newPasswordHash);
   }
 
   static async updateUserSettings(
     id: number,
-    updates: UpdateUserSettingsRequest,
+    updates: UpdateUserWithPasswordRequest,
   ): Promise<{ user: UserWithoutPassword; token?: string }> {
     const profileUpdates: UpdateUserProfileRequest = {};
     let profileUpdated = false;
@@ -397,7 +398,47 @@ export class UserService {
     return { user: updatedUser, token };
   }
 
-  static async getPublicProfileById(id: number): Promise<UserProfile | null> {
+  private static validateProfileImagePath(
+    value: string | null | undefined,
+  ): string | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    const trimmedValue = value.trim();
+    if (trimmedValue.length === 0) {
+      return null;
+    }
+
+    if (trimmedValue.length > 2048) {
+      throw new Error("Profile image URL must be 2048 characters or fewer");
+    }
+
+    if (!trimmedValue.startsWith(AVATAR_UPLOAD_PREFIX)) {
+      throw new Error(
+        "Profile image URL must reference an uploaded avatar path",
+      );
+    }
+
+    const relativePath = trimmedValue.slice(AVATAR_UPLOAD_PREFIX.length);
+    const isInvalidRelativePath =
+      relativePath.length === 0 ||
+      relativePath.length > 255 ||
+      relativePath.includes("/") ||
+      relativePath.includes("\\") ||
+      relativePath.includes("..") ||
+      !AVATAR_FILENAME_REGEX.test(relativePath);
+
+    if (isInvalidRelativePath) {
+      throw new Error(
+        "Profile image URL must reference a valid uploaded avatar filename",
+      );
+    }
+
+    return `${AVATAR_UPLOAD_PREFIX}${relativePath}`;
+  }
+
+  static async getPublicProfileById(id: number): Promise<PublicUser | null> {
     const user = await this.getUserById(id);
     return user ? this.toPublicUser(user) : null;
   }
