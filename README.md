@@ -35,18 +35,6 @@ This application is optimized for modern web browsers and has been tested on:
 - **Google Chrome**: Version 87 and later
 - **Mozilla Firefox**: Version 78 and later (ESR and stable)
 
-### Minimum Requirements
-
-The application uses modern JavaScript features including:
-
-- ES2020 syntax
-- Optional chaining (`?.`)
-- Nullish coalescing (`??`)
-- Async/await
-- WebGL for 3D graphics (Babylon.js)
-
-For the best experience, please ensure your browser is up to date with the latest stable version.
-
 ## Prerequisites
 
 - Docker and Docker Compose
@@ -326,55 +314,6 @@ JWT_SECRET=your-jwt-secret-key
    docker-compose restart backend
    ```
 
-## Known Issues
-
-The following issues have been identified and are tracked in GitHub Issues:
-
-### Critical Issues
-
-- **[Issue #19](https://github.com/arashi0-git/ft_trancendence/issues/19)**: トーナメントで勝敗決定後、次の試合に進めない
-  - Tournament progression fails after match completion
-  - Next round generation not working properly
-  - **Priority**: Critical
-
-### High Priority Issues
-
-- **[Issue #21](https://github.com/arashi0-git/ft_trancendence/issues/21)**: パドルがボールをすり抜ける（当たり判定の問題）
-  - Paddle collision detection issues
-  - Ball passes through paddles during fast movement
-  - **Priority**: High
-
-- **[Issue #20](https://github.com/arashi0-git/ft_trancendence/issues/20)**: ゲーム操作時の矢印キーでページスクロールが発生
-  - Arrow keys cause page scrolling during gameplay
-  - Affects Player 2 controls (↑/↓/←/→)
-  - **Priority**: High
-
-- **[Issue #18](https://github.com/arashi0-git/ft_trancendence/issues/18)**: 'Back to Bracket'ボタンが反応しない
-  - Navigation button not responding in tournament match view
-  - Users cannot return to bracket view
-  - **Priority**: High
-
-### Medium Priority Issues
-
-- **[Issue #17](https://github.com/arashi0-git/ft_trancendence/issues/17)**: トーナメント試合でのreset/pauseボタンの動作不良
-  - Reset and pause buttons not functioning properly in tournament matches
-  - Game control issues during tournament play
-  - **Priority**: Medium
-
-### Issue Status
-
-To view the latest status of all issues:
-
-```bash
-gh issue list
-```
-
-To view details of a specific issue:
-
-```bash
-gh issue view <issue-number>
-```
-
 ## Contributing
 
 1. Fork the repository
@@ -386,23 +325,6 @@ gh issue view <issue-number>
 ## License
 
 This project is part of the 42 School curriculum.
-
-## Planned Modules
-
-### Oliver's Modules
-
-1. AI-Algo: AI opponent
-2. Gameplay: MultiPlayer (more than 2 players)
-3. Gameplay: Game customization options
-4. Web: First 3 (1 Major, 2 Minor)
-5. Graphics: Use Advanced 3D techniques
-6. Accessibility: Supports multiple languages
-7. Cybersecurity: Implement Two-Factor Authentication (2FA) and JWT
-
-### スンジュン's Modules
-
-- Add another game with user history and matchmaking
-- Server modules are not planned
 
 ---
 
@@ -423,18 +345,6 @@ JWT認証とトーナメントシステムを備えたモダンなPongゲーム�
 
 - **Google Chrome**: バージョン87以降
 - **Mozilla Firefox**: バージョン78以降（ESRおよび安定版）
-
-### 最小要件
-
-アプリケーションは以下のモダンなJavaScript機能を使用しています：
-
-- ES2020構文
-- Optional chaining (`?.`)
-- Nullish coalescing (`??`)
-- Async/await
-- 3Dグラフィックス用のWebGL（Babylon.js）
-
-最高のエクスペリエンスを得るには、ブラウザを最新の安定版に更新してください。
 
 ## 前提条件
 
@@ -711,54 +621,6 @@ JWT_SECRET=your-jwt-secret-key
    docker-compose restart backend
    ```
 
-## 既知の問題
-
-以下の問題が確認されており、GitHub Issuesで追跡されています：
-
-### 重要な問題
-
-- **[Issue #19](https://github.com/arashi0-git/ft_trancendence/issues/19)**: トーナメントで勝敗決定後、次の試合に進めない
-  - 試合完了後のトーナメント進行が失敗
-  - 次のラウンド生成が正常に動作しない
-  - **優先度**: 重要
-
-### 高優先度の問題
-
-- **[Issue #21](https://github.com/arashi0-git/ft_trancendence/issues/21)**: パドルがボールをすり抜ける（当たり判定の問題）
-  - パドルの衝突検出の問題
-  - 高速移動時にボールがパドルを通り抜ける
-  - **優先度**: 高
-
-- **[Issue #20](https://github.com/arashi0-git/ft_trancendence/issues/20)**: ゲーム操作時の矢印キーでページスクロールが発生
-  - ゲームプレイ中に矢印キーがページスクロールを引き起こす
-  - プレイヤー2のコントロール（↑/↓/←/→）に影響
-  - **優先度**: 高
-
-- **[Issue #18](https://github.com/arashi0-git/ft_trancendence/issues/18)**: 'Back to Bracket'ボタンが反応しない
-  - トーナメント試合ビューでナビゲーションボタンが応答しない
-  - ユーザーがブラケットビューに戻れない
-  - **優先度**: 高
-
-### 中優先度の問題
-
-- **[Issue #17](https://github.com/arashi0-git/ft_trancendence/issues/17)**: トーナメント試合でのreset/pauseボタンの動作不良
-  - トーナメント試合でリセットと一時停止ボタンが正常に機能しない
-  - トーナメントプレイ中のゲームコントロールの問題
-  - **優先度**: 中
-
-### 問題のステータス
-
-全ての問題の最新ステータスを確認するには：
-
-```bash
-gh issue list
-```
-
-特定の問題の詳細を確認するには：
-
-```bash
-gh issue view <issue-number>
-```
 
 ## 貢献
 
@@ -772,19 +634,3 @@ gh issue view <issue-number>
 
 このプロジェクトは42 Schoolのカリキュラムの一部です。
 
-## 予定されているモジュール
-
-### Oliverのモジュール
-
-1. AI-Algo: AI対戦相手
-2. Gameplay: マルチプレイヤー（2人以上のプレイヤー）
-3. Gameplay: ゲームカスタマイゼーションオプション
-4. Web: 最初の3つ（1つのメジャー、2つのマイナー）
-5. Graphics: 高度な3D技術の使用
-6. Accessibility: 複数言語のサポート
-7. Cybersecurity: 二要素認証（2FA）とJWTの実装
-
-### スンジュンのモジュール
-
-- ユーザー履歴とマッチメイキング機能を持つ別のゲームの追加
-- サーバーモジュールは予定されていません
